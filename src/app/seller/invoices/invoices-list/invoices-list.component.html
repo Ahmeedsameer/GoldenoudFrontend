@@ -1,0 +1,107 @@
+<app-loading [loading]="list.loading"></app-loading>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">فواتيري</h1>
+    <p class="page-subtitle">عرض وإدارة الفواتير الخاصة بك</p>
+  </div>
+</div>
+
+<div class="ds-card overflow-hidden">
+  <!-- Filter toolbar -->
+  <div class="flex flex-wrap gap-2 px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
+    <select
+      [(ngModel)]="statusFilter"
+      (ngModelChange)="applyStatusFilter($event)"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:bg-white/[0.03] dark:text-gray-300 dark:border-gray-700"
+    >
+      <option value="">كل الحالات</option>
+      <option value="pending">معلقة</option>
+      <option value="approved">مكتملة</option>
+      <option value="cancelled">ملغاة</option>
+    </select>
+
+    <div class="flex items-center gap-2">
+      <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">من:</label>
+      <input
+        type="date"
+        [(ngModel)]="dateFrom"
+        (ngModelChange)="applyDateFrom($event)"
+        class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:bg-white/[0.03] dark:text-gray-300 dark:border-gray-700"
+      />
+    </div>
+    <div class="flex items-center gap-2">
+      <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">إلى:</label>
+      <input
+        type="date"
+        [(ngModel)]="dateTo"
+        (ngModelChange)="applyDateTo($event)"
+        class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:bg-white/[0.03] dark:text-gray-300 dark:border-gray-700"
+      />
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  @if (!list.loading && list.result.data.length === 0) {
+    <div class="text-center py-14 text-gray-400 dark:text-gray-600">
+      <svg class="w-10 h-10 mx-auto mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <p class="text-sm">لا توجد فواتير</p>
+    </div>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="ds-table">
+        <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+          <tr>
+            <th class="ds-th">رقم الفاتورة</th>
+            <th class="ds-th">العميل</th>
+            <th class="ds-th">التاريخ</th>
+            <th class="ds-th">نوع السعر</th>
+            <th class="ds-th">الحالة</th>
+            <th class="ds-th text-center">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invoice of list.result.data; track invoice.id) {
+            <tr class="ds-tr">
+              <td class="ds-td font-mono text-sm text-gray-800 dark:text-white/90">
+                {{ invoice.invoice_number || ('#' + invoice.id) }}
+              </td>
+              <td class="ds-td">
+                <div class="font-medium text-gray-800 dark:text-white/90">{{ invoice.name }}</div>
+                <div class="text-xs text-gray-400 font-mono mt-0.5">{{ invoice.phone }}</div>
+              </td>
+              <td class="ds-td text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ invoice.date | date:'mediumDate' }}</td>
+              <td class="ds-td">
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  [ngClass]="invoice.price_type === 'wholesale'
+                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                    : 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400'"
+                >
+                  {{ priceTypeLabel(invoice.price_type) }}
+                </span>
+              </td>
+              <td class="ds-td">
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  [ngClass]="{
+                    'bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400': invoice.status === 'approved',
+                    'bg-warning-50 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400': invoice.status === 'pending',
+                    'bg-error-50 text-error-700 dark:bg-error-500/10 dark:text-error-400': invoice.status === 'cancelled'
+                  }"
+                >
+                  {{ statusLabel(invoice.status) }}
+                </span>
+              </td>
+              <td class="ds-td text-center">
+                <button (click)="viewInvoice(invoice.id)"
+                  class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10 transition-colors">عرض</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
+  }
+</div>

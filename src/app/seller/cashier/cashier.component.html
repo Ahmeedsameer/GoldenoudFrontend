@@ -1,0 +1,655 @@
+<app-loading [loading]="isSubmitting"></app-loading>
+
+<!-- ─── Page header + layout toggle ──────────────────────────── -->
+<div class="mb-5 flex items-center justify-between">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">فاتورة جديدة</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">أنشئ فاتورة مبيعات جديدة</p>
+  </div>
+  <button
+    type="button"
+    (click)="toggleLayout()"
+    title="{{ layoutMode === 'form' ? 'التبديل إلى وضع الكاشير' : 'التبديل إلى وضع النموذج' }}"
+    class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]"
+  >
+    @if (layoutMode === 'form') {
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 7H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-4M9 7V5a2 2 0 014 0v2M9 7h6"/>
+      </svg>
+      وضع الكاشير
+    } @else {
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+      </svg>
+      وضع النموذج
+    }
+  </button>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5">
+    <app-alert
+      [variant]="alert.type === 'success' ? 'success' : 'error'"
+      [message]="alert.message"
+    ></app-alert>
+  </div>
+}
+
+<!-- ════════════════════════════════════════════════════════════
+     SHARED TESTER DROPDOWN FRAGMENT (used in both layouts)
+     rendered inside the form below — kept DRY via ng-template
+     ════════════════════════════════════════════════════════════ -->
+
+<ng-template #testerField let-compact="compact">
+  <div class="relative" [class.w-52]="compact">
+    @if (!compact) {
+      <app-label>المراجع (اختياري)</app-label>
+    } @else {
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">المراجع</label>
+    }
+    <div class="relative flex items-center">
+      <input
+        type="text"
+        [value]="testerQuery"
+        (input)="onTesterInput($any($event.target).value)"
+        (blur)="closeTesterDropdown()"
+        placeholder="ابحث باسم المراجع..."
+        autocomplete="off"
+        class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+        [class.pr-8]="selectedTester"
+      />
+      @if (selectedTester) {
+        <button
+          type="button"
+          (click)="clearTester()"
+          class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          title="مسح"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      }
+    </div>
+    @if (showTesterDropdown) {
+      <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
+        @for (t of testerResults; track t.id) {
+          <li
+            (mousedown)="selectTester(t)"
+            class="px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05] text-gray-800 dark:text-white/90"
+          >
+            {{ t.name }}
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</ng-template>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+
+<form [formGroup]="form" novalidate>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  LAYOUT A — Form (admin style, stacked cards)           ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+@if (layoutMode === 'form') {
+
+  <!-- Customer card -->
+  <app-component-card title="بيانات العميل">
+    <div class="space-y-4">
+
+      <!-- Phone typeahead -->
+      <div>
+        <app-label>رقم الهاتف <span class="text-error-500">*</span></app-label>
+        <div class="relative">
+          <input
+            type="text"
+            [value]="customerQuery"
+            (input)="onPhoneInput($any($event.target).value)"
+            (blur)="closeCustomerDropdown()"
+            placeholder="05xxxxxxxx — ابحث بالهاتف"
+            autocomplete="off"
+            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+            [class.border-error-500]="form.get('phone')?.invalid && form.get('phone')?.touched"
+          />
+          @if (showCustomerDropdown || customerResults.length > 0) {
+            <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden dark:bg-gray-900 dark:border-gray-700">
+              @for (c of customerResults; track c.phone) {
+                <li (mousedown)="selectCustomer(c)"
+                  class="px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                  <span class="font-medium text-gray-800 dark:text-white/90">{{ c.name }}</span>
+                  <span class="text-gray-400 font-mono text-xs mr-2">{{ c.phone }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+        @if (form.get('phone')?.invalid && form.get('phone')?.touched) {
+          <p class="mt-1 text-xs text-error-500">رقم الهاتف مطلوب</p>
+        }
+      </div>
+
+      <!-- Name -->
+      <div>
+        <app-label>اسم العميل <span class="text-error-500">*</span></app-label>
+        <input
+          type="text"
+          [value]="form.get('name')?.value"
+          (input)="form.get('name')?.setValue($any($event.target).value)"
+          placeholder="اسم العميل"
+          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+          [class.border-error-500]="form.get('name')?.invalid && form.get('name')?.touched"
+        />
+        @if (form.get('name')?.invalid && form.get('name')?.touched) {
+          <p class="mt-1 text-xs text-error-500">اسم العميل مطلوب</p>
+        }
+      </div>
+
+    </div>
+  </app-component-card>
+
+  <!-- Invoice header card -->
+  <div class="mt-5">
+    <app-component-card title="بيانات الفاتورة">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+
+        <!-- Price type -->
+        <div>
+          <app-label>نوع السعر <span class="text-error-500">*</span></app-label>
+          <div class="flex gap-3 mt-1">
+            <button type="button" (click)="setPriceType('retail')"
+              class="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors"
+              [class]="form.get('price_type')?.value === 'retail'
+                ? 'border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
+                : 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'"
+            >قطاعي</button>
+            <button type="button" (click)="setPriceType('wholesale')"
+              class="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors"
+              [class]="form.get('price_type')?.value === 'wholesale'
+                ? 'border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
+                : 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'"
+            >جملة</button>
+          </div>
+        </div>
+
+        <!-- Tester typeahead -->
+        <ng-container *ngTemplateOutlet="testerField; context: { compact: false }"></ng-container>
+
+        <!-- Date -->
+        <div>
+          <app-label>التاريخ <span class="text-error-500">*</span></app-label>
+          <input type="date" formControlName="date"
+            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+            [class.border-error-500]="form.get('date')?.invalid && form.get('date')?.touched"
+          />
+          @if (form.get('date')?.invalid && form.get('date')?.touched) {
+            <p class="mt-1 text-xs text-error-500">التاريخ مطلوب</p>
+          }
+        </div>
+
+      </div>
+    </app-component-card>
+  </div>
+
+  <!-- Items card -->
+  <div class="mt-5">
+    <app-component-card title="الأصناف">
+
+      <div class="space-y-3 mb-5">
+        @for (item of items.controls; track $index; let i = $index) {
+          <div [formGroup]="$any(item)"
+            class="flex flex-wrap gap-3 items-end p-4 rounded-xl border transition-colors"
+            [class]="isPriceViolation(i)
+              ? 'border-warning-300 bg-warning-50 dark:border-warning-500/30 dark:bg-warning-500/5'
+              : 'border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]'">
+
+            <!-- Product typeahead -->
+            <div class="flex-1 min-w-[200px]">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">المنتج <span class="text-error-500">*</span></label>
+              <div class="relative">
+                <input type="text"
+                  [value]="productQueries[i]"
+                  (input)="onProductInput(i, $any($event.target).value)"
+                  (blur)="closeProductDropdown(i)"
+                  placeholder="ابحث عن منتج..."
+                  autocomplete="off"
+                  class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                  [class.border-error-500]="item.get('product_id')?.invalid && item.get('product_id')?.touched"
+                />
+                @if (showProductDropdown[i]) {
+                  <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
+                    @for (g of productResults[i]; track g.id) {
+                      <li (mousedown)="selectProduct(i, g)"
+                        class="px-3 py-2.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                        <span class="font-medium text-gray-800 dark:text-white/90">{{ g.supply_item.product.name }}</span>
+                        <span class="text-xs text-gray-400 font-mono mr-2">{{ g.supply_item.product.sku }}</span>
+                        <span class="block text-xs text-gray-400 mt-0.5">متاح: {{ g.current_quantity }} {{ g.supply_item.product.scalar }}</span>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+              @if (selectedGoods[i]) {
+                <p class="mt-1 text-xs"
+                  [class]="isQtyExceeded(i) ? 'text-error-500' : 'text-gray-400 dark:text-gray-500'">
+                  الكمية المتاحة: {{ selectedGoods[i]!.current_quantity }} {{ selectedGoods[i]!.supply_item.product.scalar }}
+                  @if (isQtyExceeded(i)) { — تجاوزت الحد المتاح }
+                </p>
+              }
+            </div>
+
+            <!-- Quantity -->
+            <div class="w-28">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الكمية <span class="text-error-500">*</span></label>
+              <input type="number" formControlName="quantity" min="1" step="1" placeholder="0"
+                class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                [class.border-error-500]="item.get('quantity')?.invalid && item.get('quantity')?.touched"
+              />
+            </div>
+
+            <!-- Price -->
+            <div class="w-32">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">سعر الوحدة <span class="text-error-500">*</span></label>
+              <input type="number" formControlName="price" min="0" step="0.01" placeholder="0.00"
+                class="h-10 w-full rounded-lg border bg-white px-3 text-sm text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90"
+                [class]="item.get('price')?.invalid && item.get('price')?.touched
+                  ? 'border-error-500 focus:border-error-400 focus:ring-error-500/20'
+                  : isPriceViolation(i)
+                  ? 'border-warning-400 focus:border-warning-400 focus:ring-warning-500/20'
+                  : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700'"
+              />
+              @if (isPriceViolation(i)) {
+                <p class="mt-1 text-xs text-warning-600 dark:text-warning-400 font-medium">
+                  أقل من الحد الأدنى
+                </p>
+              }
+            </div>
+
+            <!-- Row total -->
+            <div class="w-28">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الإجمالي</label>
+              <div class="h-10 flex items-center px-3 rounded-lg border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-gray-800 text-sm font-mono text-gray-700 dark:text-gray-300">
+                {{ rowTotal(i) | number:'1.2-2' }}
+              </div>
+            </div>
+
+            <!-- Remove -->
+            <button type="button" (click)="removeItem(i)" [disabled]="items.length === 1"
+              class="h-10 w-10 flex items-center justify-center rounded-lg border border-error-200 text-error-400 hover:bg-error-50 hover:text-error-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors dark:border-error-500/30 dark:hover:bg-error-500/10">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+
+          </div>
+        }
+      </div>
+
+      <button type="button" (click)="addItem()"
+        class="flex items-center gap-2 text-sm text-brand-500 hover:text-brand-600 font-medium mb-6 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        إضافة صنف
+      </button>
+
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-100 dark:border-white/[0.05]">
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+          عدد الأصناف: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ items.length }}</span>
+        </div>
+        <div class="flex items-center gap-4 px-5 py-3 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+          <span class="text-sm text-gray-500 dark:text-gray-400">الإجمالي الكلي</span>
+          <span class="text-xl font-bold font-mono text-gray-800 dark:text-white/90">{{ grandTotal() | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+    </app-component-card>
+  </div>
+
+  <div class="mt-5 flex items-center gap-3">
+    <app-button (btnClick)="onSubmit()" [disabled]="isSubmitting">
+      @if (isSubmitting) { جاري الحفظ... } @else { حفظ الفاتورة }
+    </app-button>
+  </div>
+
+}
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  LAYOUT B — POS (cashier terminal style)                ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+@if (layoutMode === 'pos') {
+
+  <!-- Compact header row -->
+  <div class="flex flex-wrap gap-3 items-end p-4 mb-4 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+
+    <!-- Phone typeahead -->
+    <div class="relative min-w-[160px] flex-1">
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الهاتف <span class="text-error-500">*</span></label>
+      <div class="relative">
+        <input type="text"
+          [value]="customerQuery"
+          (input)="onPhoneInput($any($event.target).value)"
+          (blur)="closeCustomerDropdown()"
+          placeholder="05xxxxxxxx"
+          autocomplete="off"
+          class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+          [class.border-error-500]="form.get('phone')?.invalid && form.get('phone')?.touched"
+        />
+        @if (showCustomerDropdown || customerResults.length > 0) {
+          <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden dark:bg-gray-900 dark:border-gray-700">
+            @for (c of customerResults; track c.phone) {
+              <li (mousedown)="selectCustomer(c)"
+                class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                <span class="font-medium text-gray-800 dark:text-white/90">{{ c.name }}</span>
+                <span class="text-gray-400 font-mono text-xs mr-1">{{ c.phone }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
+    <!-- Name -->
+    <div class="min-w-[160px] flex-1">
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الاسم <span class="text-error-500">*</span></label>
+      <input type="text"
+        [value]="form.get('name')?.value"
+        (input)="form.get('name')?.setValue($any($event.target).value)"
+        placeholder="اسم العميل"
+        class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+        [class.border-error-500]="form.get('name')?.invalid && form.get('name')?.touched"
+      />
+    </div>
+
+    <!-- Price type -->
+    <div>
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">نوع السعر</label>
+      <div class="flex gap-2">
+        <button type="button" (click)="setPriceType('retail')"
+          class="px-4 h-10 rounded-lg border text-sm font-medium transition-colors"
+          [class]="form.get('price_type')?.value === 'retail'
+            ? 'border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
+            : 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'"
+        >قطاعي</button>
+        <button type="button" (click)="setPriceType('wholesale')"
+          class="px-4 h-10 rounded-lg border text-sm font-medium transition-colors"
+          [class]="form.get('price_type')?.value === 'wholesale'
+            ? 'border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
+            : 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'"
+        >جملة</button>
+      </div>
+    </div>
+
+    <!-- Tester typeahead (compact) -->
+    <ng-container *ngTemplateOutlet="testerField; context: { compact: true }"></ng-container>
+
+    <!-- Date -->
+    <div class="w-36">
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">التاريخ <span class="text-error-500">*</span></label>
+      <input type="date" formControlName="date"
+        class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+        [class.border-error-500]="form.get('date')?.invalid && form.get('date')?.touched"
+      />
+    </div>
+
+  </div>
+
+  <!-- Two-panel area -->
+  <div class="flex gap-4 items-start">
+
+    <!-- ── Left panel: items (≈60%) ─────────────────────────── -->
+    <div class="flex-1 min-w-0">
+
+      @for (item of items.controls; track $index; let i = $index) {
+        <div [formGroup]="$any(item)"
+          class="flex flex-wrap gap-3 items-start p-5 mb-3 rounded-xl border shadow-sm transition-colors"
+          [class]="isPriceViolation(i)
+            ? 'border-warning-300 bg-warning-50 dark:border-warning-500/30 dark:bg-warning-500/5'
+            : 'border-gray-200 dark:border-white/[0.05] bg-white dark:bg-gray-900'">
+
+          <!-- Product typeahead -->
+          <div class="flex-1 min-w-[220px]">
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">المنتج</label>
+            <div class="relative">
+              <input type="text"
+                [value]="productQueries[i]"
+                (input)="onProductInput(i, $any($event.target).value)"
+                (blur)="closeProductDropdown(i)"
+                placeholder="ابحث عن منتج..."
+                autocomplete="off"
+                class="h-11 w-full rounded-lg border border-gray-300 bg-gray-50 px-4 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                [class.border-error-500]="item.get('product_id')?.invalid && item.get('product_id')?.touched"
+              />
+              @if (showProductDropdown[i]) {
+                <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-xl max-h-56 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
+                  @for (g of productResults[i]; track g.id) {
+                    <li (mousedown)="selectProduct(i, g)"
+                      class="px-4 py-3 text-sm cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-500/10 border-b border-gray-50 dark:border-white/[0.03] last:border-b-0">
+                      <div class="flex justify-between items-start">
+                        <span class="font-medium text-gray-800 dark:text-white/90">{{ g.supply_item.product.name }}</span>
+                        <span class="text-xs text-gray-400 font-mono">{{ g.supply_item.product.sku }}</span>
+                      </div>
+                      <span class="text-xs text-gray-400">متاح: {{ g.current_quantity }} {{ g.supply_item.product.scalar }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+            @if (selectedGoods[i]) {
+              <p class="mt-1 text-xs"
+                [class]="isQtyExceeded(i) ? 'text-error-500 font-medium' : 'text-gray-400 dark:text-gray-500'">
+                متاح: {{ selectedGoods[i]!.current_quantity }} {{ selectedGoods[i]!.supply_item.product.scalar }}
+                @if (isQtyExceeded(i)) { ← تجاوزت الحد }
+              </p>
+            }
+          </div>
+
+          <!-- Quantity -->
+          <div class="w-28">
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">الكمية</label>
+            <input type="number" formControlName="quantity" min="1" step="1" placeholder="0"
+              class="h-11 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+              [class.border-error-500]="item.get('quantity')?.invalid && item.get('quantity')?.touched"
+            />
+          </div>
+
+          <!-- Price -->
+          <div class="w-32">
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">السعر</label>
+            <input type="number" formControlName="price" min="0" step="0.01" placeholder="0.00"
+              class="h-11 w-full rounded-lg border bg-gray-50 px-3 text-sm text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90"
+              [class]="item.get('price')?.invalid && item.get('price')?.touched
+                ? 'border-error-500 focus:border-error-400 focus:ring-error-500/20'
+                : isPriceViolation(i)
+                ? 'border-warning-400 focus:border-warning-400 focus:ring-warning-500/20'
+                : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700'"
+            />
+            @if (isPriceViolation(i)) {
+              <p class="mt-1 text-xs text-warning-600 dark:text-warning-400 font-medium">أقل من الحد الأدنى</p>
+            }
+          </div>
+
+          <!-- Row total + remove -->
+          <div class="flex flex-col items-end gap-1.5 pt-5">
+            <span class="text-base font-bold font-mono text-gray-800 dark:text-white/90">
+              {{ rowTotal(i) | number:'1.2-2' }}
+            </span>
+            <button type="button" (click)="removeItem(i)" [disabled]="items.length === 1"
+              class="h-8 w-8 flex items-center justify-center rounded-lg text-error-400 hover:bg-error-50 hover:text-error-600 disabled:opacity-20 disabled:cursor-not-allowed transition-colors dark:hover:bg-error-500/10">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+
+        </div>
+      }
+
+      <!-- Add item: full-width, large -->
+      <button type="button" (click)="addItem()"
+        class="w-full h-12 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-brand-400 hover:text-brand-500 hover:bg-brand-50 dark:border-gray-700 dark:hover:border-brand-500/50 dark:hover:bg-brand-500/5 font-medium text-sm transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        إضافة صنف
+      </button>
+
+    </div>
+
+    <!-- ── Right panel: summary (≈40%), sticky ───────────────── -->
+    <div class="w-80 shrink-0 sticky top-4 self-start">
+      <div class="rounded-xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+
+        <!-- Customer info -->
+        <div class="p-5 border-b border-gray-100 dark:border-white/[0.05]">
+          @if (form.get('name')?.value) {
+            <p class="font-semibold text-gray-800 dark:text-white/90 text-base">{{ form.get('name')?.value }}</p>
+            <p class="text-xs text-gray-400 font-mono mt-0.5">{{ form.get('phone')?.value }}</p>
+          } @else {
+            <p class="text-sm text-gray-400 italic">لم يُحدد عميل بعد</p>
+          }
+          <div class="flex items-center gap-2 mt-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+              [class]="form.get('price_type')?.value === 'retail'
+                ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300'
+                : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'"
+            >
+              {{ form.get('price_type')?.value === 'retail' ? 'قطاعي' : 'جملة' }}
+            </span>
+            <span class="text-xs text-gray-400 font-mono">{{ form.get('date')?.value }}</span>
+            @if (selectedTester) {
+              <span class="text-xs text-gray-400">| {{ selectedTester.name }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Items list -->
+        <div class="p-5 max-h-56 overflow-y-auto space-y-2">
+          @if (items.length === 0 || !productQueries[0]) {
+            <p class="text-xs text-gray-400 text-center py-4">لا توجد أصناف بعد</p>
+          } @else {
+            @for (item of items.controls; track $index; let i = $index) {
+              <div class="flex justify-between items-center gap-2">
+                <span class="text-sm text-gray-700 dark:text-gray-300 truncate flex-1">
+                  {{ productQueries[i] || ('صنف ' + (i + 1)) }}
+                </span>
+                <span class="text-sm font-mono font-medium text-gray-800 dark:text-white/80 shrink-0">
+                  {{ rowTotal(i) | number:'1.2-2' }}
+                </span>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Grand total -->
+        <div class="px-5 pt-4 pb-3 border-t border-gray-100 dark:border-white/[0.05]">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs text-gray-500 dark:text-gray-400">عدد الأصناف</span>
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ items.length }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">الإجمالي الكلي</span>
+            <span class="text-2xl font-bold font-mono text-gray-900 dark:text-white">
+              {{ grandTotal() | number:'1.2-2' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Submit button -->
+        <div class="p-5 pt-0">
+          <button
+            type="button"
+            (click)="onSubmit()"
+            [disabled]="isSubmitting"
+            class="w-full h-12 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+            [class]="isSubmitting
+              ? 'bg-brand-400 text-white cursor-not-allowed'
+              : 'bg-brand-500 hover:bg-brand-600 text-white'"
+          >
+            @if (isSubmitting) {
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              جاري الحفظ...
+            } @else {
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              حفظ الفاتورة
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+}
+
+</form>
+
+<!-- ════════════════════════════════════════════════════════
+     PRICE VIOLATION WARNING MODAL
+     ════════════════════════════════════════════════════════ -->
+<app-modal [isOpen]="showViolationModal" (close)="showViolationModal = false" className="max-w-lg m-4">
+  <div class="p-6">
+
+    <!-- Header -->
+    <div class="flex items-start gap-4 mb-5">
+      <div class="w-11 h-11 rounded-full bg-warning-100 flex items-center justify-center shrink-0 dark:bg-warning-500/15">
+        <svg class="w-5 h-5 text-warning-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">سعر أقل من الحد الأدنى المسموح</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+          الأصناف التالية تحتوي على سعر بيع أقل من الحد الأدنى المحدد للفئة.
+          الفاتورة ستُحفظ بحالة <span class="font-semibold text-warning-600 dark:text-warning-400">«قيد المراجعة»</span> وتحتاج موافقة المدير.
+        </p>
+      </div>
+    </div>
+
+    <!-- Violations list -->
+    <div class="space-y-2.5 mb-6">
+      @for (v of priceViolations; track v.index) {
+        <div class="flex items-start gap-3 p-3.5 rounded-xl bg-warning-50 border border-warning-200 dark:bg-warning-500/10 dark:border-warning-500/25">
+          <svg class="w-4 h-4 text-warning-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-800 dark:text-white/90 truncate">{{ v.productName }}</p>
+            <div class="flex flex-wrap gap-4 mt-1.5">
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                السعر المُدخل:
+                <span class="font-mono font-semibold text-error-500">{{ v.enteredPrice | number:'1.2-2' }}</span>
+              </span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                الحد الأدنى:
+                <span class="font-mono font-semibold text-warning-600 dark:text-warning-400">{{ v.minimumPrice | number:'1.2-2' }}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="flex gap-3">
+      <button type="button" (click)="confirmWithViolations()"
+        class="flex-1 h-10 rounded-lg bg-warning-500 hover:bg-warning-600 text-white text-sm font-semibold transition-colors">
+        تأكيد الحفظ على أي حال
+      </button>
+      <button type="button" (click)="showViolationModal = false"
+        class="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">
+        تعديل الأسعار
+      </button>
+    </div>
+
+  </div>
+</app-modal>

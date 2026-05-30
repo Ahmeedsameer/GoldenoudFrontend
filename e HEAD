@@ -1,0 +1,25 @@
+[33m042de06[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fresh start
+[33m3b1a60c[m last change
+[33m7f64a0d[m design reconstruct & modify user creation
+[33me90ba06[m emergancy commit
+[33m10396f6[m products list
+[33md8c2803[m feat(shared): build smart generic pagination system
+[33m18d2536[m add image previewer
+[33m7dc16ab[m add file handling to formservice & add image to create category
+[33mbb4583f[m add edit category
+[33m3f5e137[m finish create category
+[33m5288c3c[m category managment list, Category Model, Category Pips & routes
+[33m8414615[m category managment essentials
+[33m254be59[m add single user, role pipe
+[33m8b8405e[m edit logout interceptor logic
+[33m9fba076[m add users table , fielteration , pagination , sidebar logout
+[33m6b9fe6a[m finish create user & formHelperService and form error components
+[33m645ce87[m solve expired token bug issue
+[33m75cc738[m create add user form with its validations
+[33m47b9850[m add layouts & apply guards for roles
+[33m5d60c98[m layouts generations
+[33mdb6bc80[m auth & guest Guards
+[33m01cda9e[m finish sign-up service and form
+[33m7af0e30[m add sign layout to sign page
+[33m786e2a2[m create sign-in form with essential functions
+[33mab7cb59[m first commit

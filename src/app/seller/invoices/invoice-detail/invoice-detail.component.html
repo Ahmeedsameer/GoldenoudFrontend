@@ -1,0 +1,151 @@
+<app-loading [loading]="pageLoading || statusLoading"></app-loading>
+
+<!-- Breadcrumb -->
+<div class="mb-6">
+  <div class="flex items-center gap-2 mb-1">
+    <a routerLink="/dashboard/invoices" class="text-sm text-gray-400 hover:text-brand-500 transition-colors">فواتيري</a>
+    <span class="text-gray-300 dark:text-gray-600">/</span>
+    <span class="text-sm text-gray-600 dark:text-gray-400">تفاصيل الفاتورة</span>
+  </div>
+  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
+    {{ invoice?.invoice_number || ('#' + invoiceId) }}
+  </h2>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5">
+    <app-alert
+      [variant]="alert.type === 'success' ? 'success' : 'error'"
+      [message]="alert.message"
+    ></app-alert>
+  </div>
+}
+
+@if (invoice) {
+  <!-- Header card -->
+  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-6 mb-5">
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
+      <div>
+        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-1">بيانات الفاتورة</h3>
+      </div>
+      <div class="flex items-center gap-2">
+        <app-badge variant="light" [color]="statusBadgeColor(invoice.status)" size="sm">
+          {{ statusLabel(invoice.status) }}
+        </app-badge>
+        @if (invoice.status !== 'cancelled') {
+          <app-button
+            size="sm"
+            (btnClick)="updateStatus('approved')"
+            [disabled]="invoice.status === 'approved' || statusLoading"
+          >
+            تأكيد
+          </app-button>
+          <app-button
+            size="sm"
+            variant="outline"
+            (btnClick)="updateStatus('cancelled')"
+            [disabled]="statusLoading"
+          >
+            إلغاء الفاتورة
+          </app-button>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4 text-sm">
+      <div>
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">العميل</span>
+        <span class="font-medium text-gray-800 dark:text-white/90">{{ invoice.name }}</span>
+        <span class="block font-mono text-xs text-gray-500 dark:text-gray-400">{{ invoice.phone }}</span>
+      </div>
+      @if (invoice.seller) {
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">البائع</span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ invoice.seller.name }}</span>
+        </div>
+      }
+      @if (invoice.tester) {
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">المراجع</span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ invoice.tester.name }}</span>
+        </div>
+      }
+      @if (invoice.shop) {
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">الفرع</span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ invoice.shop.name }}</span>
+        </div>
+      }
+      <div>
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">التاريخ</span>
+        <span class="font-medium text-gray-800 dark:text-white/90">{{ invoice.date | date:'mediumDate' }}</span>
+      </div>
+      <div>
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">نوع السعر</span>
+        <app-badge variant="light" [color]="invoice.price_type === 'wholesale' ? 'info' : 'primary'" size="sm">
+          {{ invoice.price_type === 'wholesale' ? 'جملة' : 'قطاعي' }}
+        </app-badge>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items table -->
+  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] overflow-hidden mb-5">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">الأصناف</h3>
+    </div>
+
+    @if (invoice.items && invoice.items.length > 0) {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-white/[0.03]">
+            <tr>
+              <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">المنتج</th>
+              <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">SKU</th>
+              <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الكمية</th>
+              <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">سعر الوحدة</th>
+              <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الإجمالي</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+            @for (item of invoice.items; track item.id) {
+              <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                <td class="px-5 py-3.5 font-medium text-gray-800 dark:text-white/90">
+                  {{ item.product?.name || '—' }}
+                </td>
+                <td class="px-5 py-3.5 font-mono text-xs text-gray-500 dark:text-gray-400">
+                  {{ item.product?.sku || '—' }}
+                </td>
+                <td class="px-5 py-3.5 font-mono text-gray-600 dark:text-gray-300">
+                  {{ item.quantity }}
+                  <span class="text-xs text-gray-400">{{ item.product?.scalar }}</span>
+                </td>
+                <td class="px-5 py-3.5 font-mono text-gray-600 dark:text-gray-300">
+                  {{ item.price | number:'1.2-2' }}
+                </td>
+                <td class="px-5 py-3.5 font-mono font-semibold text-gray-800 dark:text-white/90">
+                  {{ lineTotal(item.quantity, item.price) | number:'1.2-2' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Grand total -->
+      <div class="px-6 py-4 border-t border-gray-100 dark:border-white/[0.05] flex justify-end">
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-gray-500 dark:text-gray-400">الإجمالي الكلي</span>
+          <span class="text-xl font-bold font-mono text-gray-800 dark:text-white/90">
+            {{ grandTotal() | number:'1.2-2' }}
+          </span>
+        </div>
+      </div>
+    } @else {
+      <div class="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-600">لا توجد أصناف</div>
+    }
+  </div>
+
+  <!-- Back -->
+  <app-button variant="outline" routerLink="/seller/invoices">← رجوع للقائمة</app-button>
+}

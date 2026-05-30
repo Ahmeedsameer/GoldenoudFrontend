@@ -1,0 +1,97 @@
+<app-loading [loading]="list.loading || deleteLoading"></app-loading>
+
+<!-- Delete Modal -->
+<app-modal [isOpen]="showDeleteModal" (close)="cancelDelete()">
+  <div class="p-8 text-center">
+    <div class="flex justify-center mb-4">
+      <div class="flex items-center justify-center w-14 h-14 rounded-full bg-error-50 dark:bg-error-500/10">
+        <svg class="w-7 h-7 text-error-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </div>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-2">حذف المورد</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">هل أنت متأكد من حذف هذا المورد؟</p>
+    @if (deleteError) {
+      <div class="mb-4 px-3 py-2 rounded-lg border border-error-300 bg-error-50 dark:bg-error-500/10 dark:border-error-500/30 text-sm text-error-600 dark:text-error-400">
+        {{ deleteError }}
+      </div>
+    }
+    <div class="flex gap-3 justify-center">
+      <app-button variant="outline" size="sm" (btnClick)="cancelDelete()">إلغاء</app-button>
+      <app-button size="sm" (btnClick)="doDelete()">حذف</app-button>
+    </div>
+  </div>
+</app-modal>
+
+<div>
+  <!-- Toolbar -->
+  <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
+    <div class="relative">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        </svg>
+      </span>
+      <input
+        type="text"
+        placeholder="بحث عن مورد..."
+        (input)="setSearchFilter($event.target.value)"
+        class="h-9 rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm placeholder:text-gray-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/10 focus:outline-none dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90 w-56"
+      />
+    </div>
+    <app-button routerLink="/dashboard/stock/suppliers/create" size="sm">
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+      </svg>
+      مورد جديد
+    </app-button>
+  </div>
+
+  <!-- Table -->
+  @if (!list.loading && list.result.data.length === 0) {
+    <div class="text-center py-14 text-gray-400 dark:text-gray-600">
+      <svg class="w-10 h-10 mx-auto mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+      </svg>
+      <p class="text-sm">لا يوجد موردون</p>
+    </div>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="ds-table">
+        <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+          <tr>
+            <th class="ds-th">اسم المورد</th>
+            <th class="ds-th">رقم الهاتف</th>
+            <th class="ds-th">عدد التوريدات</th>
+            <th class="ds-th">تاريخ الإضافة</th>
+            <th class="ds-th text-center">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (supplier of list.result.data; track supplier.id) {
+            <tr class="ds-tr">
+              <td class="ds-td font-medium text-gray-800 dark:text-white/90">{{ supplier.name }}</td>
+              <td class="ds-td font-mono text-sm text-gray-500 dark:text-gray-400">{{ supplier.phone }}</td>
+              <td class="ds-td">
+                <span class="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-500/10 dark:text-brand-400">
+                  {{ supplier.supplies_count }} توريد
+                </span>
+              </td>
+              <td class="ds-td text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ supplier.created_at | date:'mediumDate' }}</td>
+              <td class="ds-td">
+                <div class="flex items-center justify-center gap-1.5">
+                  <a [routerLink]="['/dashboard/stock/suppliers/edit', supplier.id]"
+                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10 transition-colors">تعديل</a>
+                  <button (click)="confirmDelete(supplier.id)"
+                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors">حذف</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
+  }
+</div>

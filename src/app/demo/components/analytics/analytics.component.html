@@ -1,0 +1,113 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <button (click)="onBack()" class="flex items-center gap-2 text-gray-600 hover:text-gray-800 dark:text-gray-400">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+      رجوع
+    </button>
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">التقارير analytics</h3>
+  </div>
+
+  <!-- Period Selector -->
+  <div class="flex gap-2">
+    <button
+      (click)="setPeriod('week')"
+      class="rounded-lg px-4 py-2 text-sm font-medium transition"
+      [ngClass]="selectedPeriod === 'week' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'">
+      أسبوع
+    </button>
+    <button
+      (click)="setPeriod('month')"
+      class="rounded-lg px-4 py-2 text-sm font-medium transition"
+      [ngClass]="selectedPeriod === 'month' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'">
+      شهر
+    </button>
+    <button
+      (click)="setPeriod('year')"
+      class="rounded-lg px-4 py-2 text-sm font-medium transition"
+      [ngClass]="selectedPeriod === 'year' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'">
+      سنة
+    </button>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <span class="text-sm text-gray-500">إجمالي المبيعات</span>
+      <h4 class="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">{{ formatCurrency(kpis.totalSales) }}</h4>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <span class="text-sm text-gray-500">عدد الطلبات</span>
+      <h4 class="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">{{ kpis.totalOrders }}</h4>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <span class="text-sm text-gray-500">متوسط الطلب</span>
+      <h4 class="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">{{ formatCurrency(kpis.avgOrderValue) }}</h4>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <span class="text-sm text-gray-500">المنتج الأعلى مبيعاً</span>
+      <h4 class="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">{{ kpis.topProduct }}</h4>
+    </div>
+  </div>
+
+  <!-- Sales Chart -->
+  <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+    <h4 class="mb-4 font-semibold text-gray-800 dark:text-white/90">المبيعات الشهرية</h4>
+    <apx-chart
+      [series]="salesSeries"
+      [chart]="chartOptions['sales']"
+      [colors]="chartOptions['colors']"
+      [stroke]="chartOptions['stroke']"
+      [fill]="chartOptions['fill']"
+      [markers]="chartOptions['markers']"
+      [grid]="chartOptions['grid']"
+      [dataLabels]="chartOptions['dataLabels']"
+      [tooltip]="chartOptions['tooltip']"
+      [xaxis]="chartOptions['xaxis']"
+      [yaxis]="chartOptions['yaxis']"
+      [legend]="chartOptions['legend']">
+    </apx-chart>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <!-- Top Products -->
+    <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h4 class="mb-4 font-semibold text-gray-800 dark:text-white/90">المنتجات الأعلى مبيعاً</h4>
+      <div class="space-y-3">
+        @for (product of topProducts; track product.name) {
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-2 w-2 rounded-full bg-brand-500"></div>
+              <span class="text-sm text-gray-800 dark:text-white/90">{{ product.name }}</span>
+            </div>
+            <div class="text-left">
+              <span class="text-sm font-medium text-gray-800 dark:text-white/90">{{ formatCurrency(product.sales) }}</span>
+              <span class="mr-2 text-xs text-gray-500">({{ product.percentage }}%)</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Sales vs Orders -->
+    <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h4 class="mb-4 font-semibold text-gray-800 dark:text-white/90">المبيعات vs الطلبات</h4>
+      <apx-chart
+        [series]="ordersSeries"
+        [chart]="chartOptions['sales']"
+        [colors]="chartOptions['colors']"
+        [stroke]="chartOptions['stroke']"
+        [fill]="chartOptions['fill']"
+        [markers]="chartOptions['markers']"
+        [grid]="chartOptions['grid']"
+        [dataLabels]="chartOptions['dataLabels']"
+        [tooltip]="chartOptions['tooltip']"
+        [xaxis]="chartOptions['xaxis']"
+        [yaxis]="chartOptions['yaxis']"
+        [legend]="chartOptions['legend']">
+      </apx-chart>
+    </div>
+  </div>
+</div>

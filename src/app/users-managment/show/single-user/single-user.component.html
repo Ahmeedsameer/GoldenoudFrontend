@@ -1,0 +1,14 @@
+<app-loading [loading]="false"></app-loading>
+
+@if (user != null) {
+  <div class="ds-card overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">بيانات المستخدم</h2>
+    </div>
+    <div class="p-5 space-y-5">
+      <div><app-user-meta-card [user]="user"/></div>
+      <div><app-user-info-card/></div>
+      <div><app-user-address-card/></div>
+    </div>
+  </div>
+}

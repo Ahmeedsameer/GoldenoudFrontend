@@ -1,0 +1,384 @@
+<app-loading [loading]="loading || removeEmployeeLoading || managerAssignLoading"></app-loading>
+
+<!-- Remove Employee Modal -->
+<app-modal [isOpen]="showRemoveEmployeeModal" (close)="showRemoveEmployeeModal = false">
+  <div class="p-8 text-center">
+    <div class="flex justify-center mb-4">
+      <div class="flex items-center justify-center w-14 h-14 rounded-full bg-error-50 dark:bg-error-500/10">
+        <svg class="w-7 h-7 text-error-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6"/>
+        </svg>
+      </div>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-2">إزالة الموظف</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">هل أنت متأكد من إزالة هذا الموظف من الفرع؟</p>
+    <div class="flex gap-3 justify-center">
+      <app-button variant="outline" size="sm" (btnClick)="showRemoveEmployeeModal = false">إلغاء</app-button>
+      <app-button size="sm" (btnClick)="doRemoveEmployee()">إزالة</app-button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Add Employee Modal -->
+<app-modal [isOpen]="showAddEmployeeModal" (close)="showAddEmployeeModal = false">
+  <div class="p-6">
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">إضافة موظف</h3>
+    @if (addEmployeeError) {
+      <div class="mb-3 px-3 py-2 rounded-lg border border-error-300 bg-error-50 dark:bg-error-500/10 dark:border-error-500/30 text-sm text-error-600 dark:text-error-400">
+        {{ addEmployeeError }}
+      </div>
+    }
+    <div class="relative mb-4">
+      <input
+        type="text"
+        [value]="employeeSearch"
+        (input)="onEmployeeSearchChange($event.target.value)"
+        placeholder="ابحث عن موظف... (حرفان على الأقل)"
+        class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+      />
+      @if (employeeSearchLoading) {
+        <div class="absolute left-3 top-1/2 -translate-y-1/2">
+          <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+        </div>
+      }
+    </div>
+    @if (employeeResults.length > 0) {
+      <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+        @for (emp of employeeResults; track emp.id) {
+          <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-white/5">
+            <div>
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ emp.name }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ emp.email }}</p>
+            </div>
+            <app-button size="sm" (btnClick)="addEmployee(emp.id)">إضافة</app-button>
+          </div>
+        }
+      </div>
+    } @else if (employeeSearch.length >= 2 && !employeeSearchLoading) {
+      <p class="text-center text-sm text-gray-400 py-4">لا توجد نتائج</p>
+    }
+  </div>
+</app-modal>
+
+<!-- Remove Manager Modal -->
+<app-modal [isOpen]="showRemoveManagerModal" (close)="showRemoveManagerModal = false">
+  <div class="p-8 text-center">
+    <div class="flex justify-center mb-4">
+      <div class="flex items-center justify-center w-14 h-14 rounded-full bg-warning-50 dark:bg-warning-500/10">
+        <svg class="w-7 h-7 text-warning-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-2">إزالة المدير</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">هل أنت متأكد من إزالة المدير من هذا الفرع؟</p>
+    <div class="flex gap-3 justify-center">
+      <app-button variant="outline" size="sm" (btnClick)="showRemoveManagerModal = false">إلغاء</app-button>
+      <app-button size="sm" (btnClick)="doRemoveManager()">إزالة</app-button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Assign Manager Modal -->
+<app-modal [isOpen]="showAssignManagerModal" (close)="showAssignManagerModal = false">
+  <div class="p-6">
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">تعيين مدير</h3>
+
+    @if (selectedManagerForAssign) {
+      <!-- Preview selected -->
+      <div class="flex items-center gap-3 p-3 rounded-lg border border-brand-300 bg-brand-50 dark:bg-brand-500/10 dark:border-brand-500/30 mb-4">
+        <div class="flex items-center justify-center w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-500/20 shrink-0">
+          <svg class="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ selectedManagerForAssign.name }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedManagerForAssign.email }}</p>
+        </div>
+        <button type="button" (click)="selectedManagerForAssign = null"
+          class="shrink-0 text-gray-400 hover:text-error-500 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <app-button (btnClick)="doAssignManager()" size="md" className="w-full">تأكيد التعيين</app-button>
+    } @else {
+      <div class="relative mb-3">
+        <input
+          type="text"
+          [value]="managerSearch"
+          (input)="onManagerSearchChange($event.target.value)"
+          placeholder="ابحث عن مدير... (حرفان على الأقل)"
+          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+        />
+        @if (managerSearchLoading) {
+          <div class="absolute left-3 top-1/2 -translate-y-1/2">
+            <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </div>
+        }
+      </div>
+      @if (managerResults.length > 0) {
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+          @for (mgr of managerResults; track mgr.id) {
+            <button type="button"
+              (click)="selectManagerForAssign(mgr)"
+              class="w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 shrink-0">
+                <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ mgr.name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ mgr.email }} &middot; {{ mgr.role }}</p>
+              </div>
+            </button>
+          }
+        </div>
+      } @else if (managerSearch.length >= 2 && !managerSearchLoading) {
+        <p class="text-center text-sm text-gray-400 py-4">لا توجد نتائج</p>
+      }
+    }
+  </div>
+</app-modal>
+
+
+@if (shop) {
+  <!-- Page header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <a routerLink="/dashboard/shops" class="text-sm text-gray-400 hover:text-brand-500 transition-colors">الفروع</a>
+        <span class="text-gray-300 dark:text-gray-600">/</span>
+        <span class="text-sm text-gray-600 dark:text-gray-400">{{ shop.name }}</span>
+      </div>
+      <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">{{ shop.name }}</h2>
+    </div>
+    <app-button [routerLink]="['/dashboard/shops/edit', shop.id]" variant="outline" size="sm">تعديل الفرع</app-button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] overflow-hidden">
+    <div class="flex border-b border-gray-200 dark:border-white/[0.05]">
+      <button
+        (click)="setTab('info')"
+        class="px-6 py-4 text-sm font-medium transition-colors border-b-2 -mb-px"
+        [class]="activeTab === 'info'
+          ? 'border-brand-500 text-brand-500'
+          : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'"
+      >
+        معلومات الفرع
+      </button>
+      <button
+        (click)="setTab('manager')"
+        class="px-6 py-4 text-sm font-medium transition-colors border-b-2 -mb-px"
+        [class]="activeTab === 'manager'
+          ? 'border-brand-500 text-brand-500'
+          : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'"
+      >
+        المدير
+      </button>
+      <button
+        (click)="setTab('employees')"
+        class="px-6 py-4 text-sm font-medium transition-colors border-b-2 -mb-px"
+        [class]="activeTab === 'employees'
+          ? 'border-brand-500 text-brand-500'
+          : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'"
+      >
+        الموظفون
+        <span class="mr-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full text-xs bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400">
+          {{ shop.employees_count }}
+        </span>
+      </button>
+      <button
+        (click)="setTab('stock')"
+        class="px-6 py-4 text-sm font-medium transition-colors border-b-2 -mb-px"
+        [class]="activeTab === 'stock'
+          ? 'border-brand-500 text-brand-500'
+          : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'"
+      >
+        المخزون
+      </button>
+    </div>
+
+    <!-- ── Info Tab ─────────────────────────────────────── -->
+    @if (activeTab === 'info') {
+      <div class="p-6">
+        <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4">
+            <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">اسم الفرع</dt>
+            <dd class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ shop.name }}</dd>
+          </div>
+          <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4">
+            <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">اسم المستخدم</dt>
+            <dd class="font-mono text-sm bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded inline-block">{{ shop.username }}</dd>
+          </div>
+          <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4 sm:col-span-2">
+            <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">العنوان</dt>
+            <dd class="text-sm text-gray-700 dark:text-gray-300">{{ shop.address }}</dd>
+          </div>
+          <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4">
+            <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2">الحالة</dt>
+            <dd>
+              <app-badge variant="light" [color]="shop.status === 'active' ? 'success' : 'error'" size="sm">
+                {{ shop.status === 'active' ? 'نشط' : 'غير نشط' }}
+              </app-badge>
+            </dd>
+          </div>
+          <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4">
+            <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">عدد الموظفين</dt>
+            <dd class="text-2xl font-bold text-gray-800 dark:text-white/90">{{ shop.employees_count }}</dd>
+          </div>
+          <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4">
+            <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">تاريخ الإنشاء</dt>
+            <dd class="text-sm text-gray-700 dark:text-gray-300">{{ shop.created_at | date:'longDate' }}</dd>
+          </div>
+          <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4">
+            <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">آخر تحديث</dt>
+            <dd class="text-sm text-gray-700 dark:text-gray-300">{{ shop.updated_at | date:'longDate' }}</dd>
+          </div>
+        </dl>
+      </div>
+    }
+
+    <!-- ── Manager Tab ──────────────────────────────────── -->
+    @if (activeTab === 'manager') {
+      <div class="p-6">
+        @if (shop.manager) {
+          <!-- Manager profile card -->
+          <div class="max-w-sm mx-auto rounded-2xl border border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.03] overflow-hidden">
+            <div class="h-20 bg-gradient-to-r from-brand-400 to-brand-600"></div>
+            <div class="px-6 pb-6 -mt-10">
+              <div class="flex items-end justify-between mb-4">
+                <div class="flex items-center justify-center w-20 h-20 rounded-full border-4 border-white dark:border-gray-800 bg-brand-100 dark:bg-brand-500/20">
+                  <svg class="w-10 h-10 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                </div>
+                <app-badge variant="light" color="primary" size="sm">{{ shop.manager.role }}</app-badge>
+              </div>
+              <h3 class="text-lg font-bold text-gray-800 dark:text-white/90 mb-1">{{ shop.manager.name }}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">{{ shop.manager.email }}</p>
+              <app-button
+                variant="outline"
+                size="sm"
+                (btnClick)="showRemoveManagerModal = true"
+              >
+                إزالة المدير
+              </app-button>
+            </div>
+          </div>
+        } @else {
+          <!-- Empty state -->
+          <div class="flex flex-col items-center py-16 gap-4">
+            <div class="flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-white/5">
+              <svg class="w-10 h-10 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+            <div class="text-center">
+              <p class="text-base font-medium text-gray-600 dark:text-gray-400 mb-1">لا يوجد مدير معيّن</p>
+              <p class="text-sm text-gray-400 dark:text-gray-500">قم بتعيين مدير لهذا الفرع</p>
+            </div>
+            <app-button variant="primary" size="sm" (btnClick)="openAssignManagerModal()">تعيين مدير</app-button>
+          </div>
+        }
+        @if (shop.manager) {
+          <div class="mt-4 flex justify-center">
+            <app-button variant="primary" size="sm" (btnClick)="openAssignManagerModal()">تغيير المدير</app-button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── Employees Tab ────────────────────────────────── -->
+    @if (activeTab === 'employees') {
+      <div>
+        <app-loading [loading]="employeesLoading"></app-loading>
+
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+          <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">قائمة الموظفين</h4>
+          <app-button variant="primary" size="sm" (btnClick)="openAddEmployeeModal()">+ إضافة موظف</app-button>
+        </div>
+
+        @if (!employeesLoading && employeesResult.data.length === 0) {
+          <div class="flex flex-col items-center py-16 gap-4">
+            <div class="flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-white/5">
+              <svg class="w-10 h-10 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <div class="text-center">
+              <p class="text-base font-medium text-gray-600 dark:text-gray-400 mb-1">لا يوجد موظفون</p>
+              <p class="text-sm text-gray-400 dark:text-gray-500">أضف موظفين لهذا الفرع</p>
+            </div>
+            <app-button variant="primary" size="sm" (btnClick)="openAddEmployeeModal()">+ إضافة موظف</app-button>
+          </div>
+        }
+
+        @if (employeesResult.data.length > 0) {
+          <div class="overflow-x-auto">
+            <table class="min-w-full">
+              <thead class="border-gray-100 border-y dark:border-white/[0.05]">
+                <tr>
+                  <th class="px-6 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">الموظف</th>
+                  <th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">الهاتف</th>
+                  <th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">الوظيفة</th>
+                  <th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">وقت العمل</th>
+                  <th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                @for (emp of employeesResult.data; track emp.id) {
+                  <tr>
+                    <td class="px-6 py-4">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ emp.name }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500">{{ emp.email }}</p>
+                      </div>
+                    </td>
+                    <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-400">{{ emp.phone || '—' }}</td>
+                    <td class="px-4 py-4">
+                      <app-badge variant="light" color="primary" size="sm">{{ emp.role }}</app-badge>
+                    </td>
+                    <td class="px-4 py-4">
+                      <span class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {{ formatShift(emp.shift_start) }} &rarr; {{ formatShift(emp.shift_end) }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-4">
+                      <button
+                        (click)="confirmRemoveEmployee(emp.id)"
+                        class="text-xs font-medium text-error-500 hover:text-error-600 hover:underline transition-colors"
+                      >
+                        إزالة
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-pagination [paginationResult]="employeesResult" (pageChange)="loadEmployees($event)"></app-pagination>
+        }
+      </div>
+    }
+
+    <!-- ── Stock Tab ──────────────────────────────────────── -->
+    @if (activeTab === 'stock') {
+      <app-shop-stock [shopId]="shopId" />
+    }
+
+  </div>
+}

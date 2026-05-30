@@ -1,0 +1,156 @@
+<app-modal [isOpen]="isOpen" (close)="closeModal()" className="max-w-5xl">
+  <div class="p-4">
+    <!-- Header -->
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">الكاشير</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">معالجة المبيعات</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="rounded-lg bg-gray-100 px-3 py-2 dark:bg-gray-800">
+          <span class="text-sm text-gray-500 dark:text-gray-400">عدد العناصر: </span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ cartCount }}</span>
+        </div>
+        <div class="rounded-lg bg-brand-50 px-3 py-2 dark:bg-brand-900/20">
+          <span class="text-sm text-gray-500 dark:text-gray-400">الإجمالي: </span>
+          <span class="font-medium text-brand-600 dark:text-brand-400">{{ formatCurrency(cartTotal) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <!-- Products Section -->
+      <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="border-b border-gray-200 p-4 dark:border-gray-800">
+          <div class="relative">
+            <button class="absolute top-1/2 left-4 -translate-y-1/2 text-gray-500" type="button">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </button>
+            <input
+              type="text"
+              placeholder="ابحث عن منتج..."
+              class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-11 pr-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+              [value]="searchTerm"
+              (input)="onSearchChange($event.target.value)"
+            />
+          </div>
+        </div>
+        <div class="max-h-80 overflow-y-auto p-4">
+          <div class="grid grid-cols-2 gap-2">
+            @for (product of filteredProducts; track product.id) {
+              <button
+                (click)="addToCart(product)"
+                class="rounded-lg border border-gray-200 p-3 text-right transition hover:border-brand-300 hover:bg-brand-50 dark:border-gray-700 dark:hover:bg-brand-900/20"
+              >
+                <div class="font-medium text-gray-800 dark:text-white/90">{{ product.name }}</div>
+                <div class="text-sm text-gray-500">{{ product.sku }}</div>
+                <div class="mt-1 font-medium text-brand-600">{{ formatCurrency(product.price) }}</div>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Section -->
+      <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="border-b border-gray-200 p-4 dark:border-gray-800">
+          <h4 class="font-medium text-gray-800 dark:text-white/90">سلة المشتريات</h4>
+        </div>
+        <div class="max-h-80 overflow-y-auto">
+          @if (cart.length === 0) {
+            <div class="p-8 text-center text-gray-500">
+              <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+              <p class="mt-2">السلة فارغة</p>
+            </div>
+          } @else {
+            <table class="w-full">
+              <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
+                <tr>
+                  <th class="p-3 text-right text-xs font-medium text-gray-500">المنتج</th>
+                  <th class="p-3 text-center text-xs font-medium text-gray-500">الكمية</th>
+                  <th class="p-3 text-left text-xs font-medium text-gray-500">السعر</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                @for (item of cart; track item.id) {
+                  <tr>
+                    <td class="p-3 text-sm text-gray-800 dark:text-white/90">{{ item.name }}</td>
+                    <td class="p-3">
+                      <div class="flex items-center justify-center gap-2">
+                        <button
+                          (click)="updateQuantity(item, -1)"
+                          class="flex h-6 w-6 items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
+                        >-</button>
+                        <span class="w-8 text-center text-sm">{{ item.quantity }}</span>
+                        <button
+                          (click)="updateQuantity(item, 1)"
+                          class="flex h-6 w-6 items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
+                        >+</button>
+                      </div>
+                    </td>
+                    <td class="p-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ formatCurrency(item.price * item.quantity) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+        @if (cart.length > 0) {
+          <div class="border-t border-gray-200 p-4 dark:border-gray-800">
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-gray-800 dark:text-white/90">الإجمالي</span>
+              <span class="text-lg font-bold text-brand-600">{{ formatCurrency(cartTotal) }}</span>
+            </div>
+            <app-button (btnClick)="onCheckout()" className="mt-3 w-full" size="md">
+              إتمام البيع
+            </app-button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Checkout Modal -->
+<app-modal [isOpen]="showCheckoutModal" (close)="showCheckoutModal = false" className="max-w-md">
+  <div class="p-4">
+    <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">إتمام البيع</h3>
+    <form [formGroup]="checkoutForm" class="space-y-4">
+      <div>
+        <app-label for="customerName">اسم العميل (اختياري)</app-label>
+        <app-input-field 
+          [value]="checkoutForm.get('customerName')?.value"
+          (valueChange)="checkoutForm.get('customerName')?.setValue($event)"
+          placeholder="أدخل اسم العميل"
+        />
+      </div>
+      <div>
+        <app-label for="customerPhone">رقم الهاتف (اختياري)</app-label>
+        <app-input-field 
+          type="number"
+          [value]="checkoutForm.get('customerPhone')?.value"
+          (valueChange)="checkoutForm.get('customerPhone')?.setValue($event)"
+          placeholder="05xxxxxxxx"
+        />
+      </div>
+      <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-gray-800 dark:text-white/90">المبلغ الإجمالي</span>
+          <span class="text-xl font-bold text-brand-600">{{ formatCurrency(cartTotal) }}</span>
+        </div>
+      </div>
+    </form>
+    <div class="mt-4 flex gap-3">
+      <app-button (btnClick)="processPayment()" size="md" className="flex-1">
+        دفع نقدي
+      </app-button>
+      <app-button (btnClick)="showCheckoutModal = false" size="md" variant="outline">
+        إلغاء
+      </app-button>
+    </div>
+  </div>
+</app-modal>

@@ -1,0 +1,162 @@
+<div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+  <!-- Header -->
+  <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+    <div class="flex items-center gap-3">
+      <button (click)="onBack()" class="flex items-center gap-2 text-gray-600 hover:text-gray-800 dark:text-gray-400">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">الفواتير</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">قائمة الفواتير</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <app-button (btnClick)="onNewInvoice()" size="sm">+ فاتورة جديدة</app-button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex items-center gap-3 border-b border-gray-200 px-5 py-3 dark:border-gray-800">
+    <div class="flex h-11 items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
+      <button
+        (click)="setStatusFilter('all')"
+        class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
+        [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': filterStatus === 'all', 'text-gray-500 dark:text-gray-400': filterStatus !== 'all'}">
+        الكل
+      </button>
+      <button
+        (click)="setStatusFilter('paid')"
+        class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
+        [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': filterStatus === 'paid', 'text-gray-500 dark:text-gray-400': filterStatus !== 'paid'}">
+        مدفوع
+      </button>
+      <button
+        (click)="setStatusFilter('pending')"
+        class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
+        [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': filterStatus === 'pending', 'text-gray-500 dark:text-gray-400': filterStatus !== 'pending'}">
+        غير مدفوع
+      </button>
+      <button
+        (click)="setStatusFilter('overdue')"
+        class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
+        [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': filterStatus === 'overdue', 'text-gray-500 dark:text-gray-400': filterStatus !== 'overdue'}">
+        متأخر
+      </button>
+    </div>
+    <div class="relative flex-1 max-w-xs">
+      <span class="absolute top-1/2 left-4 -translate-y-1/2 text-gray-500">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </span>
+      <input
+        type="text"
+        placeholder="ابحث..."
+        class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-11 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+        [value]="searchTerm"
+        (input)="onSearchChange($event.target.value)"
+      />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full table-auto">
+      <thead>
+        <tr class="border-b border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+          <th class="cursor-pointer p-4 text-right text-xs font-medium text-gray-700 dark:text-gray-400">رقم الفاتورة</th>
+          <th class="cursor-pointer p-4 text-right text-xs font-medium text-gray-700 dark:text-gray-400">العميل</th>
+          <th class="cursor-pointer p-4 text-right text-xs font-medium text-gray-700 dark:text-gray-400">التاريخ</th>
+          <th class="cursor-pointer p-4 text-right text-xs font-medium text-gray-700 dark:text-gray-400">تاريخ الاستحقاق</th>
+          <th class="p-4 text-right text-xs font-medium text-gray-700 dark:text-gray-400">عدد العناصر</th>
+          <th class="p-4 text-right text-xs font-medium text-gray-700 dark:text-gray-400">المبلغ</th>
+          <th class="p-4 text-right text-xs font-medium text-gray-700 dark:text-gray-400">الحالة</th>
+          <th class="p-4 text-right text-xs font-medium text-gray-700 dark:text-gray-400"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-x divide-y divide-gray-200 dark:divide-gray-800">
+        @for (invoice of filteredInvoices; track invoice.id) {
+          <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-900">
+            <td class="whitespace-nowrap p-4 text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{invoice.number}}
+            </td>
+            <td class="whitespace-nowrap p-4 text-sm text-gray-700 dark:text-gray-400">
+              {{invoice.customer}}
+            </td>
+            <td class="whitespace-nowrap p-4 text-sm text-gray-700 dark:text-gray-400">
+              {{invoice.date}}
+            </td>
+            <td class="whitespace-nowrap p-4 text-sm text-gray-700 dark:text-gray-400">
+              {{invoice.dueDate}}
+            </td>
+            <td class="whitespace-nowrap p-4 text-sm text-gray-700 dark:text-gray-400">
+              {{invoice.items}}
+            </td>
+            <td class="whitespace-nowrap p-4 text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{formatCurrency(invoice.total)}}
+            </td>
+            <td class="whitespace-nowrap p-4">
+              <span
+                class="text-theme-xs rounded-full px-2 py-0.5 font-medium"
+                [ngClass]="{
+                  'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500': invoice.status === 'paid',
+                  'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-500': invoice.status === 'pending',
+                  'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500': invoice.status === 'overdue'
+                }">
+                {{getStatusLabel(invoice.status)}}
+              </span>
+            </td>
+            <td class="whitespace-nowrap p-4">
+              <div class="relative flex justify-center">
+                <app-table-dropdown>
+                  <div dropdown-button>
+                    <button class="text-gray-500 dark:text-gray-400">
+                      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div dropdown-content>
+                    <button (click)="onViewInvoice(invoice)" class="flex w-full rounded-lg px-3 py-2 text-right text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5">
+                      عرض التفاصيل
+                    </button>
+                    <button class="flex w-full rounded-lg px-3 py-2 text-right text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5">
+                      طباعة
+                    </button>
+                    <button class="flex w-full rounded-lg px-3 py-2 text-right text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-700">
+                      حذف
+                    </button>
+                  </div>
+                </app-table-dropdown>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="flex items-center justify-between border-t border-gray-200 px-5 py-4 dark:border-gray-800">
+    <div>
+      <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
+        عرض 1 إلى {{filteredInvoices.length}} من {{filteredInvoices.length}} فاتورة
+      </span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white">1</span>
+      <button class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,78 @@
+<app-loading [loading]="loading"></app-loading>
+
+@if (supply) {
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <a routerLink="/dashboard/stock" class="text-sm text-gray-400 hover:text-brand-500 transition-colors">المخزون</a>
+        <span class="text-gray-300 dark:text-gray-600">/</span>
+        <span class="text-sm text-gray-600 dark:text-gray-400">توريد #{{ supply.id }}</span>
+      </div>
+      <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">تفاصيل التوريد</h2>
+    </div>
+    <app-button [routerLink]="['/dashboard/stock/supplies/edit', supply.id]" variant="outline" size="sm">تعديل</app-button>
+  </div>
+
+  <!-- Header card -->
+  <div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] p-6 mb-5">
+    <dl class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+      <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4">
+        <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">المورد</dt>
+        <dd class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ supply.supplier?.name }}</dd>
+        <dd class="text-xs text-gray-500 font-mono mt-0.5">{{ supply.supplier?.phone }}</dd>
+      </div>
+      <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4">
+        <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">التاريخ</dt>
+        <dd class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ supply.date | date:'longDate' }}</dd>
+      </div>
+      <div class="rounded-xl border border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-4">
+        <dt class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2">طريقة الدفع</dt>
+        <dd>
+          <app-badge variant="light" [color]="supply.payment_method === 'debt' ? 'warning' : 'success'" size="sm">
+            {{ supply.payment_method === 'debt' ? 'آجل' : 'فوري' }}
+          </app-badge>
+        </dd>
+      </div>
+    </dl>
+  </div>
+
+  <!-- Items table -->
+  <div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-white/[0.05] flex items-center justify-between">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">الأصناف</h3>
+      <span class="text-sm text-gray-500 dark:text-gray-400">{{ supply.items?.length || 0 }} صنف</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-white/[0.03]">
+          <tr>
+            <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">المنتج</th>
+            <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الوحدة</th>
+            <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الكمية</th>
+            <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">سعر الوحدة</th>
+            <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          @for (item of supply.items; track item.id) {
+            <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+              <td class="px-5 py-3.5 font-medium text-gray-800 dark:text-white/90">{{ item.product?.name }}</td>
+              <td class="px-5 py-3.5 text-gray-500 dark:text-gray-400">{{ item.product?.scalar }}</td>
+              <td class="px-5 py-3.5 text-gray-600 dark:text-gray-300 font-mono">{{ item.quantity }}</td>
+              <td class="px-5 py-3.5 text-gray-600 dark:text-gray-300 font-mono">{{ item.unit_price | number:'1.2-2' }}</td>
+              <td class="px-5 py-3.5 font-semibold text-gray-800 dark:text-white/90 font-mono">
+                {{ item.quantity * item.unit_price | number:'1.2-2' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+        <tfoot class="bg-gray-50 dark:bg-white/[0.02]">
+          <tr>
+            <td colspan="4" class="px-5 py-3.5 text-sm font-semibold text-gray-700 dark:text-gray-300 text-left">الإجمالي الكلي</td>
+            <td class="px-5 py-3.5 text-base font-bold font-mono text-gray-800 dark:text-white/90">{{ calcTotal() | number:'1.2-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+}

@@ -1,0 +1,79 @@
+
+<app-loading [loading]="loading"></app-loading>
+
+<app-component-card 
+    title="تعديل الفئه"
+    description="قم بتعديل بيانات الفئه المطلوبة في الحقول أدناه."
+>  
+@if (alert.show) {
+    <app-alert  [message]="alert.message"></app-alert>
+}
+<form [formGroup]="categoryForm">
+    <div class="mb-2">
+        <app-label for="name">اسم الفئه</app-label>
+        <app-input-field [value]="categoryForm.get('name')?.value" [error]="!!(categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched)" (valueChange)="categoryForm.get('name')?.setValue($event)" label="Username" placeholder="" />
+        <app-form-error [control]="categoryForm.get('name')"></app-form-error>
+     
+        
+    </div>
+    
+
+    <div class="mb-2">
+        <app-label>ضمن (اختيارى)</app-label>
+        <app-select  placeholder="اختر النوع" [value]="categoryForm.get('parent_id')?.value"  [options]="parentCategories" (valueChange)="categoryForm.get('parent_id')?.setValue($event)"></app-select>
+         <app-form-error [control]="categoryForm.get('parent_id')"></app-form-error>
+    </div>
+
+    <div class="mb-2">
+        <app-label>الصوره (اختيارى)</app-label>
+       
+         <app-file-input (change)="imageSelected($event)"></app-file-input>
+         @if (imageUrl != null && imageUrl != undefined && imageUrl != '') {
+            
+           <!-- making modal to preview the image when button clicked -->
+           
+            <div class="mt-2">
+                <app-button (btnClick)="showImageModal = true" size="sm" variant="outline">عرض الصوره الحاليه</app-button>
+            </div>
+
+            <app-modal   className="max-w-[700px] m-4" [isOpen]="showImageModal" [isFullscreen]="false"  (close)="showImageModal = false">
+                
+                <div class="p-4">
+                    <h2 class="text-lg font-semibold mb-4">الصوره الحاليه</h2>
+                    <img [src]="imageUrl" alt="Current Category Image" class="size-5rounded">
+                </div>
+
+            </app-modal>
+
+           
+                
+
+         }
+         
+    </div>
+
+    <div class="mb-2">
+        <app-label>(اختيارى) وصف الفئه</app-label>
+        <app-text-area placeholder="" [value]="categoryForm.get('description')?.value" [error]="!!(categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched)" (valueChange)="categoryForm.get('description')?.setValue($event)"></app-text-area>
+         <app-form-error [control]="categoryForm.get('description')"></app-form-error>
+    </div>
+
+    <div class="mb-2">
+        <app-label>الحد الأدنى لسعر البيع</app-label>
+        <app-input-field
+          type="number"
+          [value]="categoryForm.get('minimum_sell_price')?.value"
+          [error]="!!(categoryForm.get('minimum_sell_price')?.invalid && categoryForm.get('minimum_sell_price')?.touched)"
+          (valueChange)="categoryForm.get('minimum_sell_price')?.setValue($event)"
+          placeholder="0.00" />
+        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">أدنى سعر يُسمح ببيع المنتجات بهذه الفئة — إذا بيع بأقل يحتاج موافقة مدير</p>
+        <app-form-error [control]="categoryForm.get('minimum_sell_price')"></app-form-error>
+    </div>
+</form>
+  
+    <div>
+        <app-button (btnClick)="onSubmit()" size="md" >تحديث</app-button>
+           
+    </div>
+  
+</app-component-card>

@@ -1,0 +1,14 @@
+<button
+  type="button"
+  [ngClass]="[sizeClasses, variantClasses, disabledClasses, className].join(' ')"
+  [disabled]="disabled"
+  (click)="onClick($event)"
+>
+  @if (startIcon) {
+    <span class="flex items-center shrink-0" [innerHTML]="startIcon | safeHtml"></span>
+  }
+  <ng-content></ng-content>
+  @if (endIcon) {
+    <span class="flex items-center shrink-0" [innerHTML]="endIcon | safeHtml"></span>
+  }
+</button>

@@ -1,0 +1,138 @@
+<app-loading [loading]="loading || actionLoading"></app-loading>
+
+<!-- Return / Transfer Modal -->
+<app-modal [isOpen]="showModal" (close)="showModal = false">
+  <div class="p-6">
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">
+      {{ mode === 'return' ? 'إرجاع للمستودع' : 'نقل لفرع آخر' }}
+    </h3>
+
+    @if (selectedGoods) {
+      <div class="mb-4 p-3 rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.05]">
+        <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ selectedGoods.supply_item?.product?.name }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          الكمية المتاحة:
+          <span class="font-mono font-semibold">{{ selectedGoods.current_quantity }}</span>
+          {{ selectedGoods.supply_item?.product?.scalar }}
+        </p>
+      </div>
+
+      @if (actionError) {
+        <div class="mb-3 px-3 py-2 rounded-lg border border-error-300 bg-error-50 dark:bg-error-500/10 dark:border-error-500/30 text-sm text-error-600 dark:text-error-400">
+          {{ actionError }}
+        </div>
+      }
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الكمية</label>
+          <input
+            type="number"
+            [(ngModel)]="transferQty"
+            [max]="selectedGoods.current_quantity"
+            min="0.001"
+            step="0.001"
+            placeholder="0"
+            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+          />
+        </div>
+
+        @if (mode === 'transfer') {
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الفرع الوجهة</label>
+            <select
+              [(ngModel)]="transferShopId"
+              class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+            >
+              <option [value]="null" disabled>اختر الفرع</option>
+              @for (shop of shops; track shop.id) {
+                <option [value]="shop.id">{{ shop.name }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+
+      <div class="flex gap-3 mt-5">
+        <app-button
+          (btnClick)="doAction()"
+          [disabled]="!transferQty || (mode === 'transfer' && !transferShopId) || actionLoading"
+        >
+          {{ mode === 'return' ? 'إرجاع للمستودع' : 'تأكيد النقل' }}
+        </app-button>
+        <app-button variant="outline" (btnClick)="showModal = false">إلغاء</app-button>
+      </div>
+    }
+  </div>
+</app-modal>
+
+<div>
+  <!-- Search toolbar -->
+  <div class="flex items-center px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
+    <div class="relative w-full sm:w-64">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        </svg>
+      </span>
+      <input
+        type="text"
+        placeholder="بحث عن منتج..."
+        (input)="setSearch($event.target.value)"
+        class="h-9 rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm placeholder:text-gray-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/10 focus:outline-none dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90 w-full"
+      />
+    </div>
+  </div>
+
+  @if (!loading && result.data.length === 0) {
+    <div class="text-center py-14 text-gray-400 dark:text-gray-600">
+      <svg class="w-10 h-10 mx-auto mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+      </svg>
+      <p class="text-sm">لا يوجد مخزون في هذا الفرع</p>
+    </div>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="ds-table">
+        <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+          <tr>
+            <th class="ds-th">المنتج</th>
+            <th class="ds-th">الوحدة</th>
+            <th class="ds-th">الكمية الأصلية</th>
+            <th class="ds-th">الكمية الحالية</th>
+            <th class="ds-th">سعر الوحدة</th>
+            <th class="ds-th text-center">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (goods of result.data; track goods.id) {
+            <tr class="ds-tr">
+              <td class="ds-td font-medium text-gray-800 dark:text-white/90">{{ goods.supply_item?.product?.name }}</td>
+              <td class="ds-td text-gray-500 dark:text-gray-400">{{ goods.supply_item?.product?.scalar }}</td>
+              <td class="ds-td font-mono text-gray-600 dark:text-gray-300">{{ goods.supply_item?.quantity }}</td>
+              <td class="ds-td">
+                <span class="font-mono font-semibold"
+                  [ngClass]="isLow(goods) ? 'text-error-500 dark:text-error-400' : 'text-gray-800 dark:text-white/90'">
+                  {{ goods.current_quantity }}
+                </span>
+                @if (isLow(goods)) {
+                  <span class="mr-1.5 inline-flex items-center rounded-full bg-error-50 px-2 py-0.5 text-xs font-medium text-error-600 dark:bg-error-500/10 dark:text-error-400">منخفض</span>
+                }
+              </td>
+              <td class="ds-td font-mono text-gray-600 dark:text-gray-300">{{ goods.supply_item?.unit_price | number:'1.2-2' }}</td>
+              <td class="ds-td">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button (click)="openReturn(goods)"
+                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-white/[0.04] transition-colors">إرجاع للمستودع</button>
+                  <button (click)="openTransfer(goods)"
+                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10 transition-colors">نقل لفرع آخر</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [paginationResult]="result" (pageChange)="loadStock($event)"></app-pagination>
+  }
+</div>

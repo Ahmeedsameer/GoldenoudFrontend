@@ -1,0 +1,98 @@
+
+<app-loading [loading]="loading"></app-loading>
+
+<app-component-card 
+    title="انشاء مستخدم جديد"
+    description="قم بإنشاء مستخدم جديد عن طريق إدخال البيانات المطلوبة في الحقول أدناه."
+>  
+@if (alert.show) {
+    <app-alert  [message]="alert.message"></app-alert>
+}
+<form [formGroup]="userForm">
+    <div class="mb-2">
+        <app-label for="username">اسم المستخدم</app-label>
+        <app-input-field [value]="userForm.get('name')?.value" [error]="!!(userForm.get('name')?.invalid && userForm.get('name')?.touched)" (valueChange)="userForm.get('name')?.setValue($event)" label="Username" placeholder="" />
+        <app-form-error [control]="userForm.get('name')"></app-form-error>
+     
+        
+    </div>
+    
+    <div class="mb-2">
+        <app-label>البريد الالكترونى</app-label>
+        <app-input-field [value]="userForm.get('email')?.value" [error]="!!(userForm.get('email')?.invalid && userForm.get('email')?.touched)" (valueChange)="userForm.get('email')?.setValue($event)" placeholder="" />
+        <app-form-error [control]="userForm.get('email')"></app-form-error>
+        
+      
+    </div>
+
+    <div class="mb-2">
+        <app-label>رقم الهاتف</app-label>
+        <app-input-field [value]="userForm.get('phone')?.value" [error]="!!(userForm.get('phone')?.invalid && userForm.get('phone')?.touched)" (valueChange)="userForm.get('phone')?.setValue($event)" placeholder="" />
+        <app-form-error [control]="userForm.get('phone')"></app-form-error>
+        
+      
+    </div>
+
+    <div class="mb-2">
+        <app-label>نوع المستخدم</app-label>
+        <app-select [value]="userForm.get('role')?.value" (valueChange)="userForm.get('role')?.setValue($event)" [options]="userTypes"></app-select>
+        <app-form-error [control]="userForm.get('role')"></app-form-error>
+        
+      
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-2">
+        <div>
+        
+        
+            <app-time-picker label="بداية الشيفت" [defaultTime]="userForm.get('shift_start')?.value"
+                (valueChange)="userForm.get('shift_start')?.setValue($event)" placeholder="اختر وقت البدايه"> </app-time-picker>
+        
+            <app-form-error [control]="userForm.get('shift_start')"></app-form-error>
+        
+        
+        </div>
+        
+        <div>
+        
+        
+            <app-time-picker label="نهاية الشيفت" [defaultTime]="userForm.get('shift_end')?.value"
+                (valueChange)="userForm.get('shift_end')?.setValue($event)" placeholder="اختر وقت النهايه"> </app-time-picker>
+        
+            <app-form-error [control]="userForm.get('shift_end')"></app-form-error>
+        
+        
+        </div>
+        
+        </div>
+    
+
+
+
+    <div class="grid grid-cols-2 gap-3 mb-2">
+        <div>
+            <app-label>كلمة السر</app-label>
+            <app-input-field [value]="userForm.get('password')?.value" [error]="!!(userForm.get('password')?.invalid && userForm.get('password')?.touched)" (valueChange)="userForm.get('password')?.setValue($event)" type="password" placeholder="" />
+        <app-form-error [control]="userForm.get('password')"></app-form-error>
+            
+            
+        </div>
+        
+        <div class="mb-2">
+            <app-label>اعد كلمة السر</app-label>
+            <app-input-field [value]="userForm.get('coPassword')?.value" [error]="!!(userForm.get('coPassword')?.invalid && userForm.get('coPassword')?.touched)" (valueChange)="userForm.get('coPassword')?.setValue($event)" type="password" placeholder="" />
+        <app-form-error [control]="userForm.get('coPassword')"></app-form-error>
+            
+          
+        </div>
+        
+    
+    </div>
+</form>
+  
+    <div>
+        <app-button (btnClick)="onSubmit()" size="md" >انشاء</app-button>
+           
+    </div>
+  
+</app-component-card>

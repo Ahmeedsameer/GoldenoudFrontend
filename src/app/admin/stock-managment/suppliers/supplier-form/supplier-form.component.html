@@ -1,0 +1,52 @@
+<app-loading [loading]="pageLoading || loading"></app-loading>
+
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <div class="flex items-center gap-2 mb-1">
+      <a routerLink="/dashboard/stock" class="text-sm text-gray-400 hover:text-brand-500 transition-colors">المخزون</a>
+      <span class="text-gray-300 dark:text-gray-600">/</span>
+      <span class="text-sm text-gray-600 dark:text-gray-400">{{ isEdit ? 'تعديل مورد' : 'مورد جديد' }}</span>
+    </div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">{{ isEdit ? 'تعديل بيانات المورد' : 'إضافة مورد جديد' }}</h2>
+  </div>
+</div>
+
+<app-component-card [title]="isEdit ? 'تعديل المورد' : 'بيانات المورد'">
+  @if (alert.show) {
+    <div class="mb-4">
+      <app-alert
+        [variant]="alert.type === 'success' ? 'success' : 'error'"
+        [message]="alert.message"
+      ></app-alert>
+    </div>
+  }
+
+  <form [formGroup]="form" class="space-y-5" novalidate>
+    <div>
+      <app-label>اسم المورد <span class="text-error-500">*</span></app-label>
+      <app-input-field
+        [value]="form.get('name')?.value"
+        (valueChange)="form.get('name')?.setValue($event)"
+        placeholder="اسم المورد"
+        type="text"
+      ></app-input-field>
+      <app-form-error [control]="form.get('name')!"></app-form-error>
+    </div>
+
+    <div>
+      <app-label>رقم الهاتف <span class="text-error-500">*</span></app-label>
+      <app-input-field
+        [value]="form.get('phone')?.value"
+        (valueChange)="form.get('phone')?.setValue($event)"
+        placeholder="05xxxxxxxx"
+        type="text"
+      ></app-input-field>
+      <app-form-error [control]="form.get('phone')!"></app-form-error>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <app-button (btnClick)="onSubmit()" [disabled]="loading">{{ isEdit ? 'حفظ التعديلات' : 'إضافة المورد' }}</app-button>
+      <app-button routerLink="/dashboard/stock" variant="outline">إلغاء</app-button>
+    </div>
+  </form>
+</app-component-card>

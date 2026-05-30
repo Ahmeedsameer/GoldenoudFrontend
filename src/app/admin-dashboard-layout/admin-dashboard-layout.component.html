@@ -1,0 +1,22 @@
+<div class="min-h-screen" style="background-color: var(--body-bg);">
+  <!-- Sidebar -->
+  <app-side-bar [navItems]="navItems"></app-side-bar>
+  <app-backdrop></app-backdrop>
+
+  <!-- Main content area -->
+  <div
+    class="flex flex-col min-h-screen transition-all duration-300 ease-in-out"
+    [ngClass]="{
+      'xl:ml-[260px]':  (isExpanded$ | async) || (isHovered$ | async),
+      'xl:ml-[72px]':  !(isExpanded$ | async) && !(isHovered$ | async)
+    }"
+  >
+    <!-- Header -->
+    <app-header />
+
+    <!-- Page content -->
+    <main class="flex-1 p-4 md:p-6 max-w-screen-2xl w-full mx-auto">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

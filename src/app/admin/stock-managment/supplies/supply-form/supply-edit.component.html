@@ -1,0 +1,108 @@
+<app-loading [loading]="pageLoading || loading"></app-loading>
+
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <div class="flex items-center gap-2 mb-1">
+      <a routerLink="/dashboard/stock" class="text-sm text-gray-400 hover:text-brand-500 transition-colors">المخزون</a>
+      <span class="text-gray-300 dark:text-gray-600">/</span>
+      <span class="text-sm text-gray-600 dark:text-gray-400">تعديل توريد #{{ supplyId }}</span>
+    </div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">تعديل بيانات التوريد</h2>
+  </div>
+</div>
+
+@if (alert.show) {
+  <div class="mb-4 px-4 py-3 rounded-lg border border-error-300 bg-error-50 text-sm text-error-700 dark:bg-error-500/10 dark:border-error-500/30 dark:text-error-400">
+    {{ alert.message }}
+  </div>
+}
+
+<app-component-card title="بيانات التوريد">
+  <form [formGroup]="form" class="space-y-5" novalidate>
+    <!-- Supplier -->
+    <div>
+      <app-label>المورد <span class="text-error-500">*</span></app-label>
+      <select
+        formControlName="supplier_id"
+        class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+      >
+        <option value="" disabled>اختر المورد</option>
+        @for (s of suppliers; track s.id) {
+          <option [value]="s.id">{{ s.name }} — {{ s.phone }}</option>
+        }
+      </select>
+      <app-form-error [control]="form.get('supplier_id')!"></app-form-error>
+    </div>
+
+    <!-- Date -->
+    <div>
+      <app-label>التاريخ <span class="text-error-500">*</span></app-label>
+      <input
+        type="date"
+        formControlName="date"
+        class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+      />
+      <app-form-error [control]="form.get('date')!"></app-form-error>
+    </div>
+
+    <!-- Payment method -->
+    <div>
+      <app-label>طريقة الدفع <span class="text-error-500">*</span></app-label>
+      <div class="flex gap-3 mt-1">
+        <button
+          type="button"
+          (click)="setPaymentMethod('immediate')"
+          class="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors"
+          [class]="form.get('payment_method')?.value === 'immediate'
+            ? 'border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
+            : 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'"
+        >فوري</button>
+        <button
+          type="button"
+          (click)="setPaymentMethod('debt')"
+          class="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors"
+          [class]="form.get('payment_method')?.value === 'debt'
+            ? 'border-warning-500 bg-warning-50 text-warning-600 dark:bg-warning-500/10 dark:text-warning-400'
+            : 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'"
+        >آجل</button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <app-button (btnClick)="onSubmit()" [disabled]="loading">حفظ التعديلات</app-button>
+      <app-button [routerLink]="['/dashboard/stock/supplies/show', supplyId]" variant="outline">إلغاء</app-button>
+    </div>
+  </form>
+</app-component-card>
+
+<!-- Read-only items section -->
+@if (supply?.items?.length) {
+  <div class="mt-6 rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-white/[0.05] flex items-center gap-3">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">الأصناف (للقراءة فقط)</h3>
+      <span class="text-xs text-gray-400 dark:text-gray-500">لا يمكن تعديل الأصناف بعد الإنشاء</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-white/[0.03]">
+          <tr>
+            <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">المنتج</th>
+            <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الوحدة</th>
+            <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الكمية</th>
+            <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">سعر الوحدة</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          @for (item of supply!.items; track item.id) {
+            <tr class="opacity-70">
+              <td class="px-5 py-3 text-gray-700 dark:text-gray-300">{{ item.product?.name }}</td>
+              <td class="px-5 py-3 text-gray-500">{{ item.product?.scalar }}</td>
+              <td class="px-5 py-3 font-mono text-gray-600 dark:text-gray-300">{{ item.quantity }}</td>
+              <td class="px-5 py-3 font-mono text-gray-600 dark:text-gray-300">{{ item.unit_price | number:'1.2-2' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

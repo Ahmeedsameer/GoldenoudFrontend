@@ -1,0 +1,29 @@
+<div [ngClass]="variantClasses.container">
+  <div class="flex items-start gap-3">
+
+    <!-- Icon -->
+    <div class="-mt-0.5 shrink-0" [ngClass]="variantClasses.icon" [innerHTML]="iconSvg | safeHtml"></div>
+
+    <!-- Content -->
+    <div class="flex-1 min-w-0">
+      @if (title) {
+        <h4 class="mb-1 text-sm font-semibold" style="color: rgba(255,255,255,0.88);">
+          {{ title }}
+        </h4>
+      }
+      <p class="text-sm leading-relaxed" style="color: rgba(255,255,255,0.55);">
+        {{ message }}
+      </p>
+      @if (showLink) {
+        <a
+          [routerLink]="linkHref"
+          class="inline-block mt-2 text-xs font-medium underline underline-offset-2 transition-opacity hover:opacity-80"
+          style="color: rgba(232,210,109,0.72);"
+        >
+          {{ linkText }}
+        </a>
+      }
+    </div>
+
+  </div>
+</div>

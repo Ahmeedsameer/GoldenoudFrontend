@@ -1,0 +1,176 @@
+<app-loading [loading]="loading || pageLoading"></app-loading>
+
+<app-component-card
+  [title]="isEdit ? 'تعديل بيانات الفرع' : 'إنشاء فرع جديد'"
+  desc="قم بإدخال بيانات الفرع في الحقول أدناه."
+>
+
+  @if (alert.show) {
+    <div class="mb-4">
+      <app-alert
+        [variant]="alert.type === 'success' ? 'success' : 'error'"
+        [message]="alert.message"
+      ></app-alert>
+    </div>
+  }
+
+  <form [formGroup]="shopForm" class="mt-4">
+
+    <!-- Name -->
+    <div class="mb-4">
+      <app-label for="name">اسم الفرع</app-label>
+      <app-input-field
+        [value]="shopForm.get('name')?.value"
+        [error]="!!(shopForm.get('name')?.invalid && shopForm.get('name')?.touched)"
+        (valueChange)="shopForm.get('name')?.setValue($event)"
+        placeholder="مثال: فرع القاهرة"
+      />
+      <app-form-error [control]="shopForm.get('name')"></app-form-error>
+    </div>
+
+    <!-- Address -->
+    <div class="mb-4">
+      <app-label for="address">العنوان</app-label>
+      <app-input-field
+        [value]="shopForm.get('address')?.value"
+        [error]="!!(shopForm.get('address')?.invalid && shopForm.get('address')?.touched)"
+        (valueChange)="shopForm.get('address')?.setValue($event)"
+        placeholder="مثال: 15 شارع التحرير، القاهرة"
+      />
+      <app-form-error [control]="shopForm.get('address')"></app-form-error>
+    </div>
+
+    <!-- Username with live availability check -->
+    <div class="mb-4">
+      <app-label for="username">اسم المستخدم</app-label>
+      <div class="relative">
+        <app-input-field
+          [value]="shopForm.get('username')?.value"
+          [error]="!!(shopForm.get('username')?.invalid && shopForm.get('username')?.touched)"
+          [success]="usernameAvailable === true"
+          (valueChange)="onUsernameChange($event)"
+          placeholder="shop_username"
+        />
+        <!-- Live indicator -->
+        <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+          @if (usernameChecking) {
+            <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          } @else if (usernameAvailable === true) {
+            <svg class="h-4 w-4 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          } @else if (usernameAvailable === false) {
+            <svg class="h-4 w-4 text-error-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          }
+        </div>
+      </div>
+      <app-form-error [control]="shopForm.get('username')"></app-form-error>
+      @if (shopForm.get('username')?.hasError('usernameTaken')) {
+        <small class="text-red-500 block mt-1">اسم المستخدم مستخدم بالفعل.</small>
+      }
+      @if (usernameAvailable === true) {
+        <small class="text-success-600 block mt-1">اسم المستخدم متاح ✓</small>
+      }
+    </div>
+
+    <!-- Password -->
+    <div class="mb-4">
+      <app-label for="password">
+        {{ isEdit ? 'كلمة المرور (اتركها فارغة إن لم ترد تغييرها)' : 'كلمة المرور' }}
+      </app-label>
+      <app-input-field
+        type="password"
+        [value]="shopForm.get('password')?.value"
+        [error]="!!(shopForm.get('password')?.invalid && shopForm.get('password')?.touched)"
+        (valueChange)="shopForm.get('password')?.setValue($event)"
+        placeholder="••••••"
+      />
+      <app-form-error [control]="shopForm.get('password')"></app-form-error>
+    </div>
+
+    <!-- Status -->
+    <div class="mb-4">
+      <app-label>الحالة</app-label>
+      <app-select
+        [options]="statusOptions"
+        [value]="shopForm.get('status')?.value"
+        (valueChange)="shopForm.get('status')?.setValue($event)"
+        placeholder="اختر الحالة"
+      ></app-select>
+    </div>
+
+    <!-- Manager typeahead picker -->
+    <div class="mb-6">
+      <app-label>المدير (اختياري)</app-label>
+
+      @if (selectedManager) {
+        <!-- Selected manager card -->
+        <div class="flex items-center gap-3 p-3 rounded-lg border border-success-300 bg-success-50 dark:bg-success-500/10 dark:border-success-500/30">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-success-100 dark:bg-success-500/20 shrink-0">
+            <svg class="w-5 h-5 text-success-600 dark:text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-800 dark:text-white/90 truncate">{{ selectedManager.name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ selectedManager.email }}</p>
+          </div>
+          <button type="button" (click)="clearManager()"
+            class="shrink-0 p-1 rounded-full text-gray-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      } @else {
+        <!-- Search input + dropdown -->
+        <div class="relative">
+          <input
+            type="text"
+            [value]="managerSearch"
+            (input)="onManagerSearchChange($event.target.value)"
+            (focus)="showManagerDropdown = true"
+            placeholder="ابحث عن مدير... (أدخل حرفين على الأقل)"
+            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700 dark:placeholder:text-white/30"
+          />
+          @if (managerSearchLoading) {
+            <div class="absolute left-3 top-1/2 -translate-y-1/2">
+              <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+            </div>
+          }
+          @if (showManagerDropdown && managerResults.length > 0) {
+            <div class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
+              @for (manager of managerResults; track manager.id) {
+                <button
+                  type="button"
+                  (click)="selectManager(manager)"
+                  class="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-white/5 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
+                >
+                  <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ manager.name }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ manager.email }} &middot; {{ manager.role }}</p>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Submit actions -->
+    <div class="flex gap-3">
+      <app-button (btnClick)="onSubmit()" size="md">
+        {{ isEdit ? 'حفظ التعديلات' : 'إنشاء الفرع' }}
+      </app-button>
+      <app-button [routerLink]="['/dashboard/shops']" variant="outline" size="md">إلغاء</app-button>
+    </div>
+
+  </form>
+</app-component-card>

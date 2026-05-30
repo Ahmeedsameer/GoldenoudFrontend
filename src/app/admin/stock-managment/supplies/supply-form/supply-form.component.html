@@ -1,0 +1,238 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <div class="flex items-center gap-2 mb-1">
+      <a routerLink="/dashboard/stock" class="text-sm text-gray-400 hover:text-brand-500 transition-colors">المخزون</a>
+      <span class="text-gray-300 dark:text-gray-600">/</span>
+      <span class="text-sm text-gray-600 dark:text-gray-400">توريد جديد</span>
+    </div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">إضافة توريد جديد</h2>
+  </div>
+</div>
+
+<!-- Step indicator -->
+<div class="flex items-center gap-3 mb-6">
+  <div class="flex items-center gap-2">
+    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold"
+      [class]="step === 1 ? 'bg-brand-500 text-white' : 'bg-success-100 text-success-600 dark:bg-success-500/20 dark:text-success-400'">
+      @if (step === 2) {
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      } @else {
+        1
+      }
+    </div>
+    <span class="text-sm font-medium" [class]="step === 1 ? 'text-brand-500' : 'text-gray-500 dark:text-gray-400'">بيانات التوريد</span>
+  </div>
+  <div class="flex-1 h-px bg-gray-200 dark:bg-white/[0.05]"></div>
+  <div class="flex items-center gap-2">
+    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold"
+      [class]="step === 2 ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400'">
+      2
+    </div>
+    <span class="text-sm font-medium" [class]="step === 2 ? 'text-brand-500' : 'text-gray-500 dark:text-gray-400'">الأصناف</span>
+  </div>
+</div>
+
+@if (alert.show) {
+  <div class="mb-4 px-4 py-3 rounded-lg border text-sm"
+    [class]="alert.type === 'error'
+      ? 'border-error-300 bg-error-50 text-error-700 dark:bg-error-500/10 dark:border-error-500/30 dark:text-error-400'
+      : 'border-success-300 bg-success-50 text-success-700 dark:bg-success-500/10 dark:border-success-500/30 dark:text-success-400'">
+    {{ alert.message }}
+  </div>
+}
+
+<!-- Step 1: Header -->
+@if (step === 1) {
+  <app-component-card title="بيانات التوريد">
+    <form [formGroup]="headerForm" class="space-y-5" novalidate>
+      <!-- Supplier typeahead -->
+      <div>
+        <app-label>المورد <span class="text-error-500">*</span></app-label>
+        <div class="relative">
+          <input
+            type="text"
+            [value]="supplierQuery"
+            (input)="onSupplierInput($any($event.target).value)"
+            (blur)="closeSupplierDropdown()"
+            placeholder="ابحث باسم المورد..."
+            autocomplete="off"
+            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+          />
+          @if (showSupplierDropdown) {
+            <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
+              @for (s of supplierResults; track s.id) {
+                <li
+                  (mousedown)="selectSupplier(s)"
+                  class="flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05] text-gray-800 dark:text-white/90"
+                >
+                  <span>{{ s.name }}</span>
+                  <span class="text-xs text-gray-400 font-mono">{{ s.phone }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+        <app-form-error [control]="headerForm.get('supplier_id')!"></app-form-error>
+      </div>
+
+      <!-- Date -->
+      <div>
+        <app-label>التاريخ <span class="text-error-500">*</span></app-label>
+        <input
+          type="date"
+          formControlName="date"
+          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+        />
+        <app-form-error [control]="headerForm.get('date')!"></app-form-error>
+      </div>
+
+      <!-- Payment method -->
+      <div>
+        <app-label>طريقة الدفع <span class="text-error-500">*</span></app-label>
+        <div class="flex gap-3 mt-1">
+          <button
+            type="button"
+            (click)="setPaymentMethod('immediate')"
+            class="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors"
+            [class]="headerForm.get('payment_method')?.value === 'immediate'
+              ? 'border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
+              : 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'"
+          >
+            فوري
+          </button>
+          <button
+            type="button"
+            (click)="setPaymentMethod('debt')"
+            class="flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors"
+            [class]="headerForm.get('payment_method')?.value === 'debt'
+              ? 'border-warning-500 bg-warning-50 text-warning-600 dark:bg-warning-500/10 dark:text-warning-400'
+              : 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'"
+          >
+            آجل
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <app-button (btnClick)="goToStep2()">التالي ← الأصناف</app-button>
+        <app-button routerLink="/dashboard/stock" variant="outline">إلغاء</app-button>
+      </div>
+    </form>
+  </app-component-card>
+}
+
+<!-- Step 2: Items -->
+@if (step === 2) {
+  <app-component-card title="الأصناف">
+    <form [formGroup]="itemsForm" novalidate>
+      <div class="space-y-3 mb-5" [formArrayName]="'items'">
+        @for (item of items.controls; track $index; let i = $index) {
+          <div [formGroupName]="i" class="flex flex-wrap gap-3 items-end p-4 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+            <!-- Product typeahead -->
+            <div class="flex-1 min-w-[200px]">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">المنتج</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  [value]="productQueries[i]"
+                  (input)="onProductInput(i, $any($event.target).value)"
+                  (blur)="closeProductDropdown(i)"
+                  placeholder="ابحث عن منتج..."
+                  autocomplete="off"
+                  class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                />
+                @if (showProductDropdown[i]) {
+                  <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
+                    @for (p of productResults[i]; track p.id) {
+                      <li
+                        (mousedown)="selectProduct(i, p)"
+                        class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05] text-gray-800 dark:text-white/90"
+                      >
+                        {{ p.name }}
+                        @if (p.sku) {
+                          <span class="text-xs text-gray-400 ml-2 font-mono">{{ p.sku }}</span>
+                        }
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+            </div>
+            <!-- Quantity -->
+            <div class="w-28">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الكمية</label>
+              <input
+                type="number"
+                formControlName="quantity"
+                min="0.001"
+                step="0.001"
+                placeholder="0"
+                class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+              />
+            </div>
+            <!-- Unit price -->
+            <div class="w-32">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">سعر الوحدة</label>
+              <input
+                type="number"
+                formControlName="unit_price"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+              />
+            </div>
+            <!-- Row total -->
+            <div class="w-28">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الإجمالي</label>
+              <div class="h-10 flex items-center px-3 rounded-lg border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-gray-800 text-sm font-mono text-gray-700 dark:text-gray-300">
+                {{ rowTotal(i) | number:'1.2-2' }}
+              </div>
+            </div>
+            <!-- Remove -->
+            <button
+              type="button"
+              (click)="removeItem(i)"
+              [disabled]="items.length === 1"
+              class="h-10 w-10 flex items-center justify-center rounded-lg border border-error-200 text-error-400 hover:bg-error-50 hover:text-error-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors dark:border-error-500/30 dark:hover:bg-error-500/10"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Add row -->
+      <button
+        type="button"
+        (click)="addItem()"
+        class="flex items-center gap-2 text-sm text-brand-500 hover:text-brand-600 font-medium mb-6 transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        إضافة صنف
+      </button>
+
+      <!-- Grand total -->
+      <div class="flex justify-end mb-5">
+        <div class="flex items-center gap-4 px-5 py-3 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+          <span class="text-sm text-gray-500 dark:text-gray-400">الإجمالي الكلي</span>
+          <span class="text-xl font-bold font-mono text-gray-800 dark:text-white/90">{{ grandTotal() | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <app-button (btnClick)="onSubmit()" [disabled]="loading">حفظ التوريد</app-button>
+        <app-button variant="outline" (btnClick)="goBack()">← رجوع</app-button>
+        <app-button routerLink="/dashboard/stock" variant="outline">إلغاء</app-button>
+      </div>
+    </form>
+  </app-component-card>
+}

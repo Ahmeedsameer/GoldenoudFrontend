@@ -1,0 +1,261 @@
+<app-loading [loading]="safeLoading || list.loading || modalLoading"></app-loading>
+
+<!-- Page header -->
+<div class="mb-6">
+  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">خزنة الفرع</h2>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">رصيد الخزنة وسجل المعاملات المالية</p>
+</div>
+
+<!-- Alert -->
+@if (alert.show) {
+  <div class="mb-5">
+    <app-alert [variant]="alert.type" [message]="alert.message"></app-alert>
+  </div>
+}
+
+<!-- Balance card -->
+@if (safe) {
+  <div class="rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 p-6 mb-6 text-white">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <svg class="w-5 h-5 text-brand-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
+          </svg>
+          <span class="text-brand-100 text-sm font-medium">{{ safe.shop.name }}</span>
+        </div>
+        <p class="text-brand-200 text-xs mb-3">الرصيد الحالي</p>
+        <p class="text-5xl font-bold font-mono tracking-tight">
+          {{ safe.balance | number:'1.2-2' }}
+        </p>
+        <p class="text-brand-200 text-sm mt-1">جنيه مصري</p>
+      </div>
+      <div class="flex gap-3 sm:flex-col">
+        <button (click)="openDeposit()"
+          class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-semibold transition-colors backdrop-blur-sm">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          إيداع
+        </button>
+        <button (click)="openWithdraw()"
+          class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/30 text-white text-sm font-semibold transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+          </svg>
+          سحب
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Transactions section -->
+<div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+
+  <!-- Filters -->
+  <div class="p-5 border-b border-gray-100 dark:border-white/[0.05]">
+    <div class="flex flex-wrap gap-3">
+      <select (change)="setTypeFilter($any($event.target).value)"
+        class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+        @for (opt of typeOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+      <select (change)="setDirectionFilter($any($event.target).value)"
+        class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+        <option value="">كل الاتجاهات</option>
+        <option value="in">وارد</option>
+        <option value="out">صادر</option>
+      </select>
+      <input type="date" (change)="setDateFrom($any($event.target).value)"
+        class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+      <input type="date" (change)="setDateTo($any($event.target).value)"
+        class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full">
+      <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+        <tr>
+          <th class="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">#</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">النوع</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">الاتجاه</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">المبلغ</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">الموظف</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">الفاتورة</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">الملاحظة</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">التاريخ</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+        @for (tx of list.result.data; track tx.id) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+
+            <td class="px-5 py-4 text-sm font-mono text-gray-400">#{{ tx.id }}</td>
+
+            <td class="px-4 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [class]="typeBadgeClass(tx.type)">
+                {{ typeLabel(tx.type) }}
+              </span>
+            </td>
+
+            <td class="px-4 py-4">
+              @if (tx.direction === 'in') {
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                  </svg>
+                  وارد
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                  </svg>
+                  صادر
+                </span>
+              }
+            </td>
+
+            <td class="px-4 py-4">
+              <span class="text-sm font-bold font-mono"
+                [class]="tx.direction === 'in' ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                {{ tx.direction === 'in' ? '+' : '−' }}{{ tx.amount | number:'1.2-2' }}
+              </span>
+            </td>
+
+            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tx.user?.name || '—' }}</td>
+
+            <td class="px-4 py-4 text-sm">
+              @if (tx.invoice) {
+                <span class="inline-flex items-center gap-1 font-mono text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-white/[0.05] dark:text-gray-400">
+                  #{{ tx.invoice_id }}
+                </span>
+              } @else {
+                <span class="text-gray-300 dark:text-gray-600">—</span>
+              }
+            </td>
+
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-[180px]">
+              @if (tx.note) {
+                <span class="truncate block" [title]="tx.note">{{ tx.note }}</span>
+              } @else {
+                <span class="text-gray-300 dark:text-gray-600">—</span>
+              }
+            </td>
+
+            <td class="px-4 py-4 text-xs font-mono text-gray-400 whitespace-nowrap">
+              {{ tx.created_at | date:'yyyy/MM/dd HH:mm' }}
+            </td>
+
+          </tr>
+        }
+        @if (!list.loading && list.result.data.length === 0) {
+          <tr>
+            <td colspan="8" class="px-5 py-16 text-center">
+              <p class="text-sm text-gray-400 dark:text-gray-500">لا توجد معاملات بعد</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
+</div>
+
+
+<!-- ══ Deposit / Withdraw Modal ══════════════════════════════ -->
+<app-modal [isOpen]="showModal" (close)="showModal = false" className="max-w-md m-4">
+  <div class="p-6">
+
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+        [class]="modalMode === 'deposit'
+          ? 'bg-success-100 dark:bg-success-500/15'
+          : 'bg-error-100 dark:bg-error-500/15'">
+        @if (modalMode === 'deposit') {
+          <svg class="w-5 h-5 text-success-600 dark:text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        } @else {
+          <svg class="w-5 h-5 text-error-600 dark:text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+          </svg>
+        }
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
+          {{ modalMode === 'deposit' ? 'إيداع في الخزنة' : 'سحب من الخزنة' }}
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ safe?.shop?.name }}</p>
+      </div>
+    </div>
+
+    @if (modalError) {
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+        <p class="text-sm text-error-600 dark:text-error-400">{{ modalError }}</p>
+      </div>
+    }
+
+    <form [formGroup]="txForm" (ngSubmit)="submitModal()">
+
+      <!-- Amount -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          المبلغ <span class="text-error-500">*</span>
+        </label>
+        <div class="relative">
+          <input type="number" formControlName="amount" min="0.01" step="0.01" placeholder="0.00"
+            class="h-11 w-full rounded-lg border px-4 pr-16 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
+            [class]="txForm.get('amount')?.invalid && txForm.get('amount')?.touched
+              ? 'border-error-400 focus:border-error-400 focus:ring-error-500/20'
+              : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-400">ج.م</span>
+        </div>
+        @if (txForm.get('amount')?.invalid && txForm.get('amount')?.touched) {
+          <p class="mt-1 text-xs text-error-500">المبلغ مطلوب ويجب أن يكون أكبر من صفر</p>
+        }
+      </div>
+
+      <!-- Note (REQUIRED for manager) -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          سبب العملية <span class="text-error-500">*</span>
+        </label>
+        <textarea formControlName="note" rows="3" placeholder="اذكر سبب الإيداع أو السحب..."
+          class="w-full rounded-lg border px-4 py-2.5 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2 resize-none placeholder:text-gray-400"
+          [class]="txForm.get('note')?.invalid && txForm.get('note')?.touched
+            ? 'border-error-400 focus:border-error-400 focus:ring-error-500/20'
+            : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'">
+        </textarea>
+        @if (txForm.get('note')?.invalid && txForm.get('note')?.touched) {
+          <p class="mt-1 text-xs text-error-500">سبب العملية مطلوب</p>
+        }
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" [disabled]="modalLoading"
+          class="flex-1 h-10 rounded-lg font-semibold text-sm transition-colors text-white"
+          [class]="modalLoading
+            ? 'opacity-60 cursor-not-allowed'
+            : modalMode === 'deposit'
+              ? 'bg-success-500 hover:bg-success-600'
+              : 'bg-error-500 hover:bg-error-600'">
+          @if (modalLoading) { جاري التنفيذ... }
+          @else { {{ modalMode === 'deposit' ? 'تأكيد الإيداع' : 'تأكيد السحب' }} }
+        </button>
+        <button type="button" (click)="showModal = false" [disabled]="modalLoading"
+          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+          إلغاء
+        </button>
+      </div>
+
+    </form>
+  </div>
+</app-modal>

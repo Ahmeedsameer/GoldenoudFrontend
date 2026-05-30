@@ -1,0 +1,253 @@
+<app-loading [loading]="loading"></app-loading>
+
+<!-- ══════════════════════════════════════════════════════════════
+     GOLD SOVEREIGN — Luxury Black & Gold Split-Screen Login
+     ══════════════════════════════════════════════════════════════ -->
+<div class="lux-root">
+
+  <!-- ═══════════════════════════════════════════════════
+       LEFT PANEL — Luxury Branding
+       ═══════════════════════════════════════════════════ -->
+  <aside class="lux-panel" aria-hidden="true">
+
+    <!-- Atmospheric layers -->
+    <div class="p-grid"     aria-hidden="true"></div>
+    <div class="p-orb-a"    aria-hidden="true"></div>
+    <div class="p-orb-b"    aria-hidden="true"></div>
+    <div class="p-vignette" aria-hidden="true"></div>
+
+    <!-- Concentric decorative rings (watermark) -->
+    <div class="p-ring p-ring-1" aria-hidden="true"></div>
+    <div class="p-ring p-ring-2" aria-hidden="true"></div>
+    <div class="p-ring p-ring-3" aria-hidden="true"></div>
+
+    <!-- Branding content -->
+    <div class="panel-body">
+
+      <!-- Logo gem icon -->
+      <div class="brand-gem">
+        <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+          <path d="M16 2L2 9.5V22.5L16 30L30 22.5V9.5L16 2Z"
+            stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"
+            fill="rgba(201,168,76,0.10)"/>
+          <path d="M16 2V30M2 9.5L30 22.5M30 9.5L2 22.5"
+            stroke="currentColor" stroke-width="0.65" opacity="0.45"/>
+        </svg>
+      </div>
+
+      <!-- Main headline -->
+      <div class="panel-hl">
+        <h1 class="hl-name">Alpha<br/>Business</h1>
+        <div class="hl-rule"></div>
+        <p class="hl-tag">منصة إدارة الأعمال المتكاملة</p>
+      </div>
+
+      <!-- Key features -->
+      <ul class="feat-list" role="list">
+        <li>
+          <span class="feat-dot" aria-hidden="true"></span>
+          <span>إدارة المخزون والمبيعات</span>
+        </li>
+        <li>
+          <span class="feat-dot" aria-hidden="true"></span>
+          <span>لوحة تحكم متكاملة وشاملة</span>
+        </li>
+        <li>
+          <span class="feat-dot" aria-hidden="true"></span>
+          <span>تقارير وتحليلات متقدمة</span>
+        </li>
+      </ul>
+
+      <p class="panel-tagline">حلول أعمال بمعايير استثنائية</p>
+
+    </div>
+    <!-- /panel-body -->
+
+    <!-- Glowing right-edge separator -->
+    <div class="panel-edge" aria-hidden="true"></div>
+
+    <!-- Bottom decorative scan-lines -->
+    <div class="p-lines" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+
+  </aside>
+  <!-- /lux-panel -->
+
+
+  <!-- ═══════════════════════════════════════════════════
+       RIGHT PANEL — Sign-in Form
+       ═══════════════════════════════════════════════════ -->
+  <main class="lux-form-side">
+
+    <!-- Floating theme toggle -->
+    <div class="theme-toggle-wrap">
+      <app-theme-toggle-two />
+    </div>
+
+    <!-- Ambient glow behind card -->
+    <div class="form-ambient" aria-hidden="true"></div>
+
+    <div class="form-center">
+
+      <!-- Mobile-only logo (hidden ≥ 1024 px) -->
+      <div class="mob-logo">
+        <span class="mob-gem">
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+            <path d="M16 2L2 9.5V22.5L16 30L30 22.5V9.5L16 2Z"
+              stroke="currentColor" stroke-width="1.4" fill="rgba(201,168,76,0.1)"/>
+            <path d="M16 2V30M2 9.5L30 22.5M30 9.5L2 22.5"
+              stroke="currentColor" stroke-width="0.7" opacity="0.4"/>
+          </svg>
+        </span>
+        <span class="mob-name">Alpha Business</span>
+      </div>
+
+      <!-- ── Glassmorphic card ──────────────────────────────── -->
+      <div class="lux-card">
+
+        <!-- Gold shimmer crown accent -->
+        <div class="card-crown" aria-hidden="true"></div>
+
+        <!-- Header -->
+        <div class="card-head">
+          <h2 class="card-title">تسجيل الدخول</h2>
+          <p class="card-sub">مرحباً بعودتك — أدخل بياناتك للمتابعة</p>
+        </div>
+
+        <!-- Error bar -->
+        @if (errorMessage) {
+          <div class="err-bar" role="alert">
+            <svg class="err-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+
+        <!-- Success bar -->
+        @if (successMessage) {
+          <div class="ok-bar" role="status">
+            <svg class="ok-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>{{ successMessage }}</span>
+          </div>
+        }
+
+        <!-- Form -->
+        <form (ngSubmit)="onSignIn()" autocomplete="on" novalidate>
+
+          <!-- Email field -->
+          <div class="fld">
+            <label class="fld-label" for="g-email">البريد الإلكتروني</label>
+            <div class="fld-shell">
+              <span class="fld-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M2 8l10 7 10-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <app-input-field
+                id="g-email"
+                name="email"
+                type="email"
+                placeholder="you@company.com"
+                [value]="email"
+                (valueChange)="setEmail($event)"
+                className="g-input"
+              />
+            </div>
+          </div>
+
+          <!-- Password field -->
+          <div class="fld">
+            <div class="fld-label-row">
+              <label class="fld-label" for="g-pw">كلمة المرور</label>
+              <a routerLink="/reset-password" class="forgot-link">نسيت كلمة المرور؟</a>
+            </div>
+            <div class="fld-shell">
+              <span class="fld-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <app-input-field
+                id="g-pw"
+                name="password"
+                [type]="showPassword ? 'text' : 'password'"
+                placeholder="••••••••••"
+                [value]="password"
+                (valueChange)="setPassword($event)"
+                className="g-input g-input-pw"
+              />
+              <!-- Visibility toggle -->
+              <button
+                type="button"
+                class="pw-eye"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'"
+              >
+                @if (showPassword) {
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M4.33 3.27a.75.75 0 0 0-1.06 1.06l1.27 1.27A7.82 7.82 0 0 0 2.42 9.7a.75.75 0 0 0 0 .6 7.83 7.83 0 0 0 11.16 3.97l1.09 1.09a.75.75 0 1 0 1.06-1.06l-11.4-11.03ZM9.99 12.2a2.66 2.66 0 0 1-2.42-3.76l3.58 3.57a2.64 2.64 0 0 1-1.16.19ZM17.58 9.94a7.84 7.84 0 0 1-2.35 3.07l-1.1-1.1a6.33 6.33 0 0 0 1.9-1.97 6.32 6.32 0 0 0-6.03-3.88 6.4 6.4 0 0 0-1.63.21L7.2 4.99A7.83 7.83 0 0 1 10 4.54a7.83 7.83 0 0 1 7.58 5.4Z"/>
+                  </svg>
+                } @else {
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M10 13.86A4.16 4.16 0 0 1 5.84 9.7a4.16 4.16 0 1 1 8.32 0A4.16 4.16 0 0 1 10 13.86ZM10 4.04a7.83 7.83 0 0 0-7.58 5.42.75.75 0 0 0 0 .48A7.83 7.83 0 0 0 10 15.36a7.83 7.83 0 0 0 7.58-5.42.75.75 0 0 0 0-.48A7.83 7.83 0 0 0 10 4.04Zm0 8.5a2.66 2.66 0 1 0 0-5.32 2.66 2.66 0 0 0 0 5.32Z"/>
+                  </svg>
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember me -->
+          <div class="remember-row">
+            <app-checkbox
+              label="تذكرني"
+              [checked]="isChecked"
+              (checked)="setChecked($event)"
+            />
+          </div>
+
+          <!-- Submit button -->
+          <button
+            type="submit"
+            class="lux-btn"
+            [class.lux-btn--loading]="loading"
+            [disabled]="loading"
+          >
+            <span class="btn-halo"  aria-hidden="true"></span>
+            <span class="btn-sheen" aria-hidden="true"></span>
+            @if (loading) {
+              <svg class="lux-spinner" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3.5"/>
+                <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.37 0 0 5.37 0 12h4z"/>
+              </svg>
+              <span>جارٍ التحقق...</span>
+            } @else {
+              <span>دخول</span>
+              <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            }
+          </button>
+
+        </form>
+      </div>
+      <!-- /lux-card -->
+
+      <p class="form-caption">Alpha Business &copy; 2025 · جميع الحقوق محفوظة</p>
+
+    </div>
+    <!-- /form-center -->
+
+  </main>
+  <!-- /lux-form-side -->
+
+</div>
+<!-- /lux-root -->

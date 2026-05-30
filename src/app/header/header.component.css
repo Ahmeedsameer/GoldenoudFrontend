@@ -1,0 +1,28 @@
+/* ═══════════════════════════════════════════════════
+   HEADER — Luxury Black & Gold
+   ═══════════════════════════════════════════════════ */
+
+/* Icon button hover */
+.header-icon-btn:hover {
+  background-color: rgba(201, 168, 76, 0.10);
+  color: #E8D26D;
+}
+
+/* Search input placeholder */
+.header-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+/* Search input focus */
+.header-search-input:focus {
+  border-color: rgba(201, 168, 76, 0.50);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.08);
+  background: rgba(201, 168, 76, 0.06);
+  outline: none;
+}
+
+/* Search input hover */
+.header-search-input:hover:not(:focus) {
+  border-color: rgba(201, 168, 76, 0.28);
+  background: rgba(201, 168, 76, 0.055);
+}

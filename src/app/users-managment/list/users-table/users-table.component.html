@@ -1,0 +1,116 @@
+<div class="ds-card overflow-hidden">
+
+  <!-- ── Page header ──────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+    <div>
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">المستخدمون</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">إدارة حسابات المستخدمين وصلاحياتهم</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Search -->
+      <div class="relative">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+          </svg>
+        </span>
+        <input
+          type="text"
+          placeholder="بحث بالاسم..."
+          class="h-9 rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/10 focus:outline-none dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 w-52"
+          (change)="setNameFilter($event.target.value)"
+        />
+      </div>
+
+      <!-- Role filter -->
+      <app-select
+        placeholder="كل الأدوار"
+        [options]="userTypes"
+        (valueChange)="setTypeFilter($event)"
+      />
+    </div>
+  </div>
+
+  <!-- ── Table ─────────────────────────────────────────── -->
+  <div class="overflow-x-auto">
+    <table class="ds-table">
+      <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+        <tr>
+          <th class="ds-th">الاسم</th>
+          <th class="ds-th">البريد الإلكتروني</th>
+          <th class="ds-th">الدور</th>
+          <th class="ds-th">تاريخ الإنشاء</th>
+          <th class="ds-th text-center">الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of list.result.data; track user.id) {
+          <tr class="ds-tr">
+
+            <!-- Name + avatar -->
+            <td class="ds-td">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0"
+                  style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"
+                >
+                  {{ user.name?.charAt(0) ?? '?' }}
+                </div>
+                <span class="font-medium text-gray-800 dark:text-white/90">{{ user.name }}</span>
+              </div>
+            </td>
+
+            <!-- Email -->
+            <td class="ds-td text-gray-500 dark:text-gray-400">{{ user.email }}</td>
+
+            <!-- Role -->
+            <td class="ds-td">
+              <app-badge>{{ user.role | userRole }}</app-badge>
+            </td>
+
+            <!-- Date -->
+            <td class="ds-td text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              {{ user.createdAt | date:'mediumDate' }}
+            </td>
+
+            <!-- Actions -->
+            <td class="ds-td">
+              <div class="flex items-center justify-center gap-1">
+                <a
+                  [routerLink]="['show', user.id]"
+                  class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10 transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  عرض
+                </a>
+              </div>
+            </td>
+
+          </tr>
+        }
+
+        <!-- Empty state -->
+        @if (!list.loading && list.result.data.length === 0) {
+          <tr>
+            <td colspan="5" class="py-16">
+              <div class="flex flex-col items-center gap-2 text-center">
+                <svg class="w-10 h-10 text-gray-200 dark:text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">لا يوجد مستخدمون</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">أضف أول مستخدم لبدء الإدارة</p>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
+</div>

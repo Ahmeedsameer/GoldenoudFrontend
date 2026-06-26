@@ -1,64 +1,55 @@
-<div class="page-header">
+<div class="crud-page-head">
   <div>
     <h1 class="page-title">المخزون والتوريدات</h1>
-    <p class="page-subtitle">إدارة الموردين، التوريدات، والمخزون</p>
+    <p class="page-subtitle">إدارة الموردين، التوريدات، والمخزون الرئيسي</p>
   </div>
 </div>
 
-<div class="ds-card overflow-hidden">
-  <!-- Modern Tab bar -->
-  <div class="flex border-b border-gray-100 dark:border-white/[0.06] px-4 gap-1 pt-2">
+<div class="db-card overflow-hidden">
+
+  <!-- Tab bar -->
+  <div class="crud-tab-bar">
+
     <button
+      class="crud-tab"
+      [class.active]="activeTab === 'suppliers'"
       (click)="setTab('suppliers')"
-      class="px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all duration-150 border-b-2 -mb-px"
-      [ngClass]="activeTab === 'suppliers'
-        ? 'border-brand-500 text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-500/5'
-        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'"
     >
-      <span class="flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-        </svg>
-        الموردون
-      </span>
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+      </svg>
+      الموردون
     </button>
+
     <button
+      class="crud-tab"
+      [class.active]="activeTab === 'supplies'"
       (click)="setTab('supplies')"
-      class="px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all duration-150 border-b-2 -mb-px"
-      [ngClass]="activeTab === 'supplies'
-        ? 'border-brand-500 text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-500/5'
-        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'"
     >
-      <span class="flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-        التوريدات
-      </span>
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      التوريدات
     </button>
+
     <button
+      class="crud-tab"
+      [class.active]="activeTab === 'inventory'"
       (click)="setTab('inventory')"
-      class="px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all duration-150 border-b-2 -mb-px"
-      [ngClass]="activeTab === 'inventory'
-        ? 'border-brand-500 text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-500/5'
-        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'"
     >
-      <span class="flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
-        </svg>
-        المخزون الرئيسي
-      </span>
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+      </svg>
+      المخزون الرئيسي
     </button>
+
   </div>
 
-  @if (activeTab === 'suppliers') {
-    <app-suppliers-list />
-  }
-  @if (activeTab === 'supplies') {
-    <app-supplies-list />
-  }
-  @if (activeTab === 'inventory') {
-    <app-warehouse-inventory />
-  }
+  @if (activeTab === 'suppliers') { <app-suppliers-list /> }
+  @if (activeTab === 'supplies')  { <app-supplies-list /> }
+  @if (activeTab === 'inventory') { <app-warehouse-inventory /> }
+
 </div>

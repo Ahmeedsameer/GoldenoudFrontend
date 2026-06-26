@@ -1,55 +1,65 @@
-<div class="ds-card px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
+<div class="db-card h-full">
 
-  <!-- Header -->
-  <div class="flex flex-col gap-4 mb-5 sm:flex-row sm:items-center sm:justify-between">
+  <!-- Card Header -->
+  <div class="db-card-head">
+
     <div>
-      <h3 class="dash-chart-title">الإحصائيات</h3>
-      <p class="dash-chart-sub">أداء المبيعات والإيرادات الشهرية</p>
+      <h3 class="db-card-title">إحصائيات الأداء</h3>
+      <p class="db-card-sub">المبيعات والإيرادات على مدار العام</p>
     </div>
 
     <div class="flex items-center gap-3 flex-shrink-0">
+
       <!-- Legend -->
       <div class="hidden sm:flex items-center gap-4">
-        <div class="flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full" style="background: #E8D26D;"></span>
-          <span class="text-xs" style="color: rgba(255,255,255,0.45);">المبيعات</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full" style="background: #C9A84C; opacity:0.65;"></span>
-          <span class="text-xs" style="color: rgba(255,255,255,0.45);">الإيرادات</span>
-        </div>
+        <span class="db-legend-dot"
+          style="--dot-color: #D4AF37;"
+        >
+          <span
+            style="width:8px;height:8px;border-radius:50%;background:#D4AF37;display:inline-block;flex-shrink:0;">
+          </span>
+          المبيعات
+        </span>
+        <span class="db-legend-dot">
+          <span
+            style="width:8px;height:8px;border-radius:50%;background:#9A7B1A;opacity:0.7;display:inline-block;flex-shrink:0;">
+          </span>
+          الإيرادات
+        </span>
       </div>
 
       <!-- Date picker -->
       <div class="relative">
         <input
           #datepicker
-          class="h-9 w-full rounded-lg pl-9 pr-3 text-xs font-medium focus:outline-none focus:ring-0"
+          class="h-8 rounded-lg pl-7 pr-3 text-xs font-medium focus:outline-none focus:ring-0 cursor-pointer"
           placeholder="تحديد الفترة"
           data-class="flatpickr-right"
           readonly="readonly"
           style="
-            border: 1px solid rgba(201,168,76,0.20);
-            background: rgba(201,168,76,0.05);
-            color: rgba(201,168,76,0.72);
-            min-width: 148px;
+            border: 1px solid #EDE9DF;
+            background: #FAFAF8;
+            color: #6B7280;
+            min-width: 138px;
+            font-family: 'Inter', system-ui, sans-serif;
           "
         />
-        <span
-          class="absolute inset-0 right-auto flex items-center pointer-events-none"
-          style="left: 10px; color: rgba(201,168,76,0.55);"
-        >
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.66683 1.54199C7.08104 1.54199 7.41683 1.87778 7.41683 2.29199V3.00033H12.5835V2.29199C12.5835 1.87778 12.9193 1.54199 13.3335 1.54199C13.7477 1.54199 14.0835 1.87778 14.0835 2.29199V3.00033L15.4168 3.00033C16.5214 3.00033 17.4168 3.89576 17.4168 5.00033V7.50033V15.8337C17.4168 16.9382 16.5214 17.8337 15.4168 17.8337H4.5835C3.47893 17.8337 2.5835 16.9382 2.5835 15.8337V7.50033V5.00033C2.5835 3.89576 3.47893 3.00033 4.5835 3.00033L5.91683 3.00033V2.29199C5.91683 1.87778 6.25262 1.54199 6.66683 1.54199ZM6.66683 4.50033H4.5835C4.30735 4.50033 4.0835 4.72418 4.0835 5.00033V6.75033H15.9168V5.00033C15.9168 4.72418 15.693 4.50033 15.4168 4.50033H13.3335H6.66683ZM15.9168 8.25033H4.0835V15.8337C4.0835 16.1098 4.30735 16.3337 4.5835 16.3337H15.4168C15.693 16.3337 15.9168 16.1098 15.9168 15.8337V8.25033Z" fill="currentColor"/>
+        <span class="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
+          style="color: #C9A432;">
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M6.67 1.54a.75.75 0 0 1 .75.75v.71h5v-.71a.75.75 0 1 1 1.5 0v.71H15.4a2.08 2.08 0 0 1 2.08 2.08v2.5v8.33a2.08 2.08 0 0 1-2.08 2.08H4.58a2.08 2.08 0 0 1-2.08-2.08V7.58V5.08a2.08 2.08 0 0 1 2.08-2.08h1.34v-.71a.75.75 0 0 1 .75-.75ZM6.67 4.5H4.58c-.3 0-.54.24-.54.54v1.75h11.92V5.04a.54.54 0 0 0-.54-.54H13.92H6.67Zm7.25 3.79H3.54v7.29c0 .3.24.54.54.54h11.84c.3 0 .54-.24.54-.54V8.29Z"
+              fill="currentColor"/>
           </svg>
         </span>
       </div>
+
     </div>
   </div>
 
   <!-- Chart -->
-  <div class="max-w-full overflow-x-auto no-scrollbar">
-    <div class="min-w-[700px] xl:min-w-full">
+  <div class="db-card-body overflow-x-auto no-scrollbar">
+    <div class="min-w-[640px] xl:min-w-full">
       <apx-chart
         [series]="series"
         [chart]="chart"
@@ -66,4 +76,5 @@
       ></apx-chart>
     </div>
   </div>
+
 </div>

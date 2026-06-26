@@ -55,7 +55,21 @@ import { SupplyFormComponent } from './admin/stock-managment/supplies/supply-for
 import { SupplyEditComponent } from './admin/stock-managment/supplies/supply-form/supply-edit.component';
 import { SupplyDetailComponent } from './admin/stock-managment/supplies/supply-detail/supply-detail.component';
 import { AdminShopSafeComponent } from './admin/safe/admin-shop-safe.component';
+import { AdminSafeDetailComponent } from './admin/safe/detail/admin-safe-detail.component';
+import { SafeManagementComponent } from './admin/safe/management/safe-management.component';
+import { CurrencyManagementComponent } from './admin/safe/currencies/currency-management.component';
+import { SafeTypeManagementComponent } from './admin/safe/safe-types/safe-type-management.component';
+import { TransactionReasonManagementComponent } from './admin/safe/transaction-reasons/transaction-reason-management.component';
 import { ManagerSafeComponent } from './manager/safe/manager-safe.component';
+import { ManagerTransactionsComponent } from './manager/safe/transactions/manager-transactions.component';
+import { OverrideRequestsComponent } from './manager/override-requests/override-requests.component';
+import { ReportsComponent } from './manager/reports/reports.component';
+import { InventoryTransferComponent } from './manager/inventory-transfer/inventory-transfer.component';
+import { SafeReconciliationComponent } from './manager/safe-reconciliation/safe-reconciliation.component';
+import { AdminSalesReportComponent } from './admin/reports/sales/admin-sales-report.component';
+import { AdminFinancialReportComponent } from './admin/reports/financial/admin-financial-report.component';
+import { AdminDashboardComponent } from './admin/dashboard/admin-dashboard.component';
+import { AdminStockIntelligenceComponent } from './admin/stock/admin-stock-intelligence.component';
 
 // ── Demo pages ───────────────────────────────────────────────
 import { ShopListComponent } from './demo/components/shop-list/shop-list.component';
@@ -97,9 +111,14 @@ export const routes: Routes = [
       {
         path: 'safe',
         children: [
-          { path: 'shop/:shopId', component: AdminShopSafeComponent },
+          { path: 'shop/:shopId',  component: AdminShopSafeComponent },
+          { path: 'management',    component: SafeManagementComponent },
+          { path: ':safeId',       component: AdminSafeDetailComponent },
         ],
       },
+      { path: 'currencies',          component: CurrencyManagementComponent },
+      { path: 'safe-types',          component: SafeTypeManagementComponent },
+      { path: 'transaction-reasons', component: TransactionReasonManagementComponent },
       {
         path: 'stock',
         children: [
@@ -125,7 +144,10 @@ export const routes: Routes = [
           },
         ],
       },
-      { path: '', component: EcommerceComponent, pathMatch: 'full' },
+      { path: 'reports/sales',      component: AdminSalesReportComponent },
+      { path: 'reports/financial',  component: AdminFinancialReportComponent },
+      { path: 'stock-intelligence', component: AdminStockIntelligenceComponent },
+      { path: '', component: AdminDashboardComponent, pathMatch: 'full' },
       { path: 'calendar', component: CalenderComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'form-elements', component: FormElementsComponent },
@@ -150,8 +172,13 @@ export const routes: Routes = [
     canActivate: [authGuard],
     canMatch: [managerGuard],
     children: [
-      { path: 'safe/my-shop', component: ManagerSafeComponent },
-      { path: '', redirectTo: 'safe/my-shop', pathMatch: 'full' },
+      { path: 'override-requests',  component: OverrideRequestsComponent },
+      { path: 'reports',            component: ReportsComponent },
+      { path: 'inventory-transfer', component: InventoryTransferComponent },
+      { path: 'safe/my-shop',       component: ManagerSafeComponent },
+      { path: 'safe/my-shop/:safeId/transactions', component: ManagerTransactionsComponent },
+      { path: 'reconciliation',     component: SafeReconciliationComponent },
+      { path: '', redirectTo: 'override-requests', pathMatch: 'full' },
     ],
   },
 

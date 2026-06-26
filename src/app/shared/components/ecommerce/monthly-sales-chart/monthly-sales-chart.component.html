@@ -1,24 +1,27 @@
-<div class="ds-card overflow-hidden px-5 pt-5 pb-3 sm:px-6 sm:pt-6">
+<div class="db-card h-full">
 
-  <!-- Header -->
-  <div class="flex items-start justify-between mb-5">
+  <!-- Card Header -->
+  <div class="db-card-head">
     <div>
-      <h3 class="dash-chart-title">المبيعات الشهرية</h3>
-      <p class="dash-chart-sub">أداء المبيعات عبر الأشهر</p>
+      <h3 class="db-card-title">المبيعات الشهرية</h3>
+      <p class="db-card-sub">أداء المبيعات لهذا العام</p>
     </div>
-    <!-- Gold accent dot -->
+
+    <!-- Badge -->
     <div
-      class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg"
-      style="background: rgba(201,168,76,0.10); color: rgba(232,210,109,0.8);"
+      class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+      style="background: #FEF9E7; color: #9A7B1A; border: 1px solid rgba(212,175,55,0.22); font-family: 'Inter', system-ui, sans-serif;"
     >
-      <span class="w-2 h-2 rounded-full" style="background: #C9A84C; box-shadow: 0 0 6px rgba(201,168,76,0.7);"></span>
-      المبيعات
+      <span
+        style="width:7px;height:7px;border-radius:50%;background:#D4AF37;display:inline-block;flex-shrink:0;">
+      </span>
+      المبيعات ٢٠٢٦
     </div>
   </div>
 
   <!-- Chart -->
-  <div class="max-w-full overflow-x-auto no-scrollbar">
-    <div class="-ml-4 min-w-[600px] xl:min-w-full">
+  <div class="db-card-body overflow-x-auto no-scrollbar">
+    <div class="-ml-3 min-w-[400px] xl:min-w-full">
       <apx-chart
         [series]="series"
         [chart]="chart"
@@ -35,4 +38,5 @@
       ></apx-chart>
     </div>
   </div>
+
 </div>

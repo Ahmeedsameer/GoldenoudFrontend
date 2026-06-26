@@ -1,118 +1,100 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { map } from 'rxjs';
+import { RouterLink } from '@angular/router';
 import { SafeService } from '../../services/safe.service';
-import { Safe, SafeTransaction, TransactionType } from '../../models/safe.model';
-import { ListManager } from '../../services/list-manager';
-import { PaginationComponent } from '../../pagination/pagination.component';
+import { Safe, Currency, TransactionReason } from '../../models/safe.model';
 import { LoadingComponent } from '../../loading/loading.component';
-import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
 
 @Component({
   selector: 'app-manager-safe',
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    PaginationComponent,
-    LoadingComponent,
-    ButtonComponent,
-    ModalComponent,
-    AlertComponent,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LoadingComponent, ModalComponent, AlertComponent],
   templateUrl: './manager-safe.component.html',
 })
 export class ManagerSafeComponent implements OnInit {
   private safeService = inject(SafeService);
   private fb = inject(FormBuilder);
 
-  safe: Safe | null = null;
-  safeLoading = false;
+  safes: Safe[] = [];
+  loading = false;
 
-  list = new ListManager<SafeTransaction>(
-    (params) => this.safeService.getMyTransactions(params).pipe(
-      map((res: any) => res.data)
-    )
-  );
+  currencies: Currency[] = [];
+  depositReasons: TransactionReason[] = [];
+  withdrawReasons: TransactionReason[] = [];
 
-  // ── Transaction modal ───────────────────────────────────
+  // ── Modal ────────────────────────────────────────────────
   showModal = false;
   modalMode: 'deposit' | 'withdraw' = 'deposit';
+  activeSafe: Safe | null = null;
   modalLoading = false;
   modalError = '';
 
-  // Note is REQUIRED for managers
-  txForm: FormGroup = this.fb.group({
-    amount: [null, [Validators.required, Validators.min(0.01)]],
-    note:   ['', Validators.required],
+  form: FormGroup = this.fb.group({
+    currency_id: [null, Validators.required],
+    amount:      [null, [Validators.required, Validators.min(0.01)]],
+    reason_id:   [null, Validators.required],
+    note:        [''],
   });
 
-  // ── Alert ───────────────────────────────────────────────
+  get activeReasons(): TransactionReason[] {
+    return this.modalMode === 'deposit' ? this.depositReasons : this.withdrawReasons;
+  }
+
+  // ── Alert ────────────────────────────────────────────────
   alert: { show: boolean; type: 'success' | 'error'; message: string } =
     { show: false, type: 'success', message: '' };
 
-  // ── Filter options ──────────────────────────────────────
-  typeOptions = [
-    { value: '',                 label: 'كل الأنواع' },
-    { value: 'sale',             label: 'بيع' },
-    { value: 'refund',           label: 'استرداد' },
-    { value: 'admin_deposit',    label: 'إيداع إداري' },
-    { value: 'admin_withdrawal', label: 'سحب إداري' },
-    { value: 'manager_deposit',  label: 'إيداع مدير' },
-    { value: 'manager_expense',  label: 'مصروف' },
-  ];
-
   ngOnInit(): void {
-    this.loadSafe();
-    this.list.load();
+    this.load();
+    this.safeService.getManagerCurrencies({ active_only: true }).subscribe({ next: (r) => this.currencies = r.data });
+    this.safeService.getManagerReasons({ direction: 'in',  active_only: true }).subscribe({ next: (r) => this.depositReasons  = r.data });
+    this.safeService.getManagerReasons({ direction: 'out', active_only: true }).subscribe({ next: (r) => this.withdrawReasons = r.data });
   }
 
-  loadSafe() {
-    this.safeLoading = true;
-    this.safeService.getMySafe().subscribe({
-      next: (res) => { this.safe = res.data; this.safeLoading = false; },
-      error: ()  => { this.safeLoading = false; },
+  load() {
+    this.loading = true;
+    this.safeService.getMyShopSafes().subscribe({
+      next: (res) => { this.safes = res.data; this.loading = false; },
+      error: () => { this.loading = false; },
     });
   }
 
-  setTypeFilter(val: string)      { this.list.setFilter('type', val || undefined); }
-  setDirectionFilter(val: string) { this.list.setFilter('direction', val || undefined); }
-  setDateFrom(val: string)        { this.list.setFilter('date_from', val || undefined); }
-  setDateTo(val: string)          { this.list.setFilter('date_to', val || undefined); }
-
-  openDeposit() {
+  openDeposit(safe: Safe) {
+    this.activeSafe = safe;
     this.modalMode = 'deposit';
-    this.txForm.reset({ amount: null, note: '' });
     this.modalError = '';
+    this.form.reset({ currency_id: null, amount: null, reason_id: null, note: '' });
     this.showModal = true;
   }
 
-  openWithdraw() {
+  openWithdraw(safe: Safe) {
+    this.activeSafe = safe;
     this.modalMode = 'withdraw';
-    this.txForm.reset({ amount: null, note: '' });
     this.modalError = '';
+    this.form.reset({ currency_id: null, amount: null, reason_id: null, note: '' });
     this.showModal = true;
   }
 
-  submitModal() {
-    if (this.txForm.invalid) { this.txForm.markAllAsTouched(); return; }
+  submit() {
+    if (this.form.invalid || !this.activeSafe) { this.form.markAllAsTouched(); return; }
     this.modalLoading = true;
     this.modalError = '';
 
-    const { amount, note } = this.txForm.value;
+    const v = this.form.value;
+    const body = { currency_id: +v.currency_id, amount: +v.amount, reason_id: +v.reason_id, note: v.note || undefined };
     const req$ = this.modalMode === 'deposit'
-      ? this.safeService.managerDeposit(amount, note)
-      : this.safeService.managerWithdraw(amount, note);
+      ? this.safeService.managerDeposit(this.activeSafe.id, body)
+      : this.safeService.managerWithdraw(this.activeSafe.id, body);
 
     req$.subscribe({
       next: (res) => {
         this.modalLoading = false;
         this.showModal = false;
-        this.alert = { show: true, type: 'success', message: res.message };
-        this.loadSafe();
-        this.list.load();
+        const sym = this.currencies.find(c => c.id === +v.currency_id)?.symbol ?? '';
+        this.alert = { show: true, type: 'success', message: `${res.message} — الرصيد الجديد: ${sym} ${res.new_balance}` };
+        this.load();
       },
       error: (err) => {
         this.modalLoading = false;
@@ -121,24 +103,6 @@ export class ManagerSafeComponent implements OnInit {
     });
   }
 
-  // ── Helpers ─────────────────────────────────────────────
-
-  typeLabel(type: TransactionType): string {
-    const map: Record<string, string> = {
-      sale:              'بيع',
-      refund:            'استرداد',
-      admin_deposit:     'إيداع إداري',
-      admin_withdrawal:  'سحب إداري',
-      manager_deposit:   'إيداع مدير',
-      manager_expense:   'مصروف',
-    };
-    return map[type] ?? type;
-  }
-
-  typeBadgeClass(type: TransactionType): string {
-    const inTypes = ['sale', 'admin_deposit', 'manager_deposit'];
-    return inTypes.includes(type)
-      ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400'
-      : 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400';
-  }
+  f(name: string) { return this.form.get(name); }
+  isInvalid(name: string) { return this.f(name)?.invalid && this.f(name)?.touched; }
 }

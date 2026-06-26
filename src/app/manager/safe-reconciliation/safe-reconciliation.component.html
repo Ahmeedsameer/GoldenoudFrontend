@@ -1,0 +1,225 @@
+<app-loading [loading]="loading"></app-loading>
+
+<!-- ── Page header ─────────────────────────────────────────────────── -->
+<div class="mb-6">
+  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">مطابقة الخزنة</h2>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+    أدخل الكميات المعدودة فعلياً لكل عملة، وسيقوم النظام بتسجيل فروق التسوية تلقائياً.
+  </p>
+</div>
+
+<!-- Alerts -->
+@if (errorMsg) {
+  <div class="mb-4"><app-alert variant="error" [message]="errorMsg"></app-alert></div>
+}
+@if (successMsg) {
+  <div class="mb-4"><app-alert variant="success" [message]="successMsg"></app-alert></div>
+}
+
+<!-- ── Main content ────────────────────────────────────────────────── -->
+@if (!loading) {
+
+  @if (entries.length === 0) {
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
+      <svg class="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path fill-rule="evenodd" clip-rule="evenodd"
+          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p class="text-gray-500 dark:text-gray-400">لا توجد خزائن نقدية في هذا الفرع</p>
+    </div>
+  } @else {
+
+    <!-- Reconciliation table -->
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm mb-5">
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+          <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          جدول المطابقة
+        </h3>
+        @if (pendingCount > 0) {
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+            {{ pendingCount }} فرق يحتاج تسوية
+          </span>
+        }
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-white/[0.02]">
+            <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+              <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">الخزنة</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">العملة</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">رصيد النظام</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">المعدود فعلياً</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">الفرق</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+            @for (entry of entries; track entry.safeId + '-' + entry.currencyId) {
+              <tr>
+                <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90">{{ entry.safeName }}</td>
+                <td class="py-3 px-4">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
+                    {{ entry.currencyCode }} {{ entry.currencySymbol }}
+                  </span>
+                </td>
+                <td class="py-3 px-4 font-mono text-gray-900 dark:text-white">
+                  {{ entry.systemBalance | number:'1.2-2' }}
+                </td>
+                <td class="py-3 px-4">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    [(ngModel)]="entry.countedAmount"
+                    placeholder="0.00"
+                    class="w-32 px-3 py-1.5 text-sm font-mono rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
+                  />
+                </td>
+                <td class="py-3 px-4">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-mono"
+                    [class]="badgeClass(entry)">
+                    {{ varianceLabel(entry) }}
+                    @if (variance(entry) !== null && variance(entry) !== 0) {
+                      {{ entry.currencySymbol }}
+                    }
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Reconciliation options (only shown when there are variances) -->
+    @if (pendingCount > 0) {
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm mb-5">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-4 flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          إعدادات التسوية
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+          <!-- Deposit reason (for surpluses) -->
+          @if (needsDeposit) {
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                سبب الإيداع
+                <span class="text-success-600 dark:text-success-400">(زيادة في العد)</span>
+                <span class="text-error-500">*</span>
+              </label>
+              <select
+                [(ngModel)]="selectedDepositReasonId"
+                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                <option [ngValue]="null" disabled>— اختر السبب —</option>
+                @for (r of depositReasons; track r.id) {
+                  <option [ngValue]="r.id">{{ r.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <!-- Withdraw reason (for shortfalls) -->
+          @if (needsWithdraw) {
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                سبب السحب
+                <span class="text-error-600 dark:text-error-400">(نقص في العد)</span>
+                <span class="text-error-500">*</span>
+              </label>
+              <select
+                [(ngModel)]="selectedWithdrawReasonId"
+                class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+                <option [ngValue]="null" disabled>— اختر السبب —</option>
+                @for (r of withdrawReasons; track r.id) {
+                  <option [ngValue]="r.id">{{ r.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
+        </div>
+
+        <!-- Note -->
+        <div class="mb-5">
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+            ملاحظة (اختياري)
+          </label>
+          <textarea
+            [(ngModel)]="note"
+            rows="2"
+            placeholder="أدخل ملاحظة توضيحية..."
+            class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition">
+          </textarea>
+        </div>
+
+        <!-- Summary of variances -->
+        <div class="p-3 rounded-xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] mb-5 text-sm">
+          <p class="font-medium text-gray-700 dark:text-gray-300 mb-2">ملخص التسوية:</p>
+          <div class="space-y-1">
+            @for (entry of entries; track entry.safeId + '-' + entry.currencyId) {
+              @if (variance(entry) !== null && variance(entry) !== 0) {
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-600 dark:text-gray-400">
+                    {{ entry.safeName }} · {{ entry.currencyCode }}
+                  </span>
+                  <span [class]="varianceClass(entry)" class="font-mono">
+                    {{ varianceLabel(entry) }} {{ entry.currencySymbol }}
+                    <span class="text-xs opacity-70 ml-1">
+                      ({{ variance(entry)! > 0 ? 'إيداع' : 'سحب' }})
+                    </span>
+                  </span>
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Submit button -->
+        <button
+          type="button"
+          (click)="submit()"
+          [disabled]="!canSubmit() || submitting"
+          class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all"
+          [class]="canSubmit() && !submitting
+            ? 'bg-brand-500 hover:bg-brand-600 text-white shadow-sm hover:shadow-md'
+            : 'bg-gray-200 dark:bg-white/[0.08] text-gray-400 dark:text-gray-500 cursor-not-allowed'">
+          @if (submitting) {
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            جارٍ الحفظ…
+          } @else {
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5 13l4 4L19 7"/>
+            </svg>
+            تسجيل التسوية ({{ pendingCount }} فرق)
+          }
+        </button>
+      </div>
+    } @else if (!loading && anyEntryCounted) {
+      <!-- All zeros — balanced -->
+      <div class="rounded-2xl border border-success-200 dark:border-success-500/30 bg-success-50 dark:bg-success-500/10 p-5 shadow-sm flex items-center gap-3">
+        <svg class="w-6 h-6 text-success-600 dark:text-success-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-sm font-medium text-success-700 dark:text-success-400">
+          الأرصدة متطابقة — لا توجد فروق تحتاج إلى تسوية.
+        </p>
+      </div>
+    }
+
+  }
+}

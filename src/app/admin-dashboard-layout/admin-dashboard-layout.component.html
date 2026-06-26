@@ -1,22 +1,56 @@
-<div class="min-h-screen" style="background-color: var(--body-bg);">
-  <!-- Sidebar -->
+<div class="min-h-screen relative overflow-hidden" style="background: linear-gradient(135deg, #F4F1EA 0%, #F8F4E8 40%, #F4F1EA 100%);">
+
+  <!-- ─── Decorative gold blobs (provide depth for glass effects) ─── -->
+  <div aria-hidden="true" style="position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;">
+    <div style="
+      position: absolute; top: -120px; left: -80px;
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(212,175,55,0.16) 0%, transparent 65%);
+      filter: blur(40px);
+    "></div>
+    <div style="
+      position: absolute; bottom: -160px; right: -100px;
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, rgba(232,210,109,0.12) 0%, transparent 65%);
+      filter: blur(50px);
+    "></div>
+    <div style="
+      position: absolute; top: 40%; left: 40%;
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(201,162,39,0.07) 0%, transparent 70%);
+      filter: blur(60px);
+    "></div>
+  </div>
+
+  <!-- ─── Subtle dot grid overlay ─── -->
+  <div
+    aria-hidden="true"
+    style="
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: radial-gradient(circle, rgba(212,175,55,0.13) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 30%, black 30%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 30%, black 30%, transparent 100%);
+    "
+  ></div>
+
+  <!-- Floating glass sidebar -->
   <app-side-bar [navItems]="navItems"></app-side-bar>
   <app-backdrop></app-backdrop>
 
-  <!-- Main content area -->
+  <!-- Main workspace -->
   <div
-    class="flex flex-col min-h-screen transition-all duration-300 ease-in-out"
+    class="relative z-[1] transition-all duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col min-h-screen"
     [ngClass]="{
-      'xl:ml-[260px]':  (isExpanded$ | async) || (isHovered$ | async),
-      'xl:ml-[72px]':  !(isExpanded$ | async) && !(isHovered$ | async)
+      'xl:pl-[286px]': (isExpanded$ | async) || (isHovered$ | async),
+      'xl:pl-[104px]':  !(isExpanded$ | async) && !(isHovered$ | async)
     }"
   >
-    <!-- Header -->
     <app-header />
 
-    <!-- Page content -->
-    <main class="flex-1 p-4 md:p-6 max-w-screen-2xl w-full mx-auto">
+    <main class="flex-1 px-4 pb-4 pt-4 xl:pr-4 max-w-screen-2xl w-full mx-auto">
       <router-outlet></router-outlet>
     </main>
   </div>
+
 </div>

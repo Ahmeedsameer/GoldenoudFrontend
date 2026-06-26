@@ -1,15 +1,16 @@
-<div class="ds-card overflow-hidden {{ className }}">
-  <!-- Header -->
-  <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
-    <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ title }}</h3>
+<div class="crud-form-card {{ className }}">
+
+  <!-- Card header -->
+  <div class="crud-form-header">
+    <h3 class="crud-form-title">{{ title }}</h3>
     @if (desc) {
-      <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{{ desc }}</p>
+      <p class="crud-form-sub">{{ desc }}</p>
     }
   </div>
-  <!-- Body -->
-  <div class="p-5 sm:p-6">
-    <div class="space-y-5">
-      <ng-content></ng-content>
-    </div>
+
+  <!-- Card body -->
+  <div class="crud-form-body">
+    <ng-content></ng-content>
   </div>
+
 </div>

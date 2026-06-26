@@ -1,0 +1,358 @@
+<div class="p-4 md:p-6 space-y-6" dir="rtl">
+
+  <!-- ══════════════════════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">ذكاء المخزون</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">مراقبة المخزون · تنبيهات النقص · سجل التوريدات</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       FILTER BAR
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-wrap gap-3 items-center">
+
+    <!-- Location dropdown -->
+    <div class="relative">
+      <select
+        (change)="setLocation($any($event.target).value)"
+        class="appearance-none pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[180px]">
+        <option value="">كل المواقع</option>
+        <option value="0">المستودع الرئيسي</option>
+        @for (s of shops; track s.id) {
+          <option [value]="s.id">{{ s.name }}</option>
+        }
+      </select>
+      <svg class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+    </div>
+
+    <!-- Low-stock threshold -->
+    <div class="flex items-center gap-2">
+      <label class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">حد النقص</label>
+      <input
+        type="number" min="1" max="100"
+        [(ngModel)]="threshold"
+        class="w-20 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <button (click)="applyThreshold()" class="px-3 py-2 text-sm font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700">تطبيق</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading) { <app-loading /> }
+
+  <!-- Error -->
+  @if (errorMsg && !loading) {
+    <app-alert type="error" [message]="errorMsg" />
+  }
+
+  @if (!loading && overview) {
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SUMMARY KPI CARDS
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+
+      <div class="col-span-2 md:col-span-1 bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-4 text-white">
+        <p class="text-xs text-brand-100 mb-1">إجمالي قيمة المخزون</p>
+        <p class="text-2xl font-bold">{{ overview.total_stock_value | number:'1.0-0' }}</p>
+        <p class="text-xs text-brand-200 mt-0.5">ج.م</p>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">منتجات في المخزون</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ overview.products_with_stock | number }}</p>
+        <p class="text-xs text-gray-400">صنف مختلف</p>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">مواقع نشطة</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ overview.active_locations | number }}</p>
+        <p class="text-xs text-gray-400">موقع به مخزون</p>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">تنبيهات النقص</p>
+        <p class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{{ overview.low_stock_count | number }}</p>
+        <p class="text-xs text-gray-400">أقل من {{ overview.threshold }} وحدة</p>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">مواضع نفاد الكمية</p>
+        <p class="text-2xl font-bold text-error-600 dark:text-error-400 mt-1">{{ overview.out_of_stock_count | number }}</p>
+        <p class="text-xs text-gray-400">دُفعة نُفدت</p>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">قيمة المستودع</p>
+        <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{{ overview.warehouse_value | number:'1.0-0' }}</p>
+        <p class="text-xs text-gray-400">ج.م</p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         PER-LOCATION OVERVIEW CARDS
+    ══════════════════════════════════════════════════════════════ -->
+    @if (overview.by_location.length > 0) {
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">توزيع المخزون على المواقع</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          @for (loc of overview.by_location; track loc.location_name) {
+            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <p class="font-semibold text-gray-900 dark:text-white">{{ loc.location_name }}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">{{ loc.sku_count }} صنف مختلف</p>
+                </div>
+                <div class="flex gap-1">
+                  @if (loc.low_stock_count > 0) {
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 font-medium">
+                      {{ loc.low_stock_count }} نقص
+                    </span>
+                  }
+                  @if (loc.out_stock_count > 0) {
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-300 font-medium">
+                      {{ loc.out_stock_count }} نفد
+                    </span>
+                  }
+                </div>
+              </div>
+              <p class="text-xl font-bold text-brand-600 dark:text-brand-400">{{ loc.stock_value | number:'1.0-0' }} <span class="text-xs font-normal text-gray-400">ج.م</span></p>
+              <!-- Value share bar -->
+              @if (maxLocationValue > 0) {
+                <div class="mt-3 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-brand-400 transition-all duration-700"
+                    [style.width.%]="(loc.stock_value / maxLocationValue) * 100"></div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════
+         LOW STOCK ALERTS
+    ══════════════════════════════════════════════════════════════ -->
+    @if (lowStock.length > 0) {
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-amber-200 dark:border-amber-800/50 p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          <h2 class="text-sm font-semibold text-amber-700 dark:text-amber-400">تنبيهات النقص — {{ lowStock.length }} موضع تحت الحد ({{ overview.threshold }} وحدة)</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-amber-100 dark:border-amber-900/30">
+                <th class="pb-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">المنتج</th>
+                <th class="pb-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">الفئة</th>
+                <th class="pb-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">الموقع</th>
+                <th class="pb-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">الكمية</th>
+                <th class="pb-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">متوسط السعر</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of lowStock; track row.product_id + '_' + row.location_name) {
+                <tr [class]="lowStockRowClass(row.total_qty) + ' border-b border-gray-50 dark:border-gray-800/50 transition-colors'">
+                  <td class="py-2.5">
+                    <div class="font-medium text-gray-800 dark:text-gray-200">{{ row.product_name }}</div>
+                    <div class="text-xs text-gray-400">{{ row.sku }} {{ row.scalar ? '· ' + row.scalar : '' }}</div>
+                  </td>
+                  <td class="py-2.5 text-gray-500 dark:text-gray-400 text-xs">{{ row.category_name }}</td>
+                  <td class="py-2.5 text-gray-600 dark:text-gray-400 text-xs">{{ row.location_name }}</td>
+                  <td class="py-2.5">
+                    <span [class]="'inline-flex px-2 py-0.5 rounded-full text-xs font-bold ' + lowStockBadge(row.total_qty)">
+                      {{ row.total_qty | number:'1.0-3' }} {{ row.scalar }}
+                    </span>
+                  </td>
+                  <td class="py-2.5 text-gray-600 dark:text-gray-400">{{ row.avg_unit_price | number:'1.2-2' }} ج.م</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════
+         INVENTORY BROWSER (full cross-shop table)
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 shrink-0">استعراض المخزون</h2>
+        <div class="flex gap-2 flex-wrap">
+          <input
+            type="text"
+            [(ngModel)]="invSearch"
+            placeholder="بحث بالاسم أو SKU..."
+            (keydown.enter)="applyInvSearch()"
+            class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[200px]">
+          <button (click)="applyInvSearch()" class="px-4 py-2 text-sm font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700">بحث</button>
+          @if (invSearch) {
+            <button (click)="resetInvSearch()" class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">✕</button>
+          }
+        </div>
+      </div>
+
+      @if (invLoading) {
+        <div class="flex justify-center py-10"><div class="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div></div>
+      } @else if (inventory.length === 0) {
+        <p class="text-center text-sm text-gray-400 py-10">لا توجد بيانات مخزون</p>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800">
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">المنتج</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">الفئة</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">الموقع</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">الكمية</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">متوسط السعر</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">القيمة الإجمالية</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">الدفعات</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of inventory; track row.product_id + '_' + row.location_name) {
+                <tr class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                  <td class="py-3">
+                    <div class="font-medium text-gray-800 dark:text-gray-200">{{ row.product_name }}</div>
+                    <div class="text-xs text-gray-400">{{ row.sku }} {{ row.scalar ? '· ' + row.scalar : '' }}</div>
+                  </td>
+                  <td class="py-3 text-xs text-gray-500 dark:text-gray-400">{{ row.category_name }}</td>
+                  <td class="py-3">
+                    <span class="text-xs px-2 py-1 rounded-lg font-medium"
+                      [class]="row.shop_id === null
+                        ? 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300'
+                        : 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300'">
+                      {{ row.location_name }}
+                    </span>
+                  </td>
+                  <td class="py-3 font-semibold text-gray-900 dark:text-white">
+                    {{ row.total_qty | number:'1.0-3' }}
+                    <span class="text-xs font-normal text-gray-400">{{ row.scalar }}</span>
+                  </td>
+                  <td class="py-3 text-gray-600 dark:text-gray-400">{{ row.avg_unit_price | number:'1.2-2' }} <span class="text-xs text-gray-400">ج.م</span></td>
+                  <td class="py-3 font-semibold text-brand-600 dark:text-brand-400">{{ row.stock_value | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
+                  <td class="py-3 text-gray-500 dark:text-gray-400 text-center">{{ row.batch_count }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (invMeta && invMeta.last_page > 1) {
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              {{ (invPage - 1) * 30 + 1 }}–{{ invPage * 30 > invMeta.total ? invMeta.total : invPage * 30 }} من {{ invMeta.total | number }} موضع
+            </span>
+            <div class="flex gap-2">
+              <button (click)="invPrevPage()" [disabled]="invPage === 1"
+                class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed">
+                السابق
+              </button>
+              <span class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400">{{ invPage }} / {{ invMeta.last_page }}</span>
+              <button (click)="invNextPage()" [disabled]="invPage === invMeta.last_page"
+                class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed">
+                التالي
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SUPPLY HISTORY
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">سجل التوريدات</h2>
+
+      <!-- Supply filters -->
+      <div class="flex flex-wrap gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
+        <input type="text" [(ngModel)]="supSearch" placeholder="بحث بالمورد..."
+          class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[160px]">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-500">من</span>
+          <input type="date" [(ngModel)]="supFrom" class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <span class="text-xs text-gray-500">إلى</span>
+          <input type="date" [(ngModel)]="supTo" class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+        <button (click)="applySupplies()" class="px-4 py-2 text-sm font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700">بحث</button>
+        <button (click)="resetSupplies()" class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">إعادة</button>
+      </div>
+
+      @if (!supMeta) {
+        <!-- Supplies not loaded yet; load on first render -->
+        <div class="text-center py-8">
+          <button (click)="loadSupplies()" class="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+            تحميل سجل التوريدات
+          </button>
+        </div>
+      } @else if (supLoading) {
+        <div class="flex justify-center py-10"><div class="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div></div>
+      } @else if (supplies.length === 0) {
+        <p class="text-center text-sm text-gray-400 py-8">لا توجد توريدات</p>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800">
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">#</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">التاريخ</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">المورد</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">طريقة الدفع</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">المنتجات</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">إجمالي الكمية</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">إجمالي القيمة</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (sup of supplies; track sup.id) {
+                <tr class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                  <td class="py-3 text-gray-400 text-xs">{{ sup.id }}</td>
+                  <td class="py-3 text-gray-600 dark:text-gray-400">{{ sup.date }}</td>
+                  <td class="py-3 font-medium text-gray-800 dark:text-gray-200">{{ sup.supplier_name }}</td>
+                  <td class="py-3">
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300">
+                      {{ paymentLabel(sup.payment_method) }}
+                    </span>
+                  </td>
+                  <td class="py-3 text-center font-medium text-gray-700 dark:text-gray-300">{{ sup.product_count }}</td>
+                  <td class="py-3 text-gray-600 dark:text-gray-400">{{ sup.total_qty | number:'1.0-3' }}</td>
+                  <td class="py-3 font-semibold text-emerald-600 dark:text-emerald-400">{{ sup.total_value | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Supplies pagination -->
+        @if (supMeta.last_page > 1) {
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              {{ (supPage - 1) * 25 + 1 }}–{{ supPage * 25 > supMeta.total ? supMeta.total : supPage * 25 }} من {{ supMeta.total | number }}
+            </span>
+            <div class="flex gap-2">
+              <button (click)="supPrevPage()" [disabled]="supPage === 1"
+                class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed">
+                السابق
+              </button>
+              <span class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400">{{ supPage }} / {{ supMeta.last_page }}</span>
+              <button (click)="supNextPage()" [disabled]="supPage === supMeta.last_page"
+                class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed">
+                التالي
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+  } <!-- end @if overview -->
+
+</div>

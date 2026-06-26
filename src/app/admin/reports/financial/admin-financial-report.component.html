@@ -1,0 +1,363 @@
+<div class="p-4 md:p-6 space-y-6" dir="rtl">
+
+  <!-- ══════════════════════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">التقرير المالي الشامل</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">تدفقات نقدية · أرصدة الخزن · سجل المعاملات</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       FILTER BAR
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-wrap gap-3 items-center">
+
+    <!-- Shop dropdown -->
+    <div class="relative">
+      <select
+        [ngModel]="selectedShopId"
+        (ngModelChange)="setShop($event === '' ? null : +$event)"
+        class="appearance-none pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[160px]">
+        <option value="">كل الفروع</option>
+        @for (s of shops; track s.id) {
+          <option [value]="s.id">{{ s.name }}</option>
+        }
+      </select>
+      <svg class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+    </div>
+
+    <!-- Period tabs -->
+    <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+      @for (p of periods; track p.key) {
+        <button
+          (click)="setPeriod(p.key)"
+          [class]="period === p.key && !customRangeActive
+            ? 'px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-700 text-brand-600 dark:text-brand-400 shadow-sm'
+            : 'px-3 py-1.5 text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+
+    <!-- Custom date toggle -->
+    <button
+      (click)="showCustomPicker = !showCustomPicker"
+      [class]="customRangeActive
+        ? 'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
+        : 'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      @if (customRangeActive) {
+        {{ globalFrom }} → {{ globalTo }}
+        <button (click)="clearGlobalRange(); $event.stopPropagation()" class="mr-1 text-brand-500 hover:text-brand-700">✕</button>
+      } @else {
+        نطاق مخصص
+      }
+    </button>
+
+    <!-- Date picker panel -->
+    @if (showCustomPicker) {
+      <div class="flex items-center gap-2 flex-wrap">
+        <input type="date" [(ngModel)]="globalFrom" class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <span class="text-gray-400 text-sm">إلى</span>
+        <input type="date" [(ngModel)]="globalTo"   class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <button (click)="applyGlobalRange()" class="px-4 py-2 text-sm font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700">تطبيق</button>
+      </div>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (loading) { <app-loading /> }
+
+  <!-- Error -->
+  @if (errorMsg && !loading) {
+    <app-alert type="error" [message]="errorMsg" />
+  }
+
+  @if (!loading && summary) {
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SUMMARY KPI CARDS
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+
+      <!-- Total In -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col gap-1">
+        <span class="text-xs text-gray-500 dark:text-gray-400">إجمالي الوارد</span>
+        <span class="text-xl font-bold text-success-600 dark:text-success-400">{{ summary.total_in | number:'1.2-2' }}</span>
+        <span class="text-xs text-gray-400">ج.م</span>
+      </div>
+
+      <!-- Total Out -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col gap-1">
+        <span class="text-xs text-gray-500 dark:text-gray-400">إجمالي الصادر</span>
+        <span class="text-xl font-bold text-error-600 dark:text-error-400">{{ summary.total_out | number:'1.2-2' }}</span>
+        <span class="text-xs text-gray-400">ج.م</span>
+      </div>
+
+      <!-- Net Flow -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col gap-1">
+        <span class="text-xs text-gray-500 dark:text-gray-400">صافي التدفق</span>
+        <span [class]="'text-xl font-bold ' + netFlowClass(summary.net_flow)">
+          {{ summary.net_flow >= 0 ? '+' : '' }}{{ summary.net_flow | number:'1.2-2' }}
+        </span>
+        <span class="text-xs text-gray-400">ج.م</span>
+      </div>
+
+      <!-- Sales Revenue -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col gap-1">
+        <span class="text-xs text-gray-500 dark:text-gray-400">إيرادات المبيعات</span>
+        <span class="text-xl font-bold text-brand-600 dark:text-brand-400">{{ summary.sales_revenue | number:'1.2-2' }}</span>
+        <span class="text-xs text-gray-400">ج.م</span>
+      </div>
+
+      <!-- Deposits -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col gap-1">
+        <span class="text-xs text-gray-500 dark:text-gray-400">الإيداعات</span>
+        <span class="text-xl font-bold text-cyan-600 dark:text-cyan-400">{{ summary.deposits | number:'1.2-2' }}</span>
+        <span class="text-xs text-gray-400">ج.م · {{ summary.tx_count | number }} معاملة</span>
+      </div>
+
+      <!-- Expenses & Withdrawals -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col gap-1">
+        <span class="text-xs text-gray-500 dark:text-gray-400">مصاريف + سحوبات</span>
+        <span class="text-xl font-bold text-amber-600 dark:text-amber-400">{{ (summary.expenses + summary.withdrawals) | number:'1.2-2' }}</span>
+        <span class="text-xs text-gray-400">مرتجعات: {{ summary.refunds | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         CASH FLOW TREND CHART
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">التدفق النقدي اليومي</h2>
+      @if (trendData.length > 0) {
+        <apx-chart [series]="trendSeries" [chart]="trendOptions.chart" [colors]="trendOptions.colors"
+          [stroke]="trendOptions.stroke" [fill]="trendOptions.fill" [dataLabels]="trendOptions.dataLabels"
+          [xaxis]="trendOptions.xaxis" [yaxis]="trendOptions.yaxis" [grid]="trendOptions.grid"
+          [legend]="trendOptions.legend" [tooltip]="trendOptions.tooltip" />
+      } @else {
+        <p class="text-center text-sm text-gray-400 py-12">لا توجد بيانات للفترة المختارة</p>
+      }
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SAFE BALANCES + PER-SHOP TABLE  (two columns)
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- Safe Balances -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">أرصدة الخزن الحالية</h2>
+        @if (balances.length === 0) {
+          <p class="text-sm text-gray-400 text-center py-8">لا توجد خزن مسجلة</p>
+        } @else {
+          <div class="space-y-3 max-h-96 overflow-y-auto">
+            @for (entry of balances; track entry.safe_id) {
+              <div class="flex items-start justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ entry.shop_name }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500">{{ entry.type_name }}</span>
+                    @if (!entry.is_active) {
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400">غير نشطة</span>
+                    }
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                  @for (b of entry.balances; track b.currency_code) {
+                    <span class="text-sm font-semibold" [class]="b.balance >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                      {{ b.balance | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">{{ b.currency_code || b.currency }}</span>
+                    </span>
+                  }
+                  @if (entry.balances.length === 0) {
+                    <span class="text-sm text-gray-400">—</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Per-Shop Financial Table -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <div class="flex items-center justify-between mb-4 gap-3">
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 shrink-0">ملخص مالي للفروع</h2>
+          <input
+            type="text"
+            [(ngModel)]="shopSearch"
+            placeholder="بحث عن فرع..."
+            class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full max-w-[160px]">
+        </div>
+
+        @if (filteredShopStats.length === 0) {
+          <p class="text-sm text-gray-400 text-center py-8">لا توجد بيانات</p>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-100 dark:border-gray-800">
+                  <th class="pb-2 text-left font-medium text-gray-500 dark:text-gray-400">الفرع</th>
+                  <th class="pb-2 text-left font-medium text-gray-500 dark:text-gray-400">وارد</th>
+                  <th class="pb-2 text-left font-medium text-gray-500 dark:text-gray-400">صادر</th>
+                  <th class="pb-2 text-left font-medium text-gray-500 dark:text-gray-400">صافي</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of filteredShopStats; track s.safe_id) {
+                  <tr class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                    <td class="py-2.5">
+                      <div class="font-medium text-gray-800 dark:text-gray-200">{{ s.shop_name }}</div>
+                      <div class="text-xs text-gray-400">{{ s.type_name }}</div>
+                    </td>
+                    <td class="py-2.5 text-success-600 dark:text-success-400 font-medium">{{ s.total_in | number:'1.0-0' }}</td>
+                    <td class="py-2.5 text-error-600 dark:text-error-400">{{ s.total_out | number:'1.0-0' }}</td>
+                    <td class="py-2.5">
+                      <span [class]="'font-semibold ' + netFlowClass(s.net_flow)">
+                        {{ s.net_flow >= 0 ? '+' : '' }}{{ s.net_flow | number:'1.0-0' }}
+                      </span>
+                    </td>
+                  </tr>
+                  <!-- Sub-row: breakdown bar -->
+                  <tr class="border-b border-gray-50 dark:border-gray-800/50">
+                    <td colspan="4" class="pb-2 pt-0">
+                      <div class="flex gap-1 text-xs text-gray-500 dark:text-gray-400">
+                        <span>مبيعات: <b class="text-gray-700 dark:text-gray-300">{{ s.sales | number:'1.0-0' }}</b></span>
+                        <span class="mx-1">·</span>
+                        <span>إيداعات: <b class="text-gray-700 dark:text-gray-300">{{ s.deposits | number:'1.0-0' }}</b></span>
+                        <span class="mx-1">·</span>
+                        <span>مصاريف: <b class="text-amber-600 dark:text-amber-400">{{ s.expenses | number:'1.0-0' }}</b></span>
+                        <span class="mx-1">·</span>
+                        <span>مرتجعات: <b class="text-error-600 dark:text-error-400">{{ s.refunds | number:'1.0-0' }}</b></span>
+                      </div>
+                      <!-- Visual share bar -->
+                      @if (maxShopIn > 0) {
+                        <div class="mt-1.5 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                          <div class="h-full rounded-full bg-success-400 transition-all duration-500"
+                            [style.width.%]="(s.total_in / maxShopIn) * 100"></div>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         TRANSACTION LOG
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">سجل المعاملات</h2>
+
+      <!-- Transaction filters -->
+      <div class="flex flex-wrap gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
+
+        <select [(ngModel)]="txType"
+          class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <option value="">كل الأنواع</option>
+          <option value="sale">مبيعات</option>
+          <option value="refund">مرتجعات</option>
+          <option value="admin_deposit">إيداع إداري</option>
+          <option value="admin_withdrawal">سحب إداري</option>
+          <option value="manager_deposit">إيداع مدير</option>
+          <option value="manager_expense">مصاريف مدير</option>
+          <option value="transfer_in">تحويل وارد</option>
+          <option value="transfer_out">تحويل صادر</option>
+        </select>
+
+        <select [(ngModel)]="txDirection"
+          class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <option value="">كل الاتجاهات</option>
+          <option value="in">وارد (in)</option>
+          <option value="out">صادر (out)</option>
+        </select>
+
+        <input type="number" [(ngModel)]="txMinAmount" placeholder="أدنى مبلغ"
+          class="w-28 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <input type="number" [(ngModel)]="txMaxAmount" placeholder="أقصى مبلغ"
+          class="w-28 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+
+        <button (click)="applyTxFilters()" class="px-4 py-2 text-sm font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700">تصفية</button>
+        <button (click)="resetTxFilters()" class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">إعادة</button>
+      </div>
+
+      <!-- Table -->
+      @if (txLoading) {
+        <div class="flex justify-center py-10"><div class="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div></div>
+      } @else if (transactions.length === 0) {
+        <p class="text-center text-sm text-gray-400 py-10">لا توجد معاملات</p>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800">
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">#</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">الفرع</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">النوع</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">الاتجاه</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">المبلغ</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">السبب</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">المستخدم</th>
+                <th class="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">التاريخ</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (tx of transactions; track tx.id) {
+                <tr class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                  <td class="py-3 text-gray-400 text-xs">{{ tx.id }}</td>
+                  <td class="py-3 font-medium text-gray-800 dark:text-gray-200">{{ tx.shop_name }}</td>
+                  <td class="py-3">
+                    <span [class]="'inline-flex px-2 py-0.5 rounded-full text-xs font-medium ' + typeBadgeClass(tx.type)">
+                      {{ typeLabel(tx.type) }}
+                    </span>
+                  </td>
+                  <td class="py-3">
+                    <span [class]="'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ' + directionClass(tx.direction)">
+                      {{ tx.direction === 'in' ? '▲ وارد' : '▼ صادر' }}
+                    </span>
+                  </td>
+                  <td class="py-3 font-semibold" [class]="tx.direction === 'in' ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                    {{ tx.direction === 'in' ? '+' : '-' }}{{ tx.amount | number:'1.2-2' }}
+                    <span class="text-xs font-normal text-gray-400 mr-0.5">{{ tx.symbol || tx.currency }}</span>
+                  </td>
+                  <td class="py-3 text-gray-500 dark:text-gray-400 text-xs">{{ tx.reason || tx.note || '—' }}</td>
+                  <td class="py-3 text-gray-600 dark:text-gray-400">{{ tx.user_name }}</td>
+                  <td class="py-3 text-gray-400 text-xs whitespace-nowrap">{{ tx.created_at }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (txMeta && txMeta.last_page > 1) {
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              {{ (txPage - 1) * 30 + 1 }}–{{ txPage * 30 > txMeta.total ? txMeta.total : txPage * 30 }} من {{ txMeta.total | number }}
+            </span>
+            <div class="flex gap-2">
+              <button (click)="txPrevPage()" [disabled]="txPage === 1"
+                class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed">
+                السابق
+              </button>
+              <span class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400">{{ txPage }} / {{ txMeta.last_page }}</span>
+              <button (click)="txNextPage()" [disabled]="txPage === txMeta.last_page"
+                class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed">
+                التالي
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+  } <!-- end @if summary -->
+
+</div>

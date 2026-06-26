@@ -75,6 +75,25 @@ export class StockService {
     return this.http.post<TransferResponse>(`${this.inventoryUrl}/transfer`, data);
   }
 
+  // ── Manager Inventory & Transfer ─────────────────────
+  private managerInventoryUrl = `${API_BASE}/manager/inventory`;
+  private managerShopsUrl     = `${API_BASE}/manager/shops`;
+
+  getManagerInventory(params?: any) {
+    return this.http.get<any>(this.managerInventoryUrl, { params }).pipe(retry(2));
+  }
+
+  getManagerShops() {
+    return this.http.get<any>(this.managerShopsUrl).pipe(
+      retry(2),
+      map((res) => (res.data || []) as { id: number; name: string }[])
+    );
+  }
+
+  managerTransferGoods(data: { goods_id: number; quantity: number; to_shop_id: number | null }) {
+    return this.http.post<any>(`${this.managerInventoryUrl}/transfer`, data);
+  }
+
   // ── Shops (for dropdowns) ─────────────────────────────
   getActiveShops() {
     return this.http

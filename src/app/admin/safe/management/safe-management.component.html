@@ -1,0 +1,174 @@
+<app-loading [loading]="loading"></app-loading>
+
+<!-- Header -->
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">إدارة الخزن</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">عرض وإنشاء وتفعيل / تعطيل الخزن</p>
+  </div>
+  <button (click)="openCreate()"
+    class="flex items-center gap-2 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-xl transition-colors">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    إضافة خزنة
+  </button>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5"><app-alert [variant]="alert.type" [message]="alert.message"></app-alert></div>
+}
+
+<!-- Filter bar -->
+<div class="flex flex-wrap gap-2 mb-6">
+  <button (click)="setFilter('all')"
+    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+    [class]="activeFilter === 'all'
+      ? 'bg-brand-500 text-white'
+      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-white/[0.03] dark:border-white/[0.08] dark:text-gray-400'">
+    الكل
+  </button>
+  <button (click)="setFilter('company')"
+    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+    [class]="activeFilter === 'company'
+      ? 'bg-brand-500 text-white'
+      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-white/[0.03] dark:border-white/[0.08] dark:text-gray-400'">
+    الشركة
+  </button>
+  @for (shop of shops; track shop.id) {
+    <button (click)="setFilter(shop.id)"
+      class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+      [class]="activeFilter === shop.id
+        ? 'bg-brand-500 text-white'
+        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-white/[0.03] dark:border-white/[0.08] dark:text-gray-400'">
+      {{ shop.name }}
+    </button>
+  }
+</div>
+
+<!-- Safes grid -->
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+  @for (safe of safes; track safe.id) {
+    <div class="rounded-2xl border bg-white p-5 dark:bg-white/[0.03]"
+      [class]="safe.is_active
+        ? 'border-gray-200 dark:border-white/[0.05]'
+        : 'border-dashed border-gray-300 dark:border-white/[0.08] opacity-60'">
+
+      <!-- Safe header -->
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ safe.safe_type?.name }}</span>
+            <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
+              [class]="safe.safe_type?.kind === 'physical'
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400'
+                : 'bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400'">
+              {{ safe.safe_type?.kind === 'physical' ? 'نقدي' : 'إلكتروني' }}
+            </span>
+          </div>
+          <p class="text-xs text-gray-400">{{ shopName(safe) }}</p>
+        </div>
+
+        <!-- Toggle -->
+        <button (click)="toggle(safe)" [disabled]="toggleLoadingId === safe.id"
+          class="relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors disabled:opacity-50"
+          [class]="safe.is_active ? 'bg-brand-500' : 'bg-gray-200 dark:bg-gray-700'">
+          <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+            [class]="safe.is_active ? '-translate-x-1' : 'translate-x-1'"></span>
+        </button>
+      </div>
+
+      <!-- Balances -->
+      <div class="space-y-1.5 mb-4">
+        @if (safe.balances && safe.balances.length > 0) {
+          @for (b of safe.balances; track b.currency.id) {
+            <div class="flex items-center justify-between py-1.5 px-3 rounded-lg bg-gray-50 dark:bg-white/[0.03]">
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ b.currency.name }}</span>
+              <span class="text-sm font-bold font-mono"
+                [class]="+b.balance < 0 ? 'text-error-600 dark:text-error-400' : 'text-gray-800 dark:text-white/90'">
+                {{ b.currency.symbol }} {{ +b.balance | number:'1.2-2' }}
+              </span>
+            </div>
+          }
+        } @else {
+          <p class="text-xs text-gray-400 dark:text-gray-500 text-center py-2">لا توجد أرصدة بعد</p>
+        }
+      </div>
+
+      <!-- Link to detail -->
+      <a [routerLink]="['/dashboard/safe', safe.id]"
+        class="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-white/[0.08] dark:text-gray-400 dark:hover:bg-white/[0.03] transition-colors">
+        عرض التفاصيل والمعاملات
+        <svg class="w-3.5 h-3.5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+
+    </div>
+  }
+  @if (!loading && safes.length === 0) {
+    <div class="col-span-3 py-16 text-center text-sm text-gray-400">لا توجد خزن</div>
+  }
+</div>
+
+<!-- Create Safe Modal -->
+<app-modal [isOpen]="showCreateModal" (close)="showCreateModal = false" className="max-w-md m-4">
+  <div class="p-6">
+    <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">إضافة خزنة جديدة</h3>
+
+    @if (createError) {
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+        <p class="text-sm text-error-600 dark:text-error-400">{{ createError }}</p>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submitCreate()">
+      <div class="space-y-4">
+
+        <!-- Safe Type -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            نوع الخزنة <span class="text-error-500">*</span>
+          </label>
+          <select formControlName="safe_type_id"
+            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            [class]="isInvalid('safe_type_id')
+              ? 'border-error-400'
+              : 'border-gray-300 dark:border-gray-700 dark:bg-gray-800'">
+            <option value="" disabled selected>اختر النوع...</option>
+            @for (st of safeTypes; track st.id) {
+              <option [value]="st.id">{{ st.name }}</option>
+            }
+          </select>
+          @if (isInvalid('safe_type_id')) { <p class="mt-1 text-xs text-error-500">نوع الخزنة مطلوب</p> }
+        </div>
+
+        <!-- Shop (optional) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            الفرع <span class="text-xs text-gray-400">(اتركه فارغاً للشركة)</span>
+          </label>
+          <select formControlName="shop_id"
+            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            <option value="">الشركة (بدون فرع)</option>
+            @for (shop of shops; track shop.id) {
+              <option [value]="shop.id">{{ shop.name }}</option>
+            }
+          </select>
+        </div>
+
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button type="submit" [disabled]="createLoading"
+          class="flex-1 h-10 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-colors disabled:opacity-60">
+          @if (createLoading) { جاري الإنشاء... } @else { إنشاء الخزنة }
+        </button>
+        <button type="button" (click)="showCreateModal = false"
+          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">
+          إلغاء
+        </button>
+      </div>
+    </form>
+  </div>
+</app-modal>

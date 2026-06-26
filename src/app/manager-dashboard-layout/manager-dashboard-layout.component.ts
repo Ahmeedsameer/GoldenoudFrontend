@@ -21,10 +21,32 @@ import { AuthService } from '../services/auth.service';
 export class ManagerDashboardLayoutComponent {
   navItems: NavItem[] = [
     {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+      name: 'طلبات الموافقة',
+      subItems: [
+        { name: 'طلبات الأسعار', path: '/dashboard/override-requests' },
+      ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>`,
+      name: 'التقارير',
+      subItems: [
+        { name: 'إحصائيات المبيعات', path: '/dashboard/reports' },
+      ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
+      name: 'المخزون',
+      subItems: [
+        { name: 'نقل المخزون', path: '/dashboard/inventory-transfer' },
+      ],
+    },
+    {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
       name: 'الخزنة',
       subItems: [
-        { name: 'خزنة الفرع', path: '/dashboard/safe/my-shop' },
+        { name: 'خزنة الفرع',     path: '/dashboard/safe/my-shop' },
+        { name: 'مطابقة الخزنة', path: '/dashboard/reconciliation' },
       ],
     },
   ];

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, retry } from 'rxjs';
-import { CreateInvoiceRequest, Customer, GoodsSearchResult, Invoice, TesterUser } from '../models/sales.model';
+import { CreateInvoiceRequest, Customer, GoodsSearchResult, Invoice, SalesCategory, TesterUser } from '../models/sales.model';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -11,11 +11,20 @@ const API_BASE = 'http://127.0.0.1:8000/api';
 export class SalesService {
   private http = inject(HttpClient);
 
-  // ── Goods search (for cashier item rows) ──────────────────
-  searchGoods(search: string, perPage = 20): Observable<GoodsSearchResult[]> {
+  // ── Goods search (for cashier item rows + lookup panel) ───
+  searchGoods(search: string, perPage = 20, categoryId?: number): Observable<GoodsSearchResult[]> {
+    const params: Record<string, any> = { search, per_page: perPage };
+    if (categoryId) params['category_id'] = categoryId;
     return this.http
-      .get<any>(`${API_BASE}/sales/goods`, { params: { search, per_page: perPage } })
+      .get<any>(`${API_BASE}/sales/goods`, { params })
       .pipe(map((res) => res.data?.data || res.data || []));
+  }
+
+  // ── Product categories (for lookup panel tabs) ─────────────
+  getSalesCategories(): Observable<SalesCategory[]> {
+    return this.http
+      .get<any>(`${API_BASE}/sales/categories`)
+      .pipe(map((res) => res.data || []));
   }
 
   // ── Customer search (for cashier customer section) ─────────
@@ -56,5 +65,19 @@ export class SalesService {
   // ── Update invoice status ──────────────────────────────────
   updateInvoiceStatus(id: number, status: string): Observable<any> {
     return this.http.put<any>(`${API_BASE}/sales/invoices/${id}/status`, { status });
+  }
+
+  // ── Seller-accessible currencies ───────────────────────────
+  getSellerCurrencies(): Observable<{ id: number; code: string; name: string; symbol: string; rate: number }[]> {
+    return this.http
+      .get<any>(`${API_BASE}/sales/currencies`)
+      .pipe(map((res) => res.data || []));
+  }
+
+  // ── Seller-accessible safes for their shop ─────────────────
+  getSellerShopSafes(): Observable<any[]> {
+    return this.http
+      .get<any>(`${API_BASE}/sales/safes`)
+      .pipe(map((res) => res.data || []));
   }
 }

@@ -1,56 +1,53 @@
-<!-- ═══════════════════════════════════════════════════════
-     ALPHA BUSINESS — Premium Analytics Dashboard
-     ═══════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════
+     ALPHA BUSINESS — Analytics Dashboard
+     ══════════════════════════════════════════════════════ -->
 
-<div class="space-y-6">
+<div class="space-y-7">
 
-  <!-- ── Page Header ─────────────────────────────────────── -->
-  <div class="flex items-center justify-between flex-wrap gap-3">
+  <!-- ── Page Header ────────────────────────────────────── -->
+  <div class="flex items-start justify-between flex-wrap gap-4 pt-1">
     <div>
       <h1
-        class="text-xl font-bold tracking-tight"
-        style="color: rgba(255,255,255,0.92);"
+        class="text-2xl font-bold tracking-tight"
+        style="color: #111827; letter-spacing: -0.04em;"
       >لوحة التحكم</h1>
       <p
-        class="text-sm mt-0.5"
-        style="color: rgba(255,255,255,0.38);"
+        class="text-sm mt-1"
+        style="color: #6B7280;"
       >نظرة شاملة على أداء الأعمال والمبيعات</p>
     </div>
-    <div
-      class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
-      style="
-        border: 1px solid rgba(201,168,76,0.18);
-        background: rgba(201,168,76,0.05);
-        color: rgba(201,168,76,0.72);
-      "
-    >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
-        <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-      مايو ٢٠٢٦
+
+    <div class="flex items-center gap-2">
+      <!-- Date chip -->
+      <div class="db-date-chip">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        مايو ٢٠٢٦
+      </div>
     </div>
   </div>
 
-  <!-- ── KPI Metrics Row ──────────────────────────────────── -->
+  <!-- ── KPI Metrics ─────────────────────────────────────── -->
   <app-ecommerce-metrics />
 
-  <!-- ── Main Analytics: Chart + Target ──────────────────── -->
-  <div class="grid grid-cols-12 gap-4 md:gap-6">
-    <div class="col-span-12 xl:col-span-8">
+  <!-- ── Analytics Row: Area Chart + Target ─────────────── -->
+  <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+    <div class="xl:col-span-2">
       <app-statics-chart />
     </div>
-    <div class="col-span-12 xl:col-span-4">
+    <div class="xl:col-span-1">
       <app-monthly-target />
     </div>
   </div>
 
-  <!-- ── Bottom Row: Sales Bar + Recent Orders ────────────── -->
-  <div class="grid grid-cols-12 gap-4 md:gap-6">
-    <div class="col-span-12 xl:col-span-5">
+  <!-- ── Bottom Row: Monthly Sales + Recent Orders ──────── -->
+  <div class="grid grid-cols-1 gap-5 xl:grid-cols-5">
+    <div class="xl:col-span-2">
       <app-monthly-sales-chart />
     </div>
-    <div class="col-span-12 xl:col-span-7">
+    <div class="xl:col-span-3">
       <app-recent-orders />
     </div>
   </div>

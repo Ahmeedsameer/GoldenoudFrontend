@@ -1,0 +1,277 @@
+<div class="p-4 md:p-6 space-y-6" dir="rtl">
+
+  <!-- ══════════════════════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">لوحة التحكم</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ todayDate() }}</p>
+    </div>
+    <div class="flex gap-2">
+      <a routerLink="/dashboard/reports/sales"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        تقرير المبيعات
+      </a>
+      <a routerLink="/dashboard/reports/financial"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        التقرير المالي
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading) { <app-loading /> }
+
+  <!-- Error -->
+  @if (errorMsg && !loading) {
+    <div class="rounded-xl bg-error-50 border border-error-200 text-error-700 px-4 py-3 text-sm dark:bg-error-500/10 dark:border-error-500/30 dark:text-error-400">
+      {{ errorMsg }}
+    </div>
+  }
+
+  @if (!loading && data) {
+
+    <!-- ══════════════════════════════════════════════════════════════
+         TODAY KPI STRIP
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+
+      <!-- Revenue Today -->
+      <div class="col-span-2 sm:col-span-1 bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-4 text-white">
+        <p class="text-xs text-brand-100 mb-1">إيرادات اليوم</p>
+        <p class="text-2xl font-bold">{{ today.revenue | number:'1.0-0' }}</p>
+        <p class="text-xs text-brand-200 mt-0.5">ج.م</p>
+      </div>
+
+      <!-- Invoices Today -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">فواتير اليوم</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ today.invoice_count | number }}</p>
+        <p class="text-xs text-gray-400">فاتورة مقبولة</p>
+      </div>
+
+      <!-- Active Shops Today -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">فروع نشطة اليوم</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ today.active_shops | number }}</p>
+        <p class="text-xs text-gray-400">من {{ counts.shops }} فرع</p>
+      </div>
+
+      <!-- Pending -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">فواتير معلقة</p>
+        <p class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{{ today.pending_count | number }}</p>
+        <p class="text-xs text-gray-400">{{ today.pending_value | number:'1.0-0' }} ج.م</p>
+      </div>
+
+      <!-- Total Cash -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">إجمالي النقد</p>
+        <p class="text-2xl font-bold text-success-600 dark:text-success-400 mt-1">{{ today.total_cash | number:'1.0-0' }}</p>
+        <p class="text-xs text-gray-400">في الخزن</p>
+      </div>
+
+      <!-- Month Comparison -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">مقارنة الشهر</p>
+        <p class="text-lg font-bold text-gray-900 dark:text-white mt-1">{{ compare.this_month | number:'1.0-0' }}</p>
+        <div class="flex items-center gap-1">
+          @if (compare.change_pct !== null) {
+            <span [class]="'text-xs font-semibold ' + changePctClass(compare.change_pct)">
+              {{ compare.change_pct >= 0 ? '▲' : '▼' }} {{ compare.change_pct | number:'1.1-1' }}%
+            </span>
+          }
+          <span class="text-xs text-gray-400">vs الشهر الماضي</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         CHART + SYSTEM COUNTS
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+      <!-- 7-day Revenue Chart -->
+      <div class="xl:col-span-2 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">إيرادات آخر 7 أيام</h2>
+        @if (data.trend.length > 0) {
+          <apx-chart
+            [series]="trendSeries" [chart]="trendOptions.chart" [colors]="trendOptions.colors"
+            [plotOptions]="trendOptions.plotOptions" [dataLabels]="trendOptions.dataLabels"
+            [xaxis]="trendOptions.xaxis" [yaxis]="trendOptions.yaxis" [grid]="trendOptions.grid"
+            [tooltip]="trendOptions.tooltip" />
+        } @else {
+          <p class="text-center text-sm text-gray-400 py-16">لا توجد مبيعات في الأيام السبعة الماضية</p>
+        }
+      </div>
+
+      <!-- System Counts -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 flex flex-col gap-4">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">إحصائيات النظام</h2>
+
+        <a routerLink="/dashboard/shops" class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">الفروع</span>
+          </div>
+          <span class="text-xl font-bold text-gray-900 dark:text-white">{{ counts.shops }}</span>
+        </a>
+
+        <a routerLink="/dashboard/products" class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">المنتجات</span>
+          </div>
+          <span class="text-xl font-bold text-gray-900 dark:text-white">{{ counts.products }}</span>
+        </a>
+
+        <a routerLink="/dashboard/users" class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">الموظفون</span>
+          </div>
+          <span class="text-xl font-bold text-gray-900 dark:text-white">{{ counts.staff }}</span>
+        </a>
+
+        <div class="flex items-center justify-between p-3 rounded-xl">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">العملاء</span>
+          </div>
+          <span class="text-xl font-bold text-gray-900 dark:text-white">{{ counts.customers }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         TOP SHOPS + RECENT INVOICES
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- Top 5 Shops This Month -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">أفضل الفروع هذا الشهر</h2>
+          <a routerLink="/dashboard/reports/sales" class="text-xs text-brand-600 dark:text-brand-400 hover:underline">التفاصيل</a>
+        </div>
+        @if (topShops.length === 0) {
+          <p class="text-sm text-gray-400 text-center py-8">لا توجد مبيعات هذا الشهر</p>
+        } @else {
+          <div class="space-y-3">
+            @for (shop of topShops; track shop.shop_id; let i = $index) {
+              <div class="flex items-center gap-3">
+                <!-- Rank -->
+                <div class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shrink-0"
+                  [class]="i === 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' :
+                           i === 1 ? 'bg-gray-200 text-gray-700 dark:bg-white/10 dark:text-gray-300' :
+                           i === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300' :
+                                     'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-500'">
+                  {{ i + 1 }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ shop.shop_name }}</span>
+                    <span class="text-sm font-semibold text-gray-900 dark:text-white shrink-0 mr-2">{{ shop.revenue | number:'1.0-0' }} ج.م</span>
+                  </div>
+                  <div class="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500"
+                      [style.width.%]="(shop.revenue / maxTopRevenue) * 100"
+                      [class]="i === 0 ? 'bg-amber-400' : i === 1 ? 'bg-gray-400' : i === 2 ? 'bg-orange-400' : 'bg-brand-400'">
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-400 mt-0.5">{{ shop.invoice_count | number }} فاتورة</div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Recent Invoices -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">آخر الفواتير</h2>
+          <a routerLink="/dashboard/reports/sales" class="text-xs text-brand-600 dark:text-brand-400 hover:underline">عرض الكل</a>
+        </div>
+        @if (recentInvoices.length === 0) {
+          <p class="text-sm text-gray-400 text-center py-8">لا توجد فواتير</p>
+        } @else {
+          <div class="space-y-2 max-h-80 overflow-y-auto">
+            @for (inv of recentInvoices; track inv.id) {
+              <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-400">#{{ inv.id }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ inv.date }}</span>
+                    <span [class]="'text-xs px-1.5 py-0.5 rounded-full font-medium ' + statusClass(inv.status)">
+                      {{ statusLabel(inv.status) }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ inv.shop_name }}</span>
+                    <span>·</span>
+                    <span>{{ inv.customer_name }}</span>
+                  </div>
+                </div>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white shrink-0 mr-2">
+                  {{ inv.total_amount | number:'1.2-2' }}
+                </span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SAFE BALANCES OVERVIEW
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">أرصدة الخزن</h2>
+        <a routerLink="/dashboard/reports/financial" class="text-xs text-brand-600 dark:text-brand-400 hover:underline">التقرير المالي</a>
+      </div>
+      @if (safeBalances.length === 0) {
+        <p class="text-sm text-gray-400 text-center py-6">لا توجد خزن مسجلة</p>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+          @for (safe of safeBalances; track safe.shop_name) {
+            <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 transition-colors">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ safe.shop_name }}</span>
+                @if (!safe.is_active) {
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 dark:bg-gray-800">غير نشطة</span>
+                }
+              </div>
+              <div class="text-xs text-gray-400 mb-2">{{ safe.type_name }}</div>
+              @for (b of safe.balances; track b.currency) {
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-500">{{ b.currency }}</span>
+                  <span class="text-sm font-semibold" [class]="b.balance >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                    {{ b.balance | number:'1.2-2' }}
+                  </span>
+                </div>
+              }
+              @if (safe.balances.length === 0) {
+                <span class="text-xs text-gray-400">لا يوجد رصيد</span>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  } <!-- end @if data -->
+
+</div>

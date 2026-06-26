@@ -50,7 +50,13 @@ createFormData(formValue: any, file?: File|null, fileKey: string | null = 'file'
   Object.keys(formValue).forEach(key => {
     const value = formValue[key];
     if (value !== null && value !== undefined && value !== '') {
-      formData.append(key, value);
+      // FormData serialises JS booleans as "true"/"false" strings,
+      // which Laravel's `boolean` rule rejects. Convert to 1/0 instead.
+      if (typeof value === 'boolean') {
+        formData.append(key, value ? '1' : '0');
+      } else {
+        formData.append(key, value);
+      }
     }
   });
   

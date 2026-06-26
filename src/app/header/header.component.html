@@ -1,146 +1,129 @@
-<header
-  class="sticky top-0 z-[9999] flex items-center w-full transition-colors duration-200"
-  style="
-    height: var(--header-height);
-    background-color: var(--header-bg);
-    border-bottom: 1px solid var(--header-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  "
->
-  <div class="flex items-center w-full gap-3 px-4 xl:px-5">
+<header class="sticky top-0 z-[9999]">
 
-    <!-- ── Sidebar toggle ────────────────────────────── -->
+  <div class="nh-bar">
+
+    <!-- ── Sidebar toggle ─────────────────────────────────── -->
     <button
       type="button"
+      class="nh-icon-btn"
       (click)="handleToggle()"
       aria-label="Toggle sidebar"
-      class="header-icon-btn shrink-0"
     >
       @if (isMobileOpen$ | async) {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       } @else {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M3 6h18M3 12h12M3 18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       }
     </button>
 
-    <!-- ── Mobile brand ──────────────────────────────── -->
-    <a routerLink="/" class="xl:hidden flex items-center gap-2">
-      <span
-        class="flex items-center justify-center w-8 h-8 rounded-lg text-[10px] font-bold"
-        style="
-          background: linear-gradient(135deg, #9c7820 0%, #c9a84c 35%, #f0d070 60%, #c9a84c 80%, #9c7820 100%);
-          color: #0c0900;
-          box-shadow: 0 2px 8px rgba(201,168,76,0.35);
-        "
-      >AB</span>
+    <!-- ── Mobile brand ───────────────────────────────────── -->
+    <a routerLink="/" class="xl:hidden nh-mob-brand">
+      <span class="nh-mob-gem">
+        <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
+          <path d="M16 2L2 9.5V22.5L16 30L30 22.5V9.5L16 2Z"
+            stroke="rgba(255,255,255,0.95)" stroke-width="1.8" stroke-linejoin="round"
+            fill="rgba(255,255,255,0.15)"/>
+        </svg>
+      </span>
+      <span class="nh-mob-name">Alpha</span>
     </a>
 
-    <!-- ── Search bar ─────────────────────────────────── -->
-    <div class="hidden xl:flex flex-1 max-w-sm">
-      <div class="relative w-full">
-        <span
-          class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-          style="color: rgba(255,255,255,0.3);"
-        >
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-            <path fill-rule="evenodd" clip-rule="evenodd"
-              d="M3.04 9.37a6.33 6.33 0 1 1 12.67 0 6.33 6.33 0 0 1-12.67 0ZM9.37 1.54a7.83 7.83 0 1 0 4.99 13.88l2.82 2.82a.75.75 0 0 0 1.06-1.06l-2.82-2.82A7.83 7.83 0 0 0 9.37 1.54Z"
-              fill="currentColor"/>
-          </svg>
-        </span>
-        <input
-          #searchInput
-          type="text"
-          placeholder="بحث سريع..."
-          class="header-search-input"
-        />
-        <kbd
-          class="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-0.5 text-[10px] select-none rounded-md px-1.5 py-0.5"
-          style="
-            color: rgba(201,168,76,0.55);
-            border: 1px solid rgba(201,168,76,0.18);
-            background: rgba(201,168,76,0.05);
-          "
-        >
-          <span>⌘</span><span>K</span>
-        </kbd>
-      </div>
-    </div>
+    <!-- ── Breadcrumb trail (desktop) ─────────────────────── -->
+    <nav class="hidden xl:flex nh-crumbs" aria-label="Breadcrumb">
 
-    <!-- ── Spacer ─────────────────────────────────────── -->
-    <div class="flex-1 xl:hidden"></div>
-
-    <!-- ── Actions ───────────────────────────────────── -->
-    <div class="flex items-center gap-1.5">
-
-      <!-- Mobile search toggle -->
-      <button
-        type="button"
-        (click)="toggleApplicationMenu()"
-        aria-label="Search"
-        class="header-icon-btn xl:hidden"
-      >
-        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-          <path fill-rule="evenodd" clip-rule="evenodd"
-            d="M3.04 9.37a6.33 6.33 0 1 1 12.67 0 6.33 6.33 0 0 1-12.67 0ZM9.37 1.54a7.83 7.83 0 1 0 4.99 13.88l2.82 2.82a.75.75 0 0 0 1.06-1.06l-2.82-2.82A7.83 7.83 0 0 0 9.37 1.54Z"
-            fill="currentColor"/>
+      <a routerLink="/" class="nh-crumb-home">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M3 12l9-9 9 9M5 10v10a2 2 0 0 0 2 2h3v-6h4v6h3a2 2 0 0 0 2-2V10"
+            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-      </button>
+        الرئيسية
+      </a>
 
-      <!-- Divider -->
-      <div
-        class="hidden xl:block w-px h-5 mx-0.5"
-        style="background: rgba(201,168,76,0.18);"
-      ></div>
+      <span class="nh-crumb-sep">/</span>
 
-      <!-- Theme toggle -->
+      <span class="nh-crumb-active">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/>
+          <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/>
+          <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/>
+          <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/>
+        </svg>
+        لوحة التحكم
+      </span>
+
+    </nav>
+
+    <!-- ── Spacer ─────────────────────────────────────────── -->
+    <div class="flex-1"></div>
+
+    <!-- ── COMMAND PALETTE PILL (NEW) ─────────────────────── -->
+    <button
+      type="button"
+      class="nh-cmd-pill"
+      (click)="searchInput?.nativeElement?.focus()"
+      aria-label="Open command palette"
+    >
+      <svg class="nh-cmd-icon" width="14" height="14" viewBox="0 0 20 20" fill="none">
+        <path fill-rule="evenodd" clip-rule="evenodd"
+          d="M3.04 9.37a6.33 6.33 0 1 1 12.67 0 6.33 6.33 0 0 1-12.67 0ZM9.37 1.54a7.83 7.83 0 1 0 4.99 13.88l2.82 2.82a.75.75 0 0 0 1.06-1.06l-2.82-2.82A7.83 7.83 0 0 0 9.37 1.54Z"
+          fill="currentColor"/>
+      </svg>
+      <span class="nh-cmd-text">بحث في أي شيء...</span>
+      <span class="nh-cmd-kbd">⌘ K</span>
+    </button>
+
+    <!-- ── Mobile search trigger ──────────────────────────── -->
+    <button
+      type="button"
+      class="nh-icon-btn xl:hidden"
+      (click)="toggleApplicationMenu()"
+      aria-label="Search"
+    >
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+        <path fill-rule="evenodd" clip-rule="evenodd"
+          d="M3.04 9.37a6.33 6.33 0 1 1 12.67 0 6.33 6.33 0 0 1-12.67 0ZM9.37 1.54a7.83 7.83 0 1 0 4.99 13.88l2.82 2.82a.75.75 0 0 0 1.06-1.06l-2.82-2.82A7.83 7.83 0 0 0 9.37 1.54Z"
+          fill="currentColor"/>
+      </svg>
+    </button>
+
+    <!-- ── Action cluster ─────────────────────────────────── -->
+    <div class="nh-cluster">
       <app-theme-toggle-button />
-
-      <!-- Notifications -->
       <app-notification-dropdown />
-
-      <!-- Divider -->
-      <div
-        class="w-px h-5 mx-0.5"
-        style="background: rgba(201,168,76,0.18);"
-      ></div>
-
-      <!-- User dropdown -->
-      <app-user-dropdown />
-
     </div>
+
+    <!-- ── Divider ────────────────────────────────────────── -->
+    <div class="nh-divider"></div>
+
+    <!-- ── User dropdown ──────────────────────────────────── -->
+    <app-user-dropdown />
+
   </div>
+
 </header>
 
-<!-- Mobile search drawer -->
+<!-- ── Mobile search drawer ───────────────────────────────── -->
 @if (isApplicationMenuOpen) {
-  <div
-    class="xl:hidden w-full px-4 py-3"
-    style="
-      background-color: var(--header-bg);
-      border-bottom: 1px solid var(--header-border);
-    "
-  >
-    <div class="relative w-full">
-      <span
-        class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-        style="color: rgba(255,255,255,0.3);"
-      >
-        <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+  <div class="xl:hidden nh-mob-drawer">
+    <div class="relative">
+      <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style="color: #9CA3AF;">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
           <path fill-rule="evenodd" clip-rule="evenodd"
             d="M3.04 9.37a6.33 6.33 0 1 1 12.67 0 6.33 6.33 0 0 1-12.67 0ZM9.37 1.54a7.83 7.83 0 1 0 4.99 13.88l2.82 2.82a.75.75 0 0 0 1.06-1.06l-2.82-2.82A7.83 7.83 0 0 0 9.37 1.54Z"
             fill="currentColor"/>
         </svg>
       </span>
       <input
+        #searchInput
         type="text"
         placeholder="بحث سريع..."
-        class="header-search-input"
+        class="nh-mob-search"
+        style="padding-right: 2.25rem; padding-left: 0.75rem;"
+        aria-label="Mobile search"
       />
     </div>
   </div>

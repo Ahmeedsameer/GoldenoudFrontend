@@ -1,100 +1,87 @@
-<div class="ds-card overflow-hidden">
+<div class="db-tbl-card">
 
   <!-- Card Header -->
-  <div
-    class="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
-    style="border-bottom: 1px solid rgba(201,168,76,0.10);"
-  >
+  <div class="db-tbl-head">
     <div>
-      <h3 class="dash-chart-title">أحدث الطلبات</h3>
-      <p class="dash-chart-sub">آخر 5 طلبات مسجلة</p>
+      <h3
+        class="db-card-title"
+        style="font-size: 0.9375rem;"
+      >أحدث الطلبات</h3>
+      <p class="db-card-sub">آخر 5 طلبات مسجلة في النظام</p>
     </div>
     <div class="flex items-center gap-2">
-      <button
-        class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-150"
-        style="
-          border: 1px solid rgba(201,168,76,0.18);
-          background: transparent;
-          color: rgba(255,255,255,0.42);
-        "
-      >
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+      <button class="db-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+          <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         فلتر
       </button>
-      <button
-        class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150"
-        style="
-          background: rgba(201,168,76,0.10);
-          color: rgba(232,210,109,0.82);
-          border: 1px solid rgba(201,168,76,0.18);
-        "
-      >
+      <button class="db-btn db-btn-primary">
         عرض الكل
       </button>
     </div>
   </div>
 
   <!-- Table -->
-  <div class="overflow-x-auto">
-    <table class="ds-table">
-      <thead class="ds-table-head">
+  <div class="db-tbl-wrap">
+    <table class="db-tbl">
+      <thead>
         <tr>
-          <th class="ds-th">المنتج</th>
-          <th class="ds-th hidden sm:table-cell">الفئة</th>
-          <th class="ds-th hidden md:table-cell">السعر</th>
-          <th class="ds-th">الحالة</th>
+          <th>المنتج</th>
+          <th class="hidden sm:table-cell">الفئة</th>
+          <th class="hidden md:table-cell">السعر</th>
+          <th>الحالة</th>
         </tr>
       </thead>
       <tbody>
         @for (product of tableData; track $index) {
-          <tr class="ds-tr">
+          <tr>
 
             <!-- Product -->
-            <td class="ds-td">
+            <td>
               <div class="flex items-center gap-3">
                 <div
-                  class="h-10 w-10 overflow-hidden rounded-xl shrink-0"
-                  style="border: 1px solid rgba(201,168,76,0.12);"
+                  class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0"
+                  style="border: 1px solid #EDE9DF;"
                 >
                   <img
                     [src]="product.image"
                     [alt]="product.name"
-                    class="h-10 w-10 object-cover"
+                    class="w-10 h-10 object-cover"
                   />
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p
                     class="text-sm font-semibold whitespace-nowrap"
-                    style="color: rgba(255,255,255,0.88);"
+                    style="color: #111827; letter-spacing: -0.01em;"
                   >{{ product.name }}</p>
-                  <span
-                    class="text-xs"
-                    style="color: rgba(255,255,255,0.32);"
-                  >{{ product.variants }}</span>
+                  <p
+                    class="text-xs mt-0.5"
+                    style="color: #9CA3AF;"
+                  >{{ product.variants }}</p>
                 </div>
               </div>
             </td>
 
             <!-- Category -->
-            <td class="ds-td hidden sm:table-cell">
+            <td class="hidden sm:table-cell">
               <span
-                class="text-xs font-medium px-2.5 py-1 rounded-lg"
-                style="background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.48);"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium"
+                style="background: #F7F5EF; color: #6B7280; border: 1px solid #EDE9DF;"
               >{{ product.category }}</span>
             </td>
 
             <!-- Price -->
-            <td class="ds-td hidden md:table-cell">
+            <td class="hidden md:table-cell">
               <span
-                class="font-mono text-sm font-semibold"
-                style="color: rgba(232,210,109,0.75);"
+                class="text-sm font-700 tabular-nums"
+                style="color: #9A7B1A; font-weight: 700; letter-spacing: -0.01em;"
               >{{ product.price }}</span>
             </td>
 
-            <!-- Status badge -->
-            <td class="ds-td">
+            <!-- Status -->
+            <td>
               <app-badge size="sm" [color]="getBadgeColor(product.status)">
                 {{ product.status }}
               </app-badge>

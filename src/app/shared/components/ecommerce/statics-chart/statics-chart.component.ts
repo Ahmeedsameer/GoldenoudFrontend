@@ -54,13 +54,13 @@ export class StatisticsChartComponent implements AfterViewInit {
   ];
 
   public chart: ApexChart = {
-    fontFamily: 'Outfit, sans-serif',
+    fontFamily: 'Inter, system-ui, sans-serif',
     height: 310,
     type: 'area',
     toolbar: { show: false },
   };
 
-  public colors: string[] = ['#E8D26D', '#C9A84C'];
+  public colors: string[] = ['#D4AF37', '#9A7B1A'];
 
   public stroke: ApexStroke = {
     curve: 'smooth',
@@ -77,13 +77,13 @@ export class StatisticsChartComponent implements AfterViewInit {
 
   public markers: ApexMarkers = {
     size: 0,
-    strokeColors: '#0E0E0E',
+    strokeColors: '#FFFFFF',
     strokeWidth: 2,
     hover: { size: 5 },
   };
 
   public grid: ApexGrid = {
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(0,0,0,0.07)',
     xaxis: { lines: { show: false } },
     yaxis: { lines: { show: true } },
   };
@@ -92,7 +92,7 @@ export class StatisticsChartComponent implements AfterViewInit {
 
   public tooltip: ApexTooltip = {
     enabled: true,
-    theme: 'dark',
+    theme: 'light',
     x: { format: 'dd MMM yyyy' },
   };
 
@@ -108,8 +108,8 @@ export class StatisticsChartComponent implements AfterViewInit {
     labels: {
       style: {
         fontSize: '11px',
-        colors: Array(12).fill('rgba(255,255,255,0.35)'),
-        fontFamily: 'Outfit, sans-serif',
+        colors: Array(12).fill('#9CA3AF'),
+        fontFamily: 'Inter, system-ui, sans-serif',
       },
     },
   };
@@ -119,7 +119,7 @@ export class StatisticsChartComponent implements AfterViewInit {
       style: {
         fontSize: '11px',
         colors: ['rgba(255,255,255,0.35)'],
-        fontFamily: 'Outfit, sans-serif',
+        fontFamily: 'Inter, system-ui, sans-serif',
       },
     },
     title: {
@@ -132,7 +132,7 @@ export class StatisticsChartComponent implements AfterViewInit {
     show: true,
     position: 'top',
     horizontalAlign: 'left',
-    fontFamily: 'Outfit, sans-serif',
-    labels: { colors: ['rgba(255,255,255,0.55)'] },
+    fontFamily: 'Inter, system-ui, sans-serif',
+    labels: { colors: ['#6B7280'] },
   };
 }

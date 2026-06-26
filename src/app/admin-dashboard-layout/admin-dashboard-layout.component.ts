@@ -61,7 +61,27 @@ export class AdminDashboardLayoutComponent {
       ],
     },
 
-  
+    {
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 4-4"/></svg>`,
+      name: "التقارير",
+      subItems: [
+        { name: "تقارير المبيعات",  path: "/dashboard/reports/sales" },
+        { name: "التقرير المالي",   path: "/dashboard/reports/financial" },
+        { name: "ذكاء المخزون",     path: "/dashboard/stock-intelligence" },
+      ],
+    },
+
+    {
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>`,
+      name: "إدارة الخزنة",
+      subItems: [
+        { name: "الخزن",             path: "/dashboard/safe/management" },
+        { name: "العملات",            path: "/dashboard/currencies" },
+        { name: "أنواع الخزن",        path: "/dashboard/safe-types" },
+        { name: "أسباب المعاملات",    path: "/dashboard/transaction-reasons" },
+      ],
+    },
+
   ];
 
   readonly isExpanded$;

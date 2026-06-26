@@ -19,7 +19,7 @@ import {
 export class MonthlyTargetComponent {
   public series: ApexNonAxisChartSeries = [75.55];
   public chart: ApexChart = {
-    fontFamily: 'Outfit, sans-serif',
+    fontFamily: 'Inter, system-ui, sans-serif',
     type: 'radialBar',
     height: 330,
     sparkline: { enabled: true },
@@ -30,7 +30,7 @@ export class MonthlyTargetComponent {
       endAngle: 85,
       hollow: { size: '80%' },
       track: {
-        background: 'rgba(201,168,76,0.12)',
+        background: '#F1EFE9',
         strokeWidth: '100%',
         margin: 5,
       },
@@ -40,7 +40,7 @@ export class MonthlyTargetComponent {
           fontSize: '34px',
           fontWeight: '700',
           offsetY: -40,
-          color: '#E8D26D',
+          color: '#9A7B1A',
           formatter: (val: number) => `${val}%`,
         },
       },
@@ -51,10 +51,10 @@ export class MonthlyTargetComponent {
     gradient: {
       shade: 'dark',
       type: 'horizontal',
-      gradientToColors: ['#F0D882'],
+      gradientToColors: ['#E8C766'],
       stops: [0, 100],
     },
-    colors: ['#C9A84C'],
+    colors: ['#D4AF37'],
   };
   public stroke: ApexStroke = {
     lineCap: 'round',

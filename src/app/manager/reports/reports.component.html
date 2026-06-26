@@ -1,0 +1,959 @@
+<!-- Print-only header (hidden on screen) -->
+<div class="hidden print:block mb-6 border-b pb-4">
+  <h1 class="text-xl font-bold">تقرير مالي — الفرع</h1>
+  @if (financialData) {
+    <p class="text-sm text-gray-500">الفترة: {{ financialData.period.from }} — {{ financialData.period.to }}</p>
+  }
+</div>
+
+<app-loading [loading]="loading"></app-loading>
+
+<!-- ── Page header ─────────────────────────────────────────────────── -->
+<div class="mb-5 flex flex-wrap items-center justify-between gap-4 print:hidden">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">التقارير والإحصائيات</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+      @if (activeTab === 'sales'     && summary)       { الفترة: {{ summary.period.from }} — {{ summary.period.to }} }
+      @if (activeTab === 'inventory' && inventory.length > 0) { لحظي — {{ inventory.length }} صنف }
+      @if (activeTab === 'customers' && customerData)  { الفترة: {{ customerData.period.from }} — {{ customerData.period.to }} }
+      @if (activeTab === 'financial' && financialData) { الفترة: {{ financialData.period.from }} — {{ financialData.period.to }} }
+    </p>
+  </div>
+
+  <!-- Period controls -->
+  <div class="flex flex-wrap items-center gap-2">
+
+    <!-- Preset buttons (disabled when custom range is active) -->
+    <div class="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-white/[0.05]">
+      @for (p of periods; track p.key) {
+        <button type="button" (click)="setPeriod(p.key)" [disabled]="customRangeActive"
+          class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
+          [class]="period === p.key && !customRangeActive
+            ? 'bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+
+    <!-- Custom range toggle button -->
+    <button type="button" (click)="showCustomPicker = !showCustomPicker"
+      class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors"
+      [class]="customRangeActive
+        ? 'bg-brand-50 dark:bg-brand-500/10 border-brand-300 dark:border-brand-500/40 text-brand-700 dark:text-brand-300'
+        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05]'">
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+      @if (customRangeActive) { {{ globalFrom }} — {{ globalTo }} }
+      @else { تخصيص الفترة }
+    </button>
+
+    <!-- Clear custom range -->
+    @if (customRangeActive) {
+      <button type="button" (click)="clearGlobalRange()"
+        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors">
+        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        إلغاء
+      </button>
+    }
+
+  </div>
+</div>
+
+<!-- Custom date range picker (shown below header when open) -->
+@if (showCustomPicker && !customRangeActive) {
+  <div class="mb-5 flex flex-wrap items-end gap-3 p-4 rounded-2xl border border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">من تاريخ</label>
+      <input type="date" [(ngModel)]="globalFrom"
+        class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">إلى تاريخ</label>
+      <input type="date" [(ngModel)]="globalTo"
+        class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+    </div>
+    <button type="button" (click)="applyGlobalRange()"
+      [disabled]="!globalFrom || !globalTo"
+      class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+      تطبيق على كل التقارير
+    </button>
+    <button type="button" (click)="showCustomPicker = false"
+      class="px-4 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+      إلغاء
+    </button>
+  </div>
+}
+
+<!-- ── Tab bar ─────────────────────────────────────────────────────── -->
+<div class="flex gap-1 border-b border-gray-200 dark:border-white/[0.07] mb-6 print:hidden">
+  @for (tab of tabs; track tab.key) {
+    <button type="button" (click)="setTab(tab.key)"
+      class="px-5 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px"
+      [class]="activeTab === tab.key
+        ? 'border-brand-500 text-brand-600 dark:text-brand-400'
+        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'">
+      {{ tab.label }}
+    </button>
+  }
+</div>
+
+@if (errorMsg) {
+  <div class="mb-5 print:hidden">
+    <app-alert variant="error" [message]="errorMsg"></app-alert>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- TAB: SALES                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+@if (activeTab === 'sales') {
+
+  @if (summary) {
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي المبيعات</p>
+        </div>
+        <p class="text-2xl font-bold font-mono text-gray-900 dark:text-white">
+          {{ summary.total_revenue | number:'1.2-2' }}<span class="text-sm font-normal text-gray-400 mr-1">ج.م</span>
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-success-100 dark:bg-success-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-success-600 dark:text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">عدد الفواتير</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ summary.invoice_count | number }}<span class="text-sm font-normal text-gray-400 mr-1">فاتورة</span>
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">متوسط الفاتورة</p>
+        </div>
+        <p class="text-2xl font-bold font-mono text-gray-900 dark:text-white">
+          {{ summary.avg_invoice | number:'1.2-2' }}<span class="text-sm font-normal text-gray-400 mr-1">ج.م</span>
+        </p>
+      </div>
+
+      <div class="rounded-2xl border shadow-sm p-5"
+        [class]="summary.pending_count > 0
+          ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10'
+          : 'border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900'">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+            [class]="summary.pending_count > 0 ? 'bg-amber-100 dark:bg-amber-500/20' : 'bg-gray-100 dark:bg-white/[0.05]'">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              [class]="summary.pending_count > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium"
+            [class]="summary.pending_count > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-gray-500 dark:text-gray-400'">
+            قيد المراجعة
+          </p>
+        </div>
+        <p class="text-2xl font-bold"
+          [class]="summary.pending_count > 0 ? 'text-amber-800 dark:text-amber-300' : 'text-gray-900 dark:text-white'">
+          {{ summary.pending_count }}
+          <span class="text-sm font-normal"
+            [class]="summary.pending_count > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'">فاتورة</span>
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Revenue Trend Chart -->
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm mb-5">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+          </svg>
+          منحنى الإيرادات اليومية
+        </h3>
+        <span class="text-xs text-gray-400">{{ trendData.length }} يوم</span>
+      </div>
+
+      @if (trendData.length === 0) {
+        <div class="h-40 flex items-center justify-center">
+          <p class="text-sm text-gray-400 dark:text-gray-500">لا توجد بيانات للفترة المحددة</p>
+        </div>
+      } @else {
+        <apx-chart
+          [series]="chartSeries"
+          [chart]="chartOptions.chart"
+          [colors]="chartOptions.colors"
+          [plotOptions]="chartOptions.plotOptions"
+          [dataLabels]="chartOptions.dataLabels"
+          [xaxis]="chartOptions.xaxis"
+          [yaxis]="chartOptions.yaxis"
+          [grid]="chartOptions.grid"
+          [tooltip]="chartOptions.tooltip">
+        </apx-chart>
+      }
+    </div>
+
+    <!-- Seller Performance + Top Products -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+      <!-- Sellers -->
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+
+        <!-- Header + search -->
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              أداء البائعين
+            </h3>
+            <span class="text-xs text-gray-400">{{ filteredSellers.length }} بائع</span>
+          </div>
+          <div class="relative">
+            <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" [(ngModel)]="sellersSearch" (ngModelChange)="onSellersSearchChange()"
+              placeholder="بحث باسم البائع…"
+              class="pr-9 pl-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 w-44"/>
+          </div>
+        </div>
+
+        @if (filteredSellers.length === 0 && !loading) {
+          <div class="py-12 text-center"><p class="text-sm text-gray-400">لا توجد نتائج</p></div>
+        } @else {
+          <div class="divide-y divide-gray-50 dark:divide-white/[0.04]">
+            @for (seller of paginatedSellers; track seller.seller_id; let i = $index) {
+              <div class="px-5 py-3.5">
+                <div class="flex items-center justify-between gap-3 mb-1.5">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                      [class]="rankBadgeClass((sellersPage - 1) * pageSize + i)">
+                      {{ (sellersPage - 1) * pageSize + i + 1 }}
+                    </span>
+                    <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ seller.seller_name }}</p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p class="text-sm font-bold font-mono text-gray-900 dark:text-white">{{ seller.total_revenue | number:'1.2-2' }} ج.م</p>
+                    <p class="text-[10px] text-gray-400">{{ seller.invoice_count }} فاتورة · متوسط {{ seller.avg_invoice | number:'1.0-0' }} ج.م</p>
+                  </div>
+                </div>
+                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/[0.06] overflow-hidden">
+                  <div class="h-full rounded-full bg-brand-400 dark:bg-brand-500 transition-all" [style.width.%]="sellerShare(seller.total_revenue)"></div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Sellers pagination -->
+          @if (sellersPageCount > 1) {
+            <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                {{ (sellersPage - 1) * pageSize + 1 }}–{{ pageEnd(sellersPage, filteredSellers.length) }}
+                من {{ filteredSellers.length }}
+              </p>
+              <div class="flex items-center gap-1">
+                <button type="button" (click)="sellersPage = sellersPage - 1"
+                  [disabled]="sellersPage === 1"
+                  class="px-3 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                  السابق
+                </button>
+                <span class="px-3 py-1 text-xs text-gray-600 dark:text-gray-400">
+                  {{ sellersPage }} / {{ sellersPageCount }}
+                </span>
+                <button type="button" (click)="sellersPage = sellersPage + 1"
+                  [disabled]="sellersPage === sellersPageCount"
+                  class="px-3 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                  التالي
+                </button>
+              </div>
+            </div>
+          }
+        }
+
+      </div>
+
+      <!-- Top Products -->
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <svg class="w-4 h-4 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+            أكثر المنتجات مبيعاً
+          </h3>
+          <span class="text-xs text-gray-400">أفضل {{ products.length }}</span>
+        </div>
+        @if (products.length === 0 && !loading) {
+          <div class="py-12 text-center"><p class="text-sm text-gray-400">لا توجد بيانات</p></div>
+        } @else {
+          <div class="divide-y divide-gray-50 dark:divide-white/[0.04]">
+            @for (product of products; track product.product_id; let rank = $index) {
+              <div class="px-5 py-3.5">
+                <div class="flex items-center justify-between gap-3 mb-1.5">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                      [class]="rank===0?'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300':
+                               rank===1?'bg-gray-200 text-gray-700 dark:bg-white/10 dark:text-gray-300':
+                               rank===2?'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300':
+                               'bg-gray-100 text-gray-500 dark:bg-white/[0.05] dark:text-gray-500'">
+                      {{ rank + 1 }}
+                    </span>
+                    <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ product.product_name }}</p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p class="text-sm font-bold font-mono text-gray-900 dark:text-white">{{ product.total_revenue | number:'1.2-2' }} ج.م</p>
+                    <p class="text-[10px] text-gray-400 font-mono">{{ product.total_qty | number:'1.0-3' }} {{ product.scalar }}</p>
+                  </div>
+                </div>
+                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/[0.06] overflow-hidden">
+                  <div class="h-full rounded-full bg-success-400 dark:bg-success-500 transition-all" [style.width.%]="productShare(product.total_revenue)"></div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+
+  } @else if (!loading) {
+    <div class="py-16 text-center text-gray-400 text-sm">لا توجد بيانات</div>
+  }
+
+}
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- TAB: INVENTORY                                                    -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+@if (activeTab === 'inventory') {
+
+  <!-- ── Inventory sub-tab bar ──────────────────────────────────────── -->
+  <div class="flex gap-0.5 p-1 rounded-xl bg-gray-100 dark:bg-white/[0.05] w-fit mb-5">
+    <button type="button" (click)="inventorySubTab = 'snapshot'"
+      class="px-5 py-1.5 rounded-lg text-sm font-medium transition-colors"
+      [class]="inventorySubTab === 'snapshot'
+        ? 'bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 shadow-sm'
+        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'">
+      <span class="flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        الأرصدة الحالية
+        @if (inventoryLowCount > 0) {
+          <span class="w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-amber-500 text-white">
+            {{ inventoryLowCount }}
+          </span>
+        }
+      </span>
+    </button>
+    <button type="button" (click)="inventorySubTab = 'movements'"
+      class="px-5 py-1.5 rounded-lg text-sm font-medium transition-colors"
+      [class]="inventorySubTab === 'movements'
+        ? 'bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 shadow-sm'
+        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'">
+      <span class="flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+        </svg>
+        حركة المخزون
+        @if (movementsDateLabel) {
+          <span class="px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+            مخصص
+          </span>
+        }
+      </span>
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- SUB-TAB: SNAPSHOT                       -->
+  <!-- ════════════════════════════════════════ -->
+  @if (inventorySubTab === 'snapshot') {
+
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+
+      <!-- Header + search -->
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">الأرصدة الحالية</h3>
+          <span class="text-xs text-gray-400">{{ filteredInventory.length }} صنف</span>
+          @if (inventoryLowCount > 0) {
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+              {{ inventoryLowCount }} يحتاج انتباهاً
+            </span>
+          }
+        </div>
+        <!-- Search -->
+        <div class="relative">
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" [(ngModel)]="snapshotSearch" (ngModelChange)="onSnapshotSearchChange()"
+            placeholder="بحث باسم المنتج أو SKU…"
+            class="pr-9 pl-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 w-52"/>
+        </div>
+      </div>
+
+      @if (filteredInventory.length === 0 && !loading) {
+        <div class="py-12 text-center"><p class="text-sm text-gray-400">لا توجد نتائج</p></div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-white/[0.02]">
+              <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">المنتج</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الفئة</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">SKU</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الكمية</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">تاريخ الإدخال</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+              @for (item of paginatedInventory; track item.goods_id) {
+                <tr [class]="stockLevel(item.current_quantity)==='critical' ? 'bg-error-50/60 dark:bg-error-500/5' :
+                             stockLevel(item.current_quantity)==='low'      ? 'bg-amber-50/60 dark:bg-amber-500/5' : ''">
+                  <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90">{{ item.product_name }}</td>
+                  <td class="py-3 px-4 text-xs text-gray-500">{{ item.category_name }}</td>
+                  <td class="py-3 px-4 font-mono text-xs text-gray-500">{{ item.sku }}</td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
+                      [class]="stockLevel(item.current_quantity)==='critical' ? 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-300' :
+                               stockLevel(item.current_quantity)==='low'      ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' :
+                               'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-300'">
+                      <span class="font-mono">{{ item.current_quantity | number:'1.0-3' }}</span> {{ item.scalar }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-xs text-gray-400 font-mono">{{ item.date }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Snapshot pagination -->
+        @if (inventoryPageCount > 1) {
+          <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              {{ (snapshotPage - 1) * pageSize + 1 }}–{{ pageEnd(snapshotPage, filteredInventory.length) }}
+              من {{ filteredInventory.length }}
+            </p>
+            <div class="flex items-center gap-1">
+              <button type="button" (click)="snapshotPage = snapshotPage - 1"
+                [disabled]="snapshotPage === 1"
+                class="px-3 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                السابق
+              </button>
+              <span class="px-3 py-1 text-xs text-gray-600 dark:text-gray-400">
+                {{ snapshotPage }} / {{ inventoryPageCount }}
+              </span>
+              <button type="button" (click)="snapshotPage = snapshotPage + 1"
+                [disabled]="snapshotPage === inventoryPageCount"
+                class="px-3 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                التالي
+              </button>
+            </div>
+          </div>
+        }
+      }
+
+    </div>
+
+  }
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- SUB-TAB: MOVEMENTS                      -->
+  <!-- ════════════════════════════════════════ -->
+  @if (inventorySubTab === 'movements') {
+
+    <!-- Date range controls -->
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-4 shadow-sm mb-4 flex flex-wrap items-end gap-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">من تاريخ</label>
+        <input type="date" [(ngModel)]="customFrom"
+          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">إلى تاريخ</label>
+        <input type="date" [(ngModel)]="customTo"
+          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+      </div>
+      <button type="button" (click)="applyCustomDates()"
+        [disabled]="!customFrom || !customTo || loading"
+        class="px-4 py-1.5 rounded-lg text-sm font-medium bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+        تطبيق
+      </button>
+      @if (movementsDateLabel) {
+        <button type="button" (click)="resetCustomDates()"
+          class="px-4 py-1.5 rounded-lg text-sm font-medium border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          إلغاء التخصيص
+        </button>
+        <span class="text-xs text-brand-600 dark:text-brand-400 self-end pb-1.5">
+          الفترة: {{ movementsDateLabel }}
+        </span>
+      } @else {
+        <span class="text-xs text-gray-400 self-end pb-1.5">
+          الفترة الحالية: {{ period === 'today' ? 'اليوم' : period === 'week' ? 'الأسبوع' : period === 'month' ? 'الشهر' : 'السنة' }}
+        </span>
+      }
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+
+      <!-- Header + search -->
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">حركة المخزون</h3>
+          <span class="text-xs text-gray-400">{{ filteredMovements.length }} منتج</span>
+        </div>
+        <!-- Search -->
+        <div class="relative">
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" [(ngModel)]="movementsSearch" (ngModelChange)="onMovementsSearchChange()"
+            placeholder="بحث باسم المنتج أو SKU…"
+            class="pr-9 pl-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 w-52"/>
+        </div>
+      </div>
+
+      @if (filteredMovements.length === 0 && !loading) {
+        <div class="py-12 text-center"><p class="text-sm text-gray-400">لا توجد حركات في هذه الفترة</p></div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-white/[0.02]">
+              <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">المنتج</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الفئة</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">وارد (توريد)</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">صادر (مبيعات)</th>
+                <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الرصيد الحالي</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+              @for (m of paginatedMovements; track m.product_id) {
+                <tr>
+                  <td class="py-3 px-4">
+                    <p class="font-medium text-gray-800 dark:text-white/90">{{ m.product_name }}</p>
+                    <p class="text-[10px] font-mono text-gray-400">{{ m.sku }}</p>
+                  </td>
+                  <td class="py-3 px-4 text-xs text-gray-500">{{ m.category_name }}</td>
+                  <td class="py-3 px-4">
+                    @if (m.qty_in > 0) {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold font-mono bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-300">
+                        +{{ m.qty_in | number:'1.0-3' }} {{ m.scalar }}
+                      </span>
+                    } @else {
+                      <span class="text-xs text-gray-300 dark:text-gray-600">—</span>
+                    }
+                  </td>
+                  <td class="py-3 px-4">
+                    @if (m.qty_sold > 0) {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold font-mono bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-300">
+                        -{{ m.qty_sold | number:'1.0-3' }} {{ m.scalar }}
+                      </span>
+                    } @else {
+                      <span class="text-xs text-gray-300 dark:text-gray-600">—</span>
+                    }
+                  </td>
+                  <td class="py-3 px-4">
+                    <span class="font-mono text-sm font-medium"
+                      [class]="stockLevel(m.current_qty)==='critical' ? 'text-error-600 dark:text-error-400' :
+                               stockLevel(m.current_qty)==='low'      ? 'text-amber-600 dark:text-amber-400' :
+                               'text-gray-800 dark:text-white/90'">
+                      {{ m.current_qty | number:'1.0-3' }} {{ m.scalar }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Movements pagination -->
+        @if (movementsPageCount > 1) {
+          <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              {{ (movementsPage - 1) * pageSize + 1 }}–{{ pageEnd(movementsPage, filteredMovements.length) }}
+              من {{ filteredMovements.length }}
+            </p>
+            <div class="flex items-center gap-1">
+              <button type="button" (click)="movementsPage = movementsPage - 1"
+                [disabled]="movementsPage === 1"
+                class="px-3 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                السابق
+              </button>
+              <span class="px-3 py-1 text-xs text-gray-600 dark:text-gray-400">
+                {{ movementsPage }} / {{ movementsPageCount }}
+              </span>
+              <button type="button" (click)="movementsPage = movementsPage + 1"
+                [disabled]="movementsPage === movementsPageCount"
+                class="px-3 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                التالي
+              </button>
+            </div>
+          </div>
+        }
+      }
+
+    </div>
+
+  }
+
+}
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- TAB: CUSTOMERS                                                    -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+@if (activeTab === 'customers') {
+
+  @if (customerData) {
+
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">عملاء الفترة</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ customerData.unique_customers | number }}<span class="text-sm font-normal text-gray-400 mr-1">عميل</span>
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-success-100 dark:bg-success-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-success-600 dark:text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">فواتير الفترة</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ customerData.total_invoices | number }}<span class="text-sm font-normal text-gray-400 mr-1">فاتورة</span>
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي المسجلين</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ customerData.registered_total | number }}<span class="text-sm font-normal text-gray-400 mr-1">عميل</span>
+        </p>
+      </div>
+
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+
+      <!-- Header + search -->
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+            </svg>
+            أفضل العملاء إنفاقاً
+          </h3>
+          <span class="text-xs text-gray-400">{{ filteredCustomers.length }} عميل</span>
+        </div>
+        <div class="relative">
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" [(ngModel)]="customersSearch" (ngModelChange)="onCustomersSearchChange()"
+            placeholder="بحث بالاسم أو الهاتف…"
+            class="pr-9 pl-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 w-48"/>
+        </div>
+      </div>
+
+      @if (filteredCustomers.length === 0 && !loading) {
+        <div class="py-12 text-center"><p class="text-sm text-gray-400">لا توجد نتائج</p></div>
+      } @else {
+        <div class="divide-y divide-gray-50 dark:divide-white/[0.04]">
+          @for (c of paginatedCustomers; track c.customer_id ?? c.customer_name; let i = $index) {
+            <div class="px-5 py-3.5">
+              <div class="flex items-center justify-between gap-3 mb-1.5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                    [class]="rankBadgeClass((customersPage - 1) * pageSize + i)">
+                    {{ (customersPage - 1) * pageSize + i + 1 }}
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ c.customer_name }}</p>
+                    <p class="text-[10px] text-gray-400 font-mono">{{ c.customer_phone }}</p>
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-sm font-bold font-mono text-gray-900 dark:text-white">{{ c.total_spent | number:'1.2-2' }} ج.م</p>
+                  <p class="text-[10px] text-gray-400">{{ c.visit_count }} زيارة</p>
+                </div>
+              </div>
+              <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/[0.06] overflow-hidden">
+                <div class="h-full rounded-full bg-brand-400 dark:bg-brand-500 transition-all" [style.width.%]="customerShare(c.total_spent)"></div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Customers pagination -->
+        @if (customersPageCount > 1) {
+          <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              {{ (customersPage - 1) * pageSize + 1 }}–{{ pageEnd(customersPage, filteredCustomers.length) }}
+              من {{ filteredCustomers.length }}
+            </p>
+            <div class="flex items-center gap-1">
+              <button type="button" (click)="customersPage = customersPage - 1"
+                [disabled]="customersPage === 1"
+                class="px-3 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                السابق
+              </button>
+              <span class="px-3 py-1 text-xs text-gray-600 dark:text-gray-400">
+                {{ customersPage }} / {{ customersPageCount }}
+              </span>
+              <button type="button" (click)="customersPage = customersPage + 1"
+                [disabled]="customersPage === customersPageCount"
+                class="px-3 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                التالي
+              </button>
+            </div>
+          </div>
+        }
+      }
+
+    </div>
+
+  } @else if (!loading) {
+    <div class="py-16 text-center text-gray-400 text-sm">لا توجد بيانات</div>
+  }
+
+}
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- TAB: FINANCIAL  (+ print target)                                 -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+@if (activeTab === 'financial') {
+
+  @if (financialData) {
+
+    <!-- Print action bar -->
+    <div class="flex justify-end mb-4 print:hidden">
+      <button type="button" (click)="printFinancial()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.05] shadow-sm transition">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        طباعة التقرير
+      </button>
+    </div>
+
+    <!-- EGP Summary Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+
+      <div class="rounded-2xl border border-success-200 dark:border-success-500/30 bg-success-50 dark:bg-success-500/10 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-success-100 dark:bg-success-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-success-600 dark:text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-success-700 dark:text-success-400">إجمالي الإيرادات (ج.م)</p>
+        </div>
+        <p class="text-2xl font-bold font-mono text-success-800 dark:text-success-300">{{ financialData.income_egp | number:'1.2-2' }}</p>
+      </div>
+
+      <div class="rounded-2xl border border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-error-100 dark:bg-error-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-error-600 dark:text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-error-700 dark:text-error-400">إجمالي المصروفات (ج.م)</p>
+        </div>
+        <p class="text-2xl font-bold font-mono text-error-800 dark:text-error-300">{{ financialData.expense_egp | number:'1.2-2' }}</p>
+      </div>
+
+      <div class="rounded-2xl border shadow-sm p-5"
+        [class]="financialData.net_egp >= 0
+          ? 'border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10'
+          : 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10'">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+            [class]="financialData.net_egp >= 0 ? 'bg-brand-100 dark:bg-brand-500/20' : 'bg-amber-100 dark:bg-amber-500/20'">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              [class]="financialData.net_egp >= 0 ? 'text-brand-600 dark:text-brand-400' : 'text-amber-600 dark:text-amber-400'">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium"
+            [class]="financialData.net_egp >= 0 ? 'text-brand-700 dark:text-brand-400' : 'text-amber-700 dark:text-amber-400'">
+            صافي الحركة (ج.م)
+          </p>
+        </div>
+        <p class="text-2xl font-bold font-mono"
+          [class]="financialData.net_egp >= 0 ? 'text-brand-800 dark:text-brand-300' : 'text-amber-800 dark:text-amber-300'">
+          {{ financialData.net_egp | number:'1.2-2' }}
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Transactions + Safes -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+      <!-- Transaction Breakdown -->
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+            </svg>
+            تفاصيل الحركات
+          </h3>
+        </div>
+        @if (financialData.transactions.length === 0) {
+          <div class="py-10 text-center"><p class="text-sm text-gray-400">لا توجد حركات</p></div>
+        } @else {
+          @if (incomeRows.length > 0) {
+            <div class="px-5 pt-4 pb-1">
+              <p class="text-xs font-semibold text-success-600 dark:text-success-400 uppercase tracking-wide mb-2">إيرادات</p>
+            </div>
+            <div class="divide-y divide-gray-50 dark:divide-white/[0.04]">
+              @for (tx of incomeRows; track tx.type + tx.currency_code) {
+                <div class="px-5 py-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ typeLabel(tx.type) }}</p>
+                    <p class="text-[10px] text-gray-400">{{ tx.currency_code }}</p>
+                  </div>
+                  <p class="text-sm font-bold font-mono text-success-600 dark:text-success-400">+{{ tx.total_amount | number:'1.2-2' }} {{ tx.currency_symbol }}</p>
+                </div>
+              }
+            </div>
+          }
+          @if (expenseRows.length > 0) {
+            <div class="px-5 pt-4 pb-1">
+              <p class="text-xs font-semibold text-error-600 dark:text-error-400 uppercase tracking-wide mb-2">مصروفات</p>
+            </div>
+            <div class="divide-y divide-gray-50 dark:divide-white/[0.04]">
+              @for (tx of expenseRows; track tx.type + tx.currency_code) {
+                <div class="px-5 py-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ typeLabel(tx.type) }}</p>
+                    <p class="text-[10px] text-gray-400">{{ tx.currency_code }}</p>
+                  </div>
+                  <p class="text-sm font-bold font-mono text-error-600 dark:text-error-400">-{{ tx.total_amount | number:'1.2-2' }} {{ tx.currency_symbol }}</p>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Safe Balances -->
+      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            أرصدة الخزائن الحالية
+          </h3>
+        </div>
+        @if (financialData.safes.length === 0) {
+          <div class="py-10 text-center"><p class="text-sm text-gray-400">لا توجد خزائن</p></div>
+        } @else {
+          <div class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+            @for (safe of financialData.safes; track safe.safe_id) {
+              <div class="px-5 py-4">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ safe.safe_name }}</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                    [class]="safe.safe_kind==='physical'
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'
+                      : 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'">
+                    {{ safe.safe_kind === 'physical' ? 'نقدية' : 'افتراضية' }}
+                  </span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  @for (b of safe.balances; track b.currency_id) {
+                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.06]">
+                      <span class="text-xs text-gray-400">{{ b.currency_code }}</span>
+                      <span class="text-sm font-bold font-mono text-gray-900 dark:text-white">{{ b.balance | number:'1.2-2' }}</span>
+                      <span class="text-xs text-gray-400">{{ b.currency_symbol }}</span>
+                    </div>
+                  }
+                  @if (safe.balances.length === 0) {
+                    <span class="text-xs text-gray-400">لا توجد أرصدة</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+
+  } @else if (!loading) {
+    <div class="py-16 text-center text-gray-400 text-sm">لا توجد بيانات</div>
+  }
+
+}

@@ -18,7 +18,7 @@ export class MonthlySalesChartComponent {
     },
   ];
   public chart: ApexChart = {
-    fontFamily: 'Outfit, sans-serif',
+    fontFamily: 'Inter, system-ui, sans-serif',
     type: 'bar',
     height: 180,
     toolbar: { show: false },
@@ -30,7 +30,7 @@ export class MonthlySalesChartComponent {
     ],
     axisBorder: { show: false },
     axisTicks: { show: false },
-    labels: { style: { colors: Array(12).fill('rgba(255,255,255,0.35)'), fontFamily: 'Outfit, sans-serif' } },
+    labels: { style: { colors: Array(12).fill('#9CA3AF'), fontFamily: 'Inter, system-ui, sans-serif' } },
   };
   public plotOptions: ApexPlotOptions = {
     bar: {
@@ -51,18 +51,18 @@ export class MonthlySalesChartComponent {
   };
   public yaxis: ApexYAxis = {
     title: { text: undefined },
-    labels: { style: { colors: ['rgba(255,255,255,0.35)'], fontFamily: 'Outfit, sans-serif' } },
+    labels: { style: { colors: ['#9CA3AF'], fontFamily: 'Inter, system-ui, sans-serif' } },
   };
   public grid: ApexGrid = {
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(0,0,0,0.07)',
     yaxis: { lines: { show: true } },
   };
   public fill: ApexFill = { opacity: 1 };
   public tooltip: ApexTooltip = {
-    theme: 'dark',
+    theme: 'light',
     x: { show: false },
     y: { formatter: (val: number) => `${val}` },
   };
-  public colors: string[] = ['#C9A84C'];
+  public colors: string[] = ['#D4AF37'];
 
 }

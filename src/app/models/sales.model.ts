@@ -1,3 +1,8 @@
+export interface SalesCategory {
+  id: number;
+  name: string;
+}
+
 export interface TesterUser {
   id: number;
   name: string;
@@ -22,6 +27,8 @@ export interface GoodsSearchResult {
         id: number;
         name: string;
         minimum_sell_price?: number;
+        is_fixed?: boolean;
+        value_percentage?: number | null;
       };
     };
   };
@@ -65,11 +72,21 @@ export interface Invoice {
   created_at?: string;
 }
 
+export interface InvoicePaymentRow {
+  currency_id: number;
+  amount: number;
+}
+
 export interface CreateInvoiceRequest {
   name: string;
   phone: string;
   tester_id: number | null;
   date: string;
   price_type: 'wholesale' | 'retail';
-  items: { product_id: number; quantity: number; price: number }[];
+  safe_id: number | null;
+  total_amount: number;
+  payments: InvoicePaymentRow[];   // required for physical safes
+  items: { product_id: number; quantity: number }[];
+  /** Manager-approved one-time token — bypasses pending status for underpriced invoices. */
+  override_token?: string;
 }

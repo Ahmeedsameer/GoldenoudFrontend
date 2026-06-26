@@ -10,8 +10,9 @@ import { PaginationComponent } from '../../../../pagination/pagination.component
 import { ShopService } from '../../../../services/shop.service';
 import { extractPagination, PaginationResult } from '../../../../services/pagination-helper.service';
 import { ShopStockComponent } from '../../../../admin/stock-managment/inventory/shop-stock/shop-stock.component';
+import { AdminShopSafeComponent } from '../../../safe/admin-shop-safe.component';
 
-type ActiveTab = 'info' | 'manager' | 'employees' | 'stock';
+type ActiveTab = 'info' | 'manager' | 'employees' | 'stock' | 'safes';
 
 @Component({
   selector: 'app-shop-detail',
@@ -24,6 +25,7 @@ type ActiveTab = 'info' | 'manager' | 'employees' | 'stock';
     ModalComponent,
     PaginationComponent,
     ShopStockComponent,
+    AdminShopSafeComponent,
   ],
   templateUrl: './shop-detail.component.html',
   styleUrl: './shop-detail.component.css',

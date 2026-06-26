@@ -6,7 +6,10 @@ import { AbstractControl } from '@angular/forms';
   standalone: true, 
   template: `
     @if (errorMessage) {
-      <small class="text-red-500 block mt-1">{{ errorMessage }}</small>
+      <small
+        class="block mt-1 text-xs font-medium"
+        style="color: #DC2626; font-family: 'Inter', system-ui, sans-serif;"
+      >{{ errorMessage }}</small>
     }
   `
 })

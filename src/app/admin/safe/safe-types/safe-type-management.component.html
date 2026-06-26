@@ -1,0 +1,129 @@
+<app-loading [loading]="loading || modalLoading"></app-loading>
+
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">أنواع الخزن</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">تحديد أنواع الخزن المتاحة (نقدي، بنكي، إلكتروني...)</p>
+  </div>
+  <button (click)="openCreate()"
+    class="flex items-center gap-2 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-xl transition-colors">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    إضافة نوع
+  </button>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5"><app-alert [variant]="alert.type" [message]="alert.message"></app-alert></div>
+}
+
+<div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] overflow-hidden">
+  <table class="min-w-full">
+    <thead class="border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+      <tr>
+        <th class="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">الاسم</th>
+        <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">النوع</th>
+        <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">الحالة</th>
+        <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">إجراءات</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+      @for (st of safeTypes; track st.id) {
+        <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+          <td class="px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300">{{ st.name }}</td>
+          <td class="px-4 py-4">
+            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium" [class]="kindClass(st.kind)">
+              {{ kindLabel(st.kind) }}
+            </span>
+          </td>
+          <td class="px-4 py-4">
+            @if (st.is_active) {
+              <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400">مفعّل</span>
+            } @else {
+              <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-white/[0.05] dark:text-gray-400">معطّل</span>
+            }
+          </td>
+          <td class="px-4 py-4">
+            <button (click)="openEdit(st)"
+              class="text-sm text-brand-500 hover:text-brand-700 font-medium transition-colors">تعديل</button>
+          </td>
+        </tr>
+      }
+      @if (!loading && safeTypes.length === 0) {
+        <tr><td colspan="4" class="px-5 py-16 text-center text-sm text-gray-400">لا توجد أنواع خزن</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<app-modal [isOpen]="showModal" (close)="showModal = false" className="max-w-md m-4">
+  <div class="p-6">
+    <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">
+      {{ modalMode === 'create' ? 'إضافة نوع خزنة' : 'تعديل نوع الخزنة' }}
+    </h3>
+
+    @if (modalError) {
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+        <p class="text-sm text-error-600 dark:text-error-400">{{ modalError }}</p>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="space-y-4">
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            الاسم <span class="text-error-500">*</span>
+          </label>
+          <input type="text" formControlName="name" placeholder="خزنة نقدية"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
+            [class]="isInvalid('name')
+              ? 'border-error-400 focus:ring-error-500/20'
+              : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+          @if (isInvalid('name')) { <p class="mt-1 text-xs text-error-500">الاسم مطلوب</p> }
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            النوع <span class="text-error-500">*</span>
+            @if (modalMode === 'edit') { <span class="text-xs text-gray-400">(لا يمكن تعديله)</span> }
+          </label>
+          @if (modalMode === 'create') {
+            <select formControlName="kind"
+              class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+              <option value="physical">نقدي</option>
+              <option value="virtual">إلكتروني</option>
+            </select>
+          } @else {
+            <div>
+              <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium" [class]="kindClass(editTarget?.kind || '')">
+                {{ kindLabel(editTarget?.kind || '') }}
+              </span>
+            </div>
+          }
+        </div>
+
+        <div class="flex items-center gap-3">
+          <label class="relative inline-flex cursor-pointer">
+            <input type="checkbox" formControlName="is_active" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
+          </label>
+          <span class="text-sm text-gray-700 dark:text-gray-300">مفعّل</span>
+        </div>
+
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button type="submit" [disabled]="modalLoading"
+          class="flex-1 h-10 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-colors disabled:opacity-60">
+          @if (modalLoading) { جاري الحفظ... } @else { حفظ }
+        </button>
+        <button type="button" (click)="showModal = false"
+          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">
+          إلغاء
+        </button>
+      </div>
+    </form>
+  </div>
+</app-modal>

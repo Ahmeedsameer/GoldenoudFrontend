@@ -64,12 +64,6 @@
           <span class="font-medium text-gray-800 dark:text-white/90">{{ invoice.seller.name }}</span>
         </div>
       }
-      @if (invoice.tester) {
-        <div>
-          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">المراجع</span>
-          <span class="font-medium text-gray-800 dark:text-white/90">{{ invoice.tester.name }}</span>
-        </div>
-      }
       @if (invoice.shop) {
         <div>
           <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">الفرع</span>
@@ -80,13 +74,31 @@
         <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">التاريخ</span>
         <span class="font-medium text-gray-800 dark:text-white/90">{{ invoice.date | date:'mediumDate' }}</span>
       </div>
-      <div>
-        <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">نوع السعر</span>
-        <app-badge variant="light" [color]="invoice.price_type === 'wholesale' ? 'info' : 'primary'" size="sm">
-          {{ invoice.price_type === 'wholesale' ? 'جملة' : 'قطاعي' }}
-        </app-badge>
-      </div>
     </div>
+
+    <!-- Payment method(s) -->
+    @if (invoice.payments && invoice.payments.length > 0) {
+      <div class="mt-5 pt-5 border-t border-gray-100 dark:border-white/[0.05]">
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mb-2">طريقة الدفع</span>
+        <div class="flex flex-wrap gap-3">
+          @for (p of invoice.payments; track p.id) {
+            <div class="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] px-3 py-2">
+              <app-badge variant="light" [color]="p.payment_method === 'visa' ? 'info' : 'success'" size="sm">
+                {{ paymentMethodLabel(p.payment_method) }}
+              </app-badge>
+              <span class="font-mono text-sm text-gray-800 dark:text-white/90">
+                {{ p.amount | number:'1.2-2' }} {{ p.currency?.code || '' }}
+              </span>
+              @if (p.payment_method === 'visa' && p.transaction_number) {
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  رقم العملية: <span class="font-mono text-gray-700 dark:text-gray-300">{{ p.transaction_number }}</span>
+                </span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
   </div>
 
   <!-- Items table -->

@@ -1,0 +1,281 @@
+<app-loading [loading]="conventionLoading || list.loading || txLoading || deleteLoading"></app-loading>
+
+<!-- Header -->
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
+      عهدة #{{ convention?.id || '...' }}
+      @if (convention?.shop) { — {{ convention!.shop!.name }} }
+    </h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">تفاصيل العهدة وحركات الصرف</p>
+  </div>
+  <button onclick="history.back()"
+    class="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+    <svg class="w-4 h-4 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+    </svg>
+    رجوع
+  </button>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5"><app-alert [variant]="alert.type" [message]="alert.message"></app-alert></div>
+}
+
+<!-- Summary + Action -->
+@if (convention) {
+  <div class="rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 p-6 mb-6 text-white">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
+      <div class="flex-1 w-full">
+        <p class="text-brand-200 text-xs mb-3">ملخص العهدة</p>
+        <div class="flex flex-wrap gap-3 mb-5">
+          <div class="rounded-xl bg-white/15 px-4 py-2.5">
+            <p class="text-brand-200 text-xs">قيمة العهدة</p>
+            <p class="text-xl font-bold font-mono mt-0.5 text-white">{{ amount | number:'1.2-2' }}</p>
+          </div>
+          <div class="rounded-xl bg-white/15 px-4 py-2.5">
+            <p class="text-brand-200 text-xs">المصروف</p>
+            <p class="text-xl font-bold font-mono mt-0.5 text-red-200">{{ spent | number:'1.2-2' }}</p>
+          </div>
+          <div class="rounded-xl bg-white/15 px-4 py-2.5">
+            <p class="text-brand-200 text-xs">المتبقي</p>
+            <p class="text-xl font-bold font-mono mt-0.5" [class]="remaining <= 100 ? 'text-red-300' : 'text-white'">
+              {{ remaining | number:'1.2-2' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div>
+          <div class="flex items-center justify-between text-xs text-brand-100 mb-1.5">
+            <span>نسبة الرصيد المتبقي</span>
+            <span class="font-mono font-semibold">{{ remainingPercent | number:'1.0-0' }}%</span>
+          </div>
+          <div class="h-2.5 w-full rounded-full bg-white/20 overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500"
+              [class]="remainingPercent <= 15 ? 'bg-red-400' : (remainingPercent <= 40 ? 'bg-amber-300' : 'bg-white')"
+              [style.width.%]="remainingPercent"></div>
+          </div>
+        </div>
+        <p class="text-brand-200 text-xs mt-3">المسؤول: {{ convention.admin?.name || '—' }}</p>
+      </div>
+
+      <div class="flex gap-2 sm:flex-col">
+        <button (click)="openCreateTx()"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-semibold transition-colors backdrop-blur-sm">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          حركة صرف
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Transactions -->
+<div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+
+  <!-- Filters -->
+  <div class="p-5 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center gap-3">
+    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mr-auto">حركات الصرف</h3>
+    <div class="relative">
+      <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        </svg>
+      </span>
+      <input type="text" placeholder="بحث (السبب/الملاحظة/المدير)..." (input)="setSearch($any($event.target).value)"
+        class="h-9 rounded-lg border border-gray-300 bg-transparent pr-8 pl-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+    </div>
+    <input type="date" (change)="setDateFrom($any($event.target).value)"
+      class="h-9 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+    <input type="date" (change)="setDateTo($any($event.target).value)"
+      class="h-9 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full">
+      <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+        <tr>
+          <th class="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">#</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">النوع</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase cursor-pointer select-none" (click)="setSort('amount')">
+            المبلغ @if (sortBy === 'amount') { <span>{{ sortDir === 'asc' ? '▲' : '▼' }}</span> }
+          </th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">السبب</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">الملاحظات</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">المدير</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase cursor-pointer select-none" (click)="setSort('date')">
+            التاريخ @if (sortBy === 'date') { <span>{{ sortDir === 'asc' ? '▲' : '▼' }}</span> }
+          </th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+        @for (tx of list.result.data; track tx.id) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="px-5 py-4 text-sm font-mono text-gray-400">#{{ tx.id }}</td>
+            <td class="px-4 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [class]="tx.type === 'RECHARGE'
+                  ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400'
+                  : 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400'">
+                {{ tx.type === 'RECHARGE' ? 'شحن' : 'صرف' }}
+              </span>
+            </td>
+            <td class="px-4 py-4">
+              <span class="text-sm font-bold font-mono"
+                [class]="tx.type === 'RECHARGE' ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                {{ tx.type === 'RECHARGE' ? '+' : '−' }}{{ tx.amount | number:'1.2-2' }}
+              </span>
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">{{ tx.reason || '—' }}</td>
+            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-[160px]">
+              @if (tx.notes) { <span class="truncate block" [title]="tx.notes">{{ tx.notes }}</span> }
+              @else { <span class="text-gray-300 dark:text-gray-600">—</span> }
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tx.manager?.name || '—' }}</td>
+            <td class="px-4 py-4 text-xs font-mono text-gray-400 whitespace-nowrap">{{ tx.date | date:'yyyy/MM/dd' }}</td>
+            <td class="px-4 py-4">
+              <div class="flex items-center gap-2">
+                <button (click)="openEditTx(tx)" title="تعديل"
+                  class="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-brand-600 dark:hover:bg-white/[0.05] transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button (click)="confirmDelete(tx.id)" title="حذف"
+                  class="p-1.5 rounded-lg text-gray-500 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10 transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+        @if (!list.loading && list.result.data.length === 0) {
+          <tr><td colspan="8" class="px-5 py-16 text-center text-sm text-gray-400">لا توجد حركات صرف</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
+</div>
+
+<!-- ══ Add / Edit Transaction Modal ═════════════════════════ -->
+<app-modal [isOpen]="showTxModal" (close)="showTxModal = false" className="max-w-md m-4">
+  <div class="p-6">
+    <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">
+      {{ editingTxId ? 'تعديل حركة الصرف' : 'إضافة حركة صرف' }}
+    </h3>
+
+    @if (txError) {
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+        <p class="text-sm text-error-600 dark:text-error-400">{{ txError }}</p>
+      </div>
+    }
+
+    <form [formGroup]="txForm" (ngSubmit)="submitTx()">
+      <div class="space-y-4">
+
+        <!-- Manager typeahead -->
+        <div class="relative">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">المدير <span class="text-error-500">*</span></label>
+          <input type="text" [value]="managerSearch" (input)="onManagerSearchChange($any($event.target).value)"
+            (focus)="showManagerDropdown = true" placeholder="ابحث باسم المدير (حرفين على الأقل)..." autocomplete="off"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
+            [class]="txfInvalid('manager_id') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+          @if (showManagerDropdown && (managerResults.length > 0 || managerSearchLoading)) {
+            <div class="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 max-h-52 overflow-y-auto">
+              @if (managerSearchLoading) {
+                <div class="px-3 py-2.5 text-sm text-gray-400">جاري البحث...</div>
+              } @else {
+                @for (m of managerResults; track m.id) {
+                  <button type="button" (click)="selectManager(m)"
+                    class="w-full text-right px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors">
+                    {{ m.name }} <span class="text-xs text-gray-400">({{ m.email }})</span>
+                  </button>
+                }
+              }
+            </div>
+          }
+          @if (txfInvalid('manager_id')) { <p class="mt-1 text-xs text-error-500">المدير مطلوب</p> }
+        </div>
+
+        <!-- Amount -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">المبلغ <span class="text-error-500">*</span></label>
+          <input type="number" formControlName="amount" min="0.01" step="0.01" placeholder="0.00"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
+            [class]="txfInvalid('amount') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+          @if (txfInvalid('amount')) { <p class="mt-1 text-xs text-error-500">المبلغ مطلوب ويجب أن يكون أكبر من صفر</p> }
+        </div>
+
+        <!-- Reason (required) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">السبب <span class="text-error-500">*</span></label>
+          <input type="text" formControlName="reason" placeholder="سبب الصرف..."
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
+            [class]="txfInvalid('reason') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+          @if (txfInvalid('reason')) { <p class="mt-1 text-xs text-error-500">سبب الصرف مطلوب</p> }
+        </div>
+
+        <!-- Notes (optional) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">ملاحظات <span class="text-xs text-gray-400">(اختياري)</span></label>
+          <textarea formControlName="notes" rows="2" placeholder="ملاحظات إضافية..."
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent text-gray-800 dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 resize-none placeholder:text-gray-400"></textarea>
+        </div>
+
+        <!-- Date -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">التاريخ <span class="text-error-500">*</span></label>
+          <input type="date" formControlName="date"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
+            [class]="txfInvalid('date') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+          @if (txfInvalid('date')) { <p class="mt-1 text-xs text-error-500">التاريخ مطلوب</p> }
+        </div>
+
+      </div>
+
+      <div class="flex gap-3 mt-5">
+        <button type="submit" [disabled]="txLoading"
+          class="flex-1 h-10 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-colors disabled:opacity-60">
+          @if (txLoading) { جاري الحفظ... } @else { {{ editingTxId ? 'حفظ التعديلات' : 'تسجيل الحركة' }} }
+        </button>
+        <button type="button" (click)="showTxModal = false" [disabled]="txLoading"
+          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+          إلغاء
+        </button>
+      </div>
+    </form>
+  </div>
+</app-modal>
+
+<!-- ══ Delete Transaction Modal ═════════════════════════════ -->
+<app-modal [isOpen]="showDeleteModal" (close)="cancelDelete()" className="max-w-sm m-4">
+  <div class="p-6 text-center">
+    <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-error-100 dark:bg-error-500/15 flex items-center justify-center">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#DC2626">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+    </div>
+    <h3 class="text-base font-bold mb-2 text-gray-800 dark:text-white/90">تأكيد حذف الحركة</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">هل أنت متأكد من حذف حركة الصرف هذه؟ (سيتم الاحتفاظ بها في السجل)</p>
+    <div class="flex gap-3">
+      <button (click)="deleteTx()" [disabled]="deleteLoading"
+        class="flex-1 h-10 rounded-lg bg-error-500 hover:bg-error-600 text-white font-semibold text-sm transition-colors disabled:opacity-60">
+        @if (deleteLoading) { جاري الحذف... } @else { حذف الحركة }
+      </button>
+      <button (click)="cancelDelete()" [disabled]="deleteLoading"
+        class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+        إلغاء
+      </button>
+    </div>
+  </div>
+</app-modal>

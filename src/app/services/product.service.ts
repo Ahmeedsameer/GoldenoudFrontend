@@ -32,4 +32,14 @@ export class ProductService {
     deleteProduct(id: number) {
         return this.httpClient.delete<any>(`${ProductService.apiUrl}/${id}`, {});
     }
+
+    // ── Recipe (BOM) components for a product ──────────────────────────────────
+    getComponents(productId: number) {
+        return this.httpClient.get<any>(`${ProductService.apiUrl}/${productId}/components`);
+    }
+
+    // components: [{ component_product_id, quantity }]
+    saveComponents(productId: number, components: { component_product_id: number; quantity: number }[]) {
+        return this.httpClient.put<any>(`${ProductService.apiUrl}/${productId}/components`, { components });
+    }
 }

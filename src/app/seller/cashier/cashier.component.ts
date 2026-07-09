@@ -1,11 +1,11 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, of, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { SalesService } from '../../services/sales.service';
 import { OverrideService, OverrideViolation } from '../../services/override.service';
-import { Customer, GoodsSearchResult, TesterUser } from '../../models/sales.model';
+import { Customer, GoodsSearchResult, PAYMENT_METHODS } from '../../models/sales.model';
 import { InvoiceReceiptComponent } from './invoice-receipt/invoice-receipt.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { LoadingComponent } from '../../loading/loading.component';
@@ -14,9 +14,6 @@ import { LabelComponent } from '../../shared/components/form/label/label.compone
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
 import { ProductLookupPanelComponent } from './product-lookup-panel/product-lookup-panel.component';
-
-const LAYOUT_KEY = 'cashier_layout';
-type LayoutMode = 'form' | 'pos';
 
 export interface SellerCurrency { id: number; code: string; name: string; symbol: string; rate: number; }
 export interface SellerSafe    { id: number; safe_type: { name: string; kind: string }; }
@@ -62,13 +59,6 @@ export class CashierComponent implements OnInit, OnDestroy {
   // ── Receipt modal ───────────────────────────────────────────
   showReceiptModal = false;
   lastInvoice: any = null;
-
-  // ── Layout toggle ───────────────────────────────────────
-  layoutMode: LayoutMode = (localStorage.getItem(LAYOUT_KEY) as LayoutMode) || 'form';
-  toggleLayout() {
-    this.layoutMode = this.layoutMode === 'form' ? 'pos' : 'form';
-    localStorage.setItem(LAYOUT_KEY, this.layoutMode);
-  }
 
   // ── Quick product lookup panel ──────────────────────────
   /** Whether the lookup panel is expanded (persisted per layout key). */
@@ -128,18 +118,10 @@ export class CashierComponent implements OnInit, OnDestroy {
   showCustomerDropdown = false;
   private customerSearch$ = new Subject<string>();
 
-  // ── Tester typeahead ────────────────────────────────────
-  testerQuery = '';
-  testerResults: TesterUser[] = [];
-  showTesterDropdown = false;
-  selectedTester: TesterUser | null = null;
-  private testerSearch$ = new Subject<string>();
-
   // ── Header form ─────────────────────────────────────────
   form: FormGroup = this.fb.group({
     phone:        [''],
     name:         [''],
-    tester_id:    [null],
     date:         [this.getToday(), Validators.required],
     price_type:   ['retail', Validators.required],
     safe_id:      [null],
@@ -157,6 +139,98 @@ export class CashierComponent implements OnInit, OnDestroy {
 
   // ── Payments FormArray (for physical safe) ──────────────
   payments: FormArray = this.fb.array([]);
+
+  // ── Compose (BOM) modal ──────────────────────────────────
+  showComposeModal = false;
+  composeRows: { product_id: number | null; name: string; sku: string | null; unit: string; quantity: number | null; price: number | null; stock: number }[] = [];
+  composeAddQuery = '';
+  composeAddResults: GoodsSearchResult[] = [];
+  showComposeAddDropdown = false;
+  private composeAddSearch$ = new Subject<string>();
+  composeRecipeQuery = '';
+  composeRecipeResults: { id: number; name: string; sku?: string }[] = [];
+  showComposeRecipeDropdown = false;
+  private composeRecipeSearch$ = new Subject<string>();
+
+  openCompose() { this.showComposeModal = true; }
+  closeCompose() { this.showComposeModal = false; }
+
+  onComposeAddInput(v: string) { this.composeAddQuery = v; this.composeAddSearch$.next(v); }
+  onComposeRecipeInput(v: string) { this.composeRecipeQuery = v; this.composeRecipeSearch$.next(v); }
+
+  /** Add a component row from a product search result (ad-hoc). */
+  addComponent(goods: GoodsSearchResult) {
+    this.composeRows.push({
+      product_id: goods.supply_item.product.id,
+      name:       goods.supply_item.product.name,
+      sku:        goods.supply_item.product.sku ?? null,
+      unit:       goods.unit ?? goods.supply_item.product.scalar ?? '',
+      quantity:   1,
+      price:      goods.configured_unit_price ?? null,
+      stock:      goods.product_shop_stock ?? 0,
+    });
+    this.composeAddQuery = ''; this.composeAddResults = []; this.showComposeAddDropdown = false;
+  }
+
+  /** Load a product's saved recipe (BOM) into the component rows. */
+  loadRecipe(product: { id: number; name: string }) {
+    const pid = product.id;
+    this.composeRecipeQuery = product.name;
+    this.showComposeRecipeDropdown = false; this.composeRecipeResults = [];
+    this.salesService.getProductComponents(pid).subscribe({
+      next: (comps) => {
+        if (!comps.length) {
+          this.alert = { show: true, type: 'error', message: 'هذا المنتج ليس له وصفة مكوّنات محفوظة.' };
+          return;
+        }
+        for (const c of comps) {
+          this.composeRows.push({
+            product_id: c.component_product_id, name: c.name, sku: c.sku, unit: c.unit,
+            quantity: c.quantity, price: c.configured_unit_price ?? null, stock: c.shop_stock ?? 0,
+          });
+        }
+      },
+    });
+  }
+
+  removeComposeRow(i: number) { this.composeRows.splice(i, 1); }
+
+  get composeTotal(): number {
+    return this.composeRows.reduce((s, r) => s + (+(r.quantity ?? 0)) * (+(r.price ?? 0)), 0);
+  }
+
+  /** Add all composed component rows to the invoice as editable lines. */
+  applyCompose() {
+    const rows = this.composeRows.filter(r => r.product_id && +(r.quantity ?? 0) > 0);
+    for (const r of rows) {
+      this.addComposedLine(r);
+    }
+    this.composeRows = [];
+    this.closeCompose();
+  }
+
+  private addComposedLine(r: any) {
+    // Synthetic goods object so the invoice line carries stock / unit / price.
+    const goods: any = {
+      id: -Math.floor(Math.random() * 1e9),
+      product_shop_stock: r.stock,
+      configured_unit_price: r.price,
+      unit: r.unit,
+      supply_item: { product: { id: r.product_id, name: r.name, sku: r.sku, scalar: r.unit } },
+    };
+    // Reuse the last empty row, otherwise add a fresh one.
+    let idx = this.items.length - 1;
+    if (idx < 0 || this.selectedGoods[idx] != null) {
+      this.addItem();
+      idx = this.items.length - 1;
+    }
+    this.productQueries[idx] = r.name;
+    this.items.at(idx).get('product_id')?.setValue(r.product_id);
+    this.items.at(idx).get('quantity')?.setValue(r.quantity);
+    this.items.at(idx).get('price')?.setValue(r.price);
+    this.selectedGoods[idx] = goods;
+    this.syncComputedTotal();
+  }
 
   // ── Totals & balance ────────────────────────────────────
 
@@ -190,6 +264,79 @@ export class CashierComponent implements OnInit, OnDestroy {
   get isPaymentBalanced(): boolean {
     if (!this.isPhysicalSafe || this.payments.length === 0) return true;
     return Math.abs(this.paymentsEgpTotal - this.totalAmount) <= 0.01;
+  }
+
+  // ── Pricing engine: new per-item (default) vs legacy Global Total ─────────
+  /** Cashier-selected mode. 'auto' uses per-item pricing when every item is
+   *  configured; 'global' always uses the manual Global-Total workflow. */
+  pricingMode: 'auto' | 'global' = 'auto';
+
+  setPricingMode(mode: 'auto' | 'global') {
+    this.pricingMode = mode;
+    this.syncComputedTotal();
+  }
+
+  /** The editable unit price for a row (prefilled from config, overridable). */
+  lineUnitPrice(i: number): number {
+    return +(this.items.at(i)?.get('price')?.value) || 0;
+  }
+
+  /** Whether a row has a usable unit price (typed or prefilled). */
+  itemConfigured(i: number): boolean {
+    return this.lineUnitPrice(i) > 0;
+  }
+
+  /** The selling unit for a row (g / pcs) — comes from the Product Type. */
+  itemUnit(i: number): string {
+    return this.selectedGoods[i]?.unit
+        ?? this.selectedGoods[i]?.supply_item?.product?.scalar
+        ?? '';
+  }
+
+  /** Line total = quantity × configured unit price. */
+  lineTotal(i: number): number {
+    return (+(this.items.at(i)?.get('quantity')?.value) || 0) * this.lineUnitPrice(i);
+  }
+
+  /** Remaining shop stock for a row's product (from the goods payload). */
+  stockAvailable(i: number): number {
+    return +(this.selectedGoods[i]?.product_shop_stock ?? 0);
+  }
+
+  /** The requested quantity exceeds the available shop stock. */
+  exceedsStock(i: number): boolean {
+    const goods = this.selectedGoods[i];
+    if (!goods) return false;
+    const qty = +(this.items.at(i)?.get('quantity')?.value) || 0;
+    return qty > this.stockAvailable(i);
+  }
+
+  /** Any row requests more than what's in stock → block the sale. */
+  get hasStockError(): boolean {
+    return this.selectedGoods.some((g, i) => g != null && this.exceedsStock(i));
+  }
+
+  /** Every selected row is configured (and there is at least one). */
+  get allItemsConfigured(): boolean {
+    const rows = this.selectedGoods.filter(g => g != null);
+    return rows.length > 0 && rows.every(g => g?.configured_unit_price != null);
+  }
+
+  /** Per-item pricing active (default). Global mode is the manual-total fallback. */
+  get useNewEngine(): boolean {
+    return this.pricingMode === 'auto';
+  }
+
+  /** Automatic invoice total = Σ (quantity × editable line price). */
+  get computedTotal(): number {
+    return this.selectedGoods.reduce((sum, g, i) => sum + (g ? this.lineTotal(i) : 0), 0);
+  }
+
+  /** Mirror the computed total into the form so payments/balance logic reuses it. */
+  private syncComputedTotal(): void {
+    if (this.pricingMode === 'auto') {
+      this.form.get('total_amount')?.setValue(+this.computedTotal.toFixed(2), { emitEvent: false });
+    }
   }
 
   // ── Lifecycle ───────────────────────────────────────────
@@ -229,15 +376,23 @@ export class CashierComponent implements OnInit, OnDestroy {
       this.showCustomerDropdown = results.length > 0;
     });
 
-    this.testerSearch$.pipe(
-      debounceTime(350),
-      distinctUntilChanged(),
-      switchMap((q) => q.trim().length === 0 ? of([]) : this.salesService.searchTesters(q)),
+    // Recompute the automatic invoice total whenever quantities change.
+    this.items.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.syncComputedTotal());
+
+    // Compose modal — add-component + load-recipe searches.
+    this.composeAddSearch$.pipe(
+      debounceTime(350), distinctUntilChanged(),
+      switchMap((q) => q.trim().length === 0 ? of([]) : this.salesService.searchGoods(q)),
       takeUntil(this.destroy$),
-    ).subscribe((results) => {
-      this.testerResults = results;
-      this.showTesterDropdown = results.length > 0;
-    });
+    ).subscribe((results) => { this.composeAddResults = results; this.showComposeAddDropdown = results.length > 0; });
+
+    this.composeRecipeSearch$.pipe(
+      debounceTime(350), distinctUntilChanged(),
+      switchMap((q) => q.trim().length === 0 ? of([]) : this.salesService.searchComposableProducts(q)),
+      takeUntil(this.destroy$),
+    ).subscribe((results) => { this.composeRecipeResults = results; this.showComposeRecipeDropdown = results.length > 0; });
 
     this.addItem();
   }
@@ -272,33 +427,6 @@ export class CashierComponent implements OnInit, OnDestroy {
     setTimeout(() => { this.showCustomerDropdown = false; }, 200);
   }
 
-  // ── Tester ──────────────────────────────────────────────
-  onTesterInput(value: string) {
-    this.testerQuery = value;
-    this.selectedTester = null;
-    this.form.get('tester_id')?.setValue(null);
-    this.testerSearch$.next(value);
-  }
-
-  selectTester(tester: TesterUser) {
-    this.selectedTester = tester;
-    this.testerQuery = tester.name;
-    this.form.get('tester_id')?.setValue(tester.id);
-    this.showTesterDropdown = false;
-    this.testerResults = [];
-  }
-
-  clearTester() {
-    this.selectedTester = null;
-    this.testerQuery = '';
-    this.form.get('tester_id')?.setValue(null);
-    this.showTesterDropdown = false;
-  }
-
-  closeTesterDropdown() {
-    setTimeout(() => { this.showTesterDropdown = false; }, 200);
-  }
-
   // ── Price type ──────────────────────────────────────────
   setPriceType(type: 'retail' | 'wholesale') {
     this.form.get('price_type')?.setValue(type);
@@ -310,6 +438,8 @@ export class CashierComponent implements OnInit, OnDestroy {
     const group = this.fb.group({
       product_id: [null, Validators.required],
       quantity:   [null, [Validators.required, Validators.min(0.001)]],
+      // Editable unit price — prefilled from the configured price, overridable.
+      price:      [null, [Validators.min(0)]],
     });
     this.items.push(group);
     this.productQueries.push('');
@@ -338,6 +468,7 @@ export class CashierComponent implements OnInit, OnDestroy {
       this.showProductDropdown.splice(index, 1);
       this.selectedGoods.splice(index, 1);
       this.productSearchSubjects.splice(index, 1)[0].complete();
+      this.syncComputedTotal();
     }
   }
 
@@ -346,6 +477,7 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.items.at(index).get('product_id')?.setValue(null);
     this.selectedGoods[index] = null;
     this.productSearchSubjects[index].next(value);
+    this.syncComputedTotal();
   }
 
   selectProduct(index: number, goods: GoodsSearchResult) {
@@ -354,6 +486,12 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.selectedGoods[index] = goods;
     this.showProductDropdown[index] = false;
     this.productResults[index] = [];
+    // Prefill the editable unit price from the product's configured price.
+    const priceCtrl = this.items.at(index).get('price');
+    if (priceCtrl && (priceCtrl.value == null || priceCtrl.value === '')) {
+      priceCtrl.setValue(goods.configured_unit_price ?? null);
+    }
+    this.syncComputedTotal();
   }
 
   closeProductDropdown(index: number) {
@@ -507,12 +645,39 @@ export class CashierComponent implements OnInit, OnDestroy {
   }
 
   // ── Payments ────────────────────────────────────────────
+  /** Payment method options for the dropdown (mirror of backend enum). */
+  readonly paymentMethods = PAYMENT_METHODS;
+
+  /** Whether the given payment row's method requires a transaction number. */
+  methodNeedsTxn(payment: AbstractControl): boolean {
+    const method = payment.get('payment_method')?.value;
+    return this.paymentMethods.find(m => m.value === method)?.requiresTransactionNumber ?? false;
+  }
+
   addPayment() {
     const defaultCurrency = this.currencies.find(c => c.code === 'EGP') ?? this.currencies[0];
-    this.payments.push(this.fb.group({
-      currency_id: [defaultCurrency?.id ?? null, Validators.required],
-      amount:      [null, [Validators.required, Validators.min(0.01)]],
-    }));
+    const group = this.fb.group({
+      currency_id:        [defaultCurrency?.id ?? null, Validators.required],
+      amount:             [null, [Validators.required, Validators.min(0.01)]],
+      payment_method:     ['cash', Validators.required],
+      transaction_number: [''],
+    });
+
+    // Transaction number is required only for methods that need it (e.g. visa).
+    // Toggle the validator dynamically as the method changes.
+    group.get('payment_method')?.valueChanges.subscribe((method) => {
+      const txn = group.get('transaction_number');
+      const needs = this.paymentMethods.find(m => m.value === method)?.requiresTransactionNumber ?? false;
+      if (needs) {
+        txn?.setValidators([Validators.required, Validators.maxLength(100)]);
+      } else {
+        txn?.clearValidators();
+        txn?.setValue('');
+      }
+      txn?.updateValueAndValidity();
+    });
+
+    this.payments.push(group);
   }
 
   removePayment(index: number) {
@@ -549,6 +714,27 @@ export class CashierComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // In per-item mode, every line must have a unit price.
+    if (this.useNewEngine) {
+      const missing = this.selectedGoods.findIndex((g, idx) => g != null && this.lineUnitPrice(idx) <= 0);
+      if (missing !== -1) {
+        const name = this.selectedGoods[missing]?.supply_item?.product?.name ?? '';
+        this.alert = { show: true, type: 'error', message: `يرجى إدخال سعر الوحدة للصنف "${name}".` };
+        return;
+      }
+    }
+
+    // Never sell more than what's in stock.
+    if (this.hasStockError) {
+      const i = this.selectedGoods.findIndex((g, idx) => g != null && this.exceedsStock(idx));
+      const name = this.selectedGoods[i]?.supply_item?.product?.name ?? '';
+      this.alert = {
+        show: true, type: 'error',
+        message: `الكمية المطلوبة من "${name}" أكبر من المتاح في المخزون (${this.stockAvailable(i)} ${this.itemUnit(i)}). لا يمكن إتمام البيع.`,
+      };
+      return;
+    }
+
     if (this.isPhysicalSafe && this.payments.invalid) {
       this.alert = { show: true, type: 'error', message: 'يرجى إدخال تفاصيل الدفع المستلم (العملة والمبلغ) لكل صف.' };
       return;
@@ -559,8 +745,10 @@ export class CashierComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check for price violations — require manager override first
-    if (this.hasViolations && this.overrideState !== 'approved') {
+    // The legacy client-side violation/override flow only applies to the
+    // Global-Total engine. Under the new per-item engine the price is fixed by
+    // configuration, so the backend enforces the floor and notifies directly.
+    if (!this.useNewEngine && this.hasViolations && this.overrideState !== 'approved') {
       this.overrideState = 'needed';
       return;
     }
@@ -569,17 +757,25 @@ export class CashierComponent implements OnInit, OnDestroy {
     const payload: any = {
       phone:        fv.phone      || '',
       name:         fv.name       || '',
-      tester_id:    fv.tester_id,
       date:         fv.date,
       price_type:   fv.price_type,
       safe_id:      fv.safe_id ? +fv.safe_id : null,
-      total_amount: +fv.total_amount,
+      // New engine → computed total; Global Total → the entered amount.
+      total_amount: this.useNewEngine ? +this.computedTotal.toFixed(2) : +fv.total_amount,
+      pricing_mode: this.useNewEngine ? 'auto' : 'global',
       payments: this.isPhysicalSafe
-        ? this.payments.value.map((p: any) => ({ currency_id: +p.currency_id, amount: +p.amount }))
+        ? this.payments.value.map((p: any) => ({
+            currency_id:        +p.currency_id,
+            amount:             +p.amount,
+            payment_method:     p.payment_method,
+            transaction_number: p.payment_method === 'cash' ? null : (p.transaction_number?.trim() || null),
+          }))
         : [],
       items: this.items.value.map((item: any) => ({
         product_id: item.product_id,
         quantity:   item.quantity,
+        // Send the editable unit price so the backend uses it (no distribution).
+        price:      (item.price === null || item.price === '') ? null : +item.price,
       })),
     };
     if (this.overrideToken) {
@@ -611,9 +807,7 @@ export class CashierComponent implements OnInit, OnDestroy {
   private resetForm() {
     this.cancelOverrideRequest();
     this.customerQuery = '';
-    this.testerQuery = '';
-    this.selectedTester = null;
-    this.form.reset({ phone: '', name: '', tester_id: null, date: this.getToday(), price_type: 'retail', safe_id: null, total_amount: null });
+    this.form.reset({ phone: '', name: '', date: this.getToday(), price_type: 'retail', safe_id: null, total_amount: null });
     while (this.items.length) { this.items.removeAt(0); }
     while (this.payments.length) { this.payments.removeAt(0); }
     this.productSearchSubjects.forEach((s) => s.complete());

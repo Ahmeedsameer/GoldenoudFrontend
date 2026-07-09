@@ -14,6 +14,7 @@ import { AlertComponent } from '../../../../shared/components/ui/alert/alert.com
 import { FormErrorComponent } from '../../../../form-error/form-error.component';
 import { LabelComponent } from '../../../../shared/components/form/label/label.component';
 import { ComponentCardComponent } from '../../../../shared/components/common/component-card/component-card.component';
+import { HighlightPipe } from '../../../../shared/pipe/highlight.pipe';
 
 type Step = 1 | 2;
 
@@ -27,8 +28,8 @@ type Step = 1 | 2;
     LabelComponent,
     ButtonComponent,
     LoadingComponent,
-  
     FormErrorComponent,
+    HighlightPipe,
   ],
   templateUrl: './supply-form.component.html',
   styleUrl: './supply-form.component.css',

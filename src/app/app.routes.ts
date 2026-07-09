@@ -55,6 +55,10 @@ import { SupplyFormComponent } from './admin/stock-managment/supplies/supply-for
 import { SupplyEditComponent } from './admin/stock-managment/supplies/supply-form/supply-edit.component';
 import { SupplyDetailComponent } from './admin/stock-managment/supplies/supply-detail/supply-detail.component';
 import { AdminShopSafeComponent } from './admin/safe/admin-shop-safe.component';
+import { ConventionShopComponent } from './admin/convention/convention-shop.component';
+import { ConventionDetailComponent } from './admin/convention/detail/convention-detail.component';
+import { ConventionManagementComponent } from './admin/convention/management/convention-management.component';
+import { ManagerConventionComponent } from './manager/convention/manager-convention.component';
 import { AdminSafeDetailComponent } from './admin/safe/detail/admin-safe-detail.component';
 import { SafeManagementComponent } from './admin/safe/management/safe-management.component';
 import { CurrencyManagementComponent } from './admin/safe/currencies/currency-management.component';
@@ -70,6 +74,7 @@ import { AdminSalesReportComponent } from './admin/reports/sales/admin-sales-rep
 import { AdminFinancialReportComponent } from './admin/reports/financial/admin-financial-report.component';
 import { AdminDashboardComponent } from './admin/dashboard/admin-dashboard.component';
 import { AdminStockIntelligenceComponent } from './admin/stock/admin-stock-intelligence.component';
+import { AdminInvoicesComponent } from './admin/invoices/admin-invoices.component';
 
 // ── Demo pages ───────────────────────────────────────────────
 import { ShopListComponent } from './demo/components/shop-list/shop-list.component';
@@ -116,6 +121,14 @@ export const routes: Routes = [
           { path: ':safeId',       component: AdminSafeDetailComponent },
         ],
       },
+      { path: 'conventions', component: ConventionManagementComponent },
+      {
+        path: 'convention',
+        children: [
+          { path: 'shop/:shopId', component: ConventionShopComponent },
+          { path: ':id',          component: ConventionDetailComponent },
+        ],
+      },
       { path: 'currencies',          component: CurrencyManagementComponent },
       { path: 'safe-types',          component: SafeTypeManagementComponent },
       { path: 'transaction-reasons', component: TransactionReasonManagementComponent },
@@ -147,6 +160,7 @@ export const routes: Routes = [
       { path: 'reports/sales',      component: AdminSalesReportComponent },
       { path: 'reports/financial',  component: AdminFinancialReportComponent },
       { path: 'stock-intelligence', component: AdminStockIntelligenceComponent },
+      { path: 'pending-invoices',   component: AdminInvoicesComponent },
       { path: '', component: AdminDashboardComponent, pathMatch: 'full' },
       { path: 'calendar', component: CalenderComponent },
       { path: 'profile', component: ProfileComponent },
@@ -172,11 +186,21 @@ export const routes: Routes = [
     canActivate: [authGuard],
     canMatch: [managerGuard],
     children: [
+      // ── Cashier / selling — managers sell exactly like sellers ──
+      { path: 'cashier', component: CashierComponent },
+      {
+        path: 'invoices',
+        children: [
+          { path: '', component: SellerInvoicesListComponent },
+          { path: ':id', component: SellerInvoiceDetailComponent },
+        ],
+      },
       { path: 'override-requests',  component: OverrideRequestsComponent },
       { path: 'reports',            component: ReportsComponent },
       { path: 'inventory-transfer', component: InventoryTransferComponent },
       { path: 'safe/my-shop',       component: ManagerSafeComponent },
       { path: 'safe/my-shop/:safeId/transactions', component: ManagerTransactionsComponent },
+      { path: 'conventions',        component: ManagerConventionComponent },
       { path: 'reconciliation',     component: SafeReconciliationComponent },
       { path: '', redirectTo: 'override-requests', pathMatch: 'full' },
     ],

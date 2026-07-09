@@ -56,23 +56,6 @@
                 </td>
               </tr>
             }
-            @if (invoice.tester?.name) {
-              <tr>
-                <td class="text-gray-400 py-0.5">المراجع</td>
-                <td class="text-gray-700 dark:text-gray-300">{{ invoice.tester.name }}</td>
-              </tr>
-            }
-            <tr>
-              <td class="text-gray-400 py-0.5">نوع السعر</td>
-              <td>
-                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium"
-                  [class]="invoice.price_type === 'retail'
-                    ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300'
-                    : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'">
-                  {{ invoice.price_type === 'retail' ? 'قطاعي' : 'جملة' }}
-                </span>
-              </td>
-            </tr>
             <tr>
               <td class="text-gray-400 py-0.5">الحالة</td>
               <td>
@@ -117,6 +100,28 @@
             {{ invoice.total_amount | number:'1.2-2' }} ج.م
           </span>
         </div>
+
+        <!-- Payment method(s) -->
+        @if (invoice.payments?.length) {
+          <div class="border-t border-dashed border-gray-200 dark:border-white/[0.08] pt-3">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">طريقة الدفع</p>
+            <div class="space-y-1.5">
+              @for (p of invoice.payments; track $index) {
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-gray-700 dark:text-gray-300">
+                    {{ methodLabel(p.payment_method) }}
+                    @if (methodHasTxn(p.payment_method) && p.transaction_number) {
+                      <span class="text-gray-400">— رقم العملية: <span class="font-mono text-gray-600 dark:text-gray-300">{{ p.transaction_number }}</span></span>
+                    }
+                  </span>
+                  <span class="font-mono text-gray-800 dark:text-white/90">
+                    {{ p.amount | number:'1.2-2' }} {{ p.currency?.code || '' }}
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+        }
 
       </div>
 

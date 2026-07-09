@@ -152,9 +152,12 @@
                         (mousedown)="selectProduct(i, p)"
                         class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05] text-gray-800 dark:text-white/90"
                       >
-                        {{ p.name }}
+                        <span [innerHTML]="p.name | highlight: productQueries[i]"></span>
                         @if (p.sku) {
-                          <span class="text-xs text-gray-400 ml-2 font-mono">{{ p.sku }}</span>
+                          <span class="text-xs text-gray-400 ml-2 font-mono" [innerHTML]="p.sku | highlight: productQueries[i]"></span>
+                        }
+                        @if (p.barcode) {
+                          <span class="text-xs text-gray-400 ml-2 font-mono" [innerHTML]="p.barcode | highlight: productQueries[i]"></span>
                         }
                       </li>
                     }

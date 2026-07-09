@@ -1,0 +1,103 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="mb-6">
+  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">مراجعة الفواتير</h2>
+  <p class="text-sm text-gray-500 dark:text-gray-400">الفواتير المعلّقة (بيع بأقل من الحد الأدنى) — اعتمد أو ارفض.</p>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5">
+    <app-alert [variant]="alert.type === 'success' ? 'success' : 'error'" [message]="alert.message"></app-alert>
+  </div>
+}
+
+<!-- Status tabs -->
+<div class="inline-flex rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden mb-5">
+  @for (t of statusTabs; track t.key) {
+    <button type="button" (click)="setStatus(t.key)"
+      [class]="status === t.key ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
+      class="px-4 py-2 text-sm font-medium transition-colors">{{ t.label }}</button>
+  }
+</div>
+
+@if (!loading && invoices.length === 0) {
+  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-10 text-center text-sm text-gray-400">
+    لا توجد فواتير في هذه الحالة.
+  </div>
+}
+
+<div class="space-y-4">
+  @for (inv of invoices; track inv.id) {
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] overflow-hidden">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
+        <div class="flex items-center gap-3">
+          <span class="text-base font-bold text-gray-800 dark:text-white/90">فاتورة #{{ inv.id }}</span>
+          <span class="text-xs text-gray-400">{{ inv.date | date:'mediumDate' }}</span>
+          @if (hasViolation(inv)) {
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400">
+              أقل من الحد الأدنى
+            </span>
+          }
+        </div>
+        <div class="text-sm">
+          <span class="text-gray-400">الإجمالي:</span>
+          <span class="font-bold font-mono text-gray-800 dark:text-white/90">{{ inv.total_amount | number:'1.2-2' }} ج.م</span>
+        </div>
+      </div>
+
+      <!-- Meta -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 px-5 py-3 text-sm">
+        <div><span class="block text-xs text-gray-400">الفرع</span><span class="text-gray-700 dark:text-gray-300">{{ inv.shop?.name || '—' }}</span></div>
+        <div><span class="block text-xs text-gray-400">البائع</span><span class="text-gray-700 dark:text-gray-300">{{ inv.seller?.name || '—' }}</span></div>
+        <div><span class="block text-xs text-gray-400">العميل</span><span class="text-gray-700 dark:text-gray-300">{{ inv.name || inv.customer?.name || '—' }}</span></div>
+        <div><span class="block text-xs text-gray-400">نوع السعر</span><span class="text-gray-700 dark:text-gray-300">{{ inv.price_type === 'wholesale' ? 'جملة' : 'قطاعي' }}</span></div>
+      </div>
+
+      <!-- Items -->
+      <div class="px-5 pb-3 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs text-gray-400 border-b border-gray-100 dark:border-white/[0.05]">
+              <th class="text-right py-2 font-medium">المنتج</th>
+              <th class="text-right py-2 font-medium">الكمية</th>
+              <th class="text-right py-2 font-medium">سعر الوحدة</th>
+              <th class="text-right py-2 font-medium">الحد الأدنى</th>
+              <th class="text-right py-2 font-medium">الإجمالي</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of inv.items; track item.id) {
+              <tr class="border-b border-gray-50 dark:border-white/[0.03]"
+                  [class]="isBelowMin(item) ? 'bg-error-50/50 dark:bg-error-500/5' : ''">
+                <td class="py-2 text-gray-800 dark:text-white/90">{{ item.product?.name || '—' }}</td>
+                <td class="py-2 font-mono text-gray-600 dark:text-gray-300">{{ item.quantity }} <span class="text-xs text-gray-400">{{ item.product?.scalar }}</span></td>
+                <td class="py-2 font-mono"
+                    [class]="isBelowMin(item) ? 'text-error-600 dark:text-error-400 font-bold' : 'text-gray-600 dark:text-gray-300'">
+                  {{ item.price | number:'1.2-2' }}
+                </td>
+                <td class="py-2 font-mono text-gray-400">{{ categoryMin(item) != null ? (categoryMin(item) | number:'1.2-2') : '—' }}</td>
+                <td class="py-2 font-mono font-semibold text-gray-800 dark:text-white/90">{{ lineTotal(item) | number:'1.2-2' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Actions (only for pending) -->
+      @if (inv.status === 'pending') {
+        <div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+          <button type="button" (click)="reject(inv)" [disabled]="actingId === inv.id"
+            class="px-4 py-2 rounded-lg border border-error-300 text-error-600 hover:bg-error-50 dark:border-error-500/40 dark:hover:bg-error-500/10 text-sm font-medium disabled:opacity-40 transition-colors">
+            رفض
+          </button>
+          <button type="button" (click)="approve(inv)" [disabled]="actingId === inv.id"
+            class="px-4 py-2 rounded-lg bg-success-500 hover:bg-success-600 text-white text-sm font-medium disabled:opacity-40 transition-colors">
+            اعتماد
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -11,84 +11,77 @@
 
   <form [formGroup]="categoryForm">
 
-    <!-- Category name -->
+    <!-- STEP 1 — Product Type (source of truth for the rest of the form) -->
     <div>
-      <app-label for="name">اسم الفئة <span style="color: #DC2626;">*</span></app-label>
-      <app-input-field
-        [value]="categoryForm.get('name')?.value"
-        [error]="!!(categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched)"
-        (valueChange)="categoryForm.get('name')?.setValue($event)"
-        placeholder="مثال: إلكترونيات"
-      />
-      <app-form-error [control]="categoryForm.get('name')"></app-form-error>
+      <app-label for="product_type_id">نوع المنتج <span style="color: #DC2626;">*</span></app-label>
+      <select formControlName="product_type_id"
+        class="h-11 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800"
+        [class]="categoryForm.get('product_type_id')?.invalid && categoryForm.get('product_type_id')?.touched ? 'border-error-400' : 'border-gray-300 dark:border-gray-700'">
+        <option [ngValue]="null" disabled>اختر نوع المنتج أولاً…</option>
+        @for (t of productTypes; track t.id) {
+          <option [ngValue]="t.id">{{ t.name }}</option>
+        }
+      </select>
+      <app-form-error [control]="categoryForm.get('product_type_id')"></app-form-error>
     </div>
 
-    <!-- Image -->
-    <div>
-      <app-label>صورة الفئة (اختياري)</app-label>
-      <app-file-input (change)="onFileSelected($event)"></app-file-input>
-      <app-form-error [control]="categoryForm.get('image')"></app-form-error>
-    </div>
+    @if (categoryForm.get('product_type_id')?.value) {
 
-    <!-- Description -->
-    <div>
-      <app-label>وصف الفئة (اختياري)</app-label>
-      <app-text-area
-        placeholder="وصف مختصر للفئة..."
-        [value]="categoryForm.get('description')?.value"
-        [error]="!!(categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched)"
-        (valueChange)="categoryForm.get('description')?.setValue($event)"
-      ></app-text-area>
-      <app-form-error [control]="categoryForm.get('description')"></app-form-error>
-    </div>
-
-    <!-- Minimum sell price -->
-    <div>
-      <app-label>الحد الأدنى لسعر البيع (اختياري)</app-label>
-      <app-input-field
-        type="number"
-        [value]="categoryForm.get('minimum_sell_price')?.value"
-        [error]="!!(categoryForm.get('minimum_sell_price')?.invalid && categoryForm.get('minimum_sell_price')?.touched)"
-        (valueChange)="categoryForm.get('minimum_sell_price')?.setValue($event)"
-        placeholder="0.00"
-      />
-      <p
-        class="text-xs mt-1"
-        style="color: #9CA3AF; font-family: 'Inter', system-ui, sans-serif;"
-      >أدنى سعر يُسمح ببيع المنتجات بهذه الفئة — البيع بأقل يحتاج موافقة مدير</p>
-      <app-form-error [control]="categoryForm.get('minimum_sell_price')"></app-form-error>
-    </div>
-
-    <!-- Fixed price toggle -->
-    <div>
-      <app-switch
-        label="سعر ثابت (Fixed Price)"
-        [defaultChecked]="categoryForm.get('is_fixed')?.value"
-        (valueChange)="categoryForm.get('is_fixed')?.setValue($event)"
-      ></app-switch>
-      <p
-        class="text-xs mt-1.5"
-        style="color: #9CA3AF; font-family: 'Inter', system-ui, sans-serif;"
-      >إذا كان مفعَّلاً، يُستخدم الحد الأدنى للسعر مباشرةً كسعر بيع ولا يخضع لتوزيع القيمة</p>
-    </div>
-
-    <!-- Value percentage — only for non-fixed categories -->
-    @if (!isFixed) {
+      <!-- Category name (always) -->
       <div>
-        <app-label>نسبة القيمة للتوزيع (%)</app-label>
+        <app-label for="name">اسم الفئة <span style="color: #DC2626;">*</span></app-label>
         <app-input-field
-          type="number"
-          [value]="categoryForm.get('value_percentage')?.value"
-          [error]="!!(categoryForm.get('value_percentage')?.invalid && categoryForm.get('value_percentage')?.touched)"
-          (valueChange)="categoryForm.get('value_percentage')?.setValue($event)"
-          placeholder="0"
+          [value]="categoryForm.get('name')?.value"
+          [error]="!!(categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched)"
+          (valueChange)="categoryForm.get('name')?.setValue($event)"
+          placeholder="مثال: عود / مسك / زجاجة 30مل"
         />
-        <p
-          class="text-xs mt-1"
-          style="color: #9CA3AF; font-family: 'Inter', system-ui, sans-serif;"
-        >وزن الفئة عند توزيع الإجمالي الكلي على بنود الفاتورة (0–100). القيمة الأعلى تعني حصة أكبر من الإجمالي.</p>
-        <app-form-error [control]="categoryForm.get('value_percentage')"></app-form-error>
+        <app-form-error [control]="categoryForm.get('name')"></app-form-error>
       </div>
+
+      <!-- Oil-only pricing: minimum selling price + price per gram -->
+      @if (isOilType) {
+        <div>
+          <app-label>الحد الأدنى لسعر البيع <span style="color: #DC2626;">*</span></app-label>
+          <app-input-field
+            type="number"
+            [value]="categoryForm.get('minimum_sell_price')?.value"
+            [error]="!!(categoryForm.get('minimum_sell_price')?.invalid && categoryForm.get('minimum_sell_price')?.touched)"
+            (valueChange)="categoryForm.get('minimum_sell_price')?.setValue($event)"
+            placeholder="0.00"
+          />
+          <p class="text-xs mt-1" style="color: #9CA3AF;">أدنى سعر يُسمح به — البيع بأقل ينبّه الإدارة</p>
+          <app-form-error [control]="categoryForm.get('minimum_sell_price')"></app-form-error>
+        </div>
+
+        <div class="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 px-3 py-2">
+          <p class="text-xs text-blue-700 dark:text-blue-400">سعر الجرام يُضبط على مستوى كل منتج زيت داخل هذه الفئة (من نموذج إنشاء/تعديل المنتج).</p>
+        </div>
+      } @else {
+        <div class="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-3 py-2">
+          <p class="text-xs text-amber-700 dark:text-amber-400">لا تُضبط الأسعار على مستوى الفئة لهذا النوع — يُحدَّد سعر البيع على مستوى المنتج.</p>
+        </div>
+      }
+
+      <!-- Description (always, optional) -->
+      <div>
+        <app-label>وصف الفئة (اختياري)</app-label>
+        <app-text-area
+          placeholder="وصف مختصر للفئة..."
+          [value]="categoryForm.get('description')?.value"
+          [error]="!!(categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched)"
+          (valueChange)="categoryForm.get('description')?.setValue($event)"
+        ></app-text-area>
+        <app-form-error [control]="categoryForm.get('description')"></app-form-error>
+      </div>
+
+      <!-- Image (optional) -->
+      <div>
+        <app-label>صورة الفئة (اختياري)</app-label>
+        <app-file-input (change)="onFileSelected($event)"></app-file-input>
+        <app-form-error [control]="categoryForm.get('image')"></app-form-error>
+      </div>
+
     }
 
   </form>

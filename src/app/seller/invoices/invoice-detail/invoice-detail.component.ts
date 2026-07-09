@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SalesService } from '../../../services/sales.service';
-import { Invoice } from '../../../models/sales.model';
+import { Invoice, PAYMENT_METHODS } from '../../../models/sales.model';
 import { BadgeComponent } from '../../../shared/components/ui/badge/badge.component';
 import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
 import { LoadingComponent } from '../../../loading/loading.component';
@@ -97,5 +97,9 @@ export class InvoiceDetailComponent implements OnInit {
     if (status === 'approved') return 'مكتملة';
     if (status === 'cancelled') return 'ملغاة';
     return 'معلقة';
+  }
+
+  paymentMethodLabel(method: string): string {
+    return PAYMENT_METHODS.find(m => m.value === method)?.label ?? method;
   }
 }

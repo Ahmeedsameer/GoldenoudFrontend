@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PAYMENT_METHODS } from '../../../models/sales.model';
 
 @Component({
   selector: 'app-invoice-receipt',
@@ -19,6 +20,16 @@ export class InvoiceReceiptComponent {
 
   itemSubtotal(item: any): number {
     return +(item.quantity ?? 0) * +(item.price ?? 0);
+  }
+
+  /** Arabic label for a payment-method value (falls back to the raw value). */
+  methodLabel(method: string): string {
+    return PAYMENT_METHODS.find(m => m.value === method)?.label ?? method;
+  }
+
+  /** Whether a payment method carries a transaction/reference number. */
+  methodHasTxn(method: string): boolean {
+    return PAYMENT_METHODS.find(m => m.value === method)?.requiresTransactionNumber ?? false;
   }
 
   /**
@@ -42,8 +53,19 @@ export class InvoiceReceiptComponent {
       ? `<tr><td class="lbl">العميل</td><td>${inv.customer.name || inv.customer.phone}</td></tr>`
       : '';
 
-    const testerRow = inv.tester?.name
-      ? `<tr><td class="lbl">المراجع</td><td>${inv.tester.name}</td></tr>`
+    // Payment method(s) — includes the Visa transaction number when present.
+    const paymentRows = (inv.payments ?? []).map((p: any) => {
+      const label = this.methodLabel(p.payment_method);
+      const amount = (+p.amount).toFixed(2);
+      const code = p.currency?.code ?? '';
+      const txn = this.methodHasTxn(p.payment_method) && p.transaction_number
+        ? ` — رقم العملية: ${p.transaction_number}`
+        : '';
+      return `<tr><td class="lbl">الدفع (${label})</td><td>${amount} ${code}${txn}</td></tr>`;
+    }).join('');
+
+    const paymentsBlock = paymentRows
+      ? `<hr class="divider"><table class="meta">${paymentRows}</table>`
       : '';
 
     const html = `<!DOCTYPE html>
@@ -93,8 +115,6 @@ export class InvoiceReceiptComponent {
     <tr><td class="lbl">التاريخ</td><td>${inv.date}</td></tr>
     <tr><td class="lbl">البائع</td><td>${inv.seller?.name ?? ''}</td></tr>
     ${customerRow}
-    ${testerRow}
-    <tr><td class="lbl">نوع السعر</td><td>${inv.price_type === 'retail' ? 'قطاعي' : 'جملة'}</td></tr>
     <tr><td class="lbl">الحالة</td>
       <td><span class="status-badge ${inv.status === 'approved' ? 'approved' : 'pending'}">
         ${inv.status === 'approved' ? 'معتمدة' : 'قيد المراجعة'}
@@ -119,6 +139,7 @@ export class InvoiceReceiptComponent {
       <td class="total-row" style="text-align:left">${(+inv.total_amount).toFixed(2)} ج.م</td>
     </tr>
   </table>
+  ${paymentsBlock}
   <div class="footer">
     <p>شكراً لتعاملكم معنا</p>
     <p>${new Date().toLocaleString('ar-EG')}</p>

@@ -8,7 +8,12 @@ import { retry } from 'rxjs';
 export class CategoryService {
   private httpClient:HttpClient = inject(HttpClient);
   private apiUrl = 'http://localhost:8000/api/categories';
+  private productTypesUrl = 'http://localhost:8000/api/product-types';
 
+  /** Product Types drive which category fields are visible/required. */
+  public getProductTypes() {
+    return this.httpClient.get<any>(this.productTypesUrl).pipe(retry(2));
+  }
 
   public createCategory(categoryData: any) {
     return this.httpClient.post<any>(`${this.apiUrl}/create`,categoryData).pipe(retry(2))

@@ -4,12 +4,20 @@ import { map } from 'rxjs';
 
 const API_BASE = 'http://127.0.0.1:8000/api/manager';
 
+export interface PaymentMethodStat {
+  method: string;
+  label: string;
+  amount_egp: number;
+  payment_count: number;
+}
+
 export interface SalesSummary {
   period: { from: string; to: string };
   invoice_count: number;
   total_revenue: number;
   avg_invoice: number;
   pending_count: number;
+  payment_methods?: PaymentMethodStat[];
 }
 
 export interface SellerStat {

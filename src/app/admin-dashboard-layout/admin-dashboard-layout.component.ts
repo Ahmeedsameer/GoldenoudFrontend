@@ -48,6 +48,13 @@ export class AdminDashboardLayoutComponent {
       ],
     },
     {
+      icon:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M128 64C92.7 64 64 92.7 64 128L64 512C64 547.3 92.7 576 128 576L448 576C483.3 576 512 547.3 512 512L512 128C512 92.7 483.3 64 448 64L128 64zM160 176C160 167.2 167.2 160 176 160L400 160C408.8 160 416 167.2 416 176C416 184.8 408.8 192 400 192L176 192C167.2 192 160 184.8 160 176zM160 272C160 263.2 167.2 256 176 256L400 256C408.8 256 416 263.2 416 272C416 280.8 408.8 288 400 288L176 288C167.2 288 160 280.8 160 272zM160 368C160 359.2 167.2 352 176 352L288 352C296.8 352 304 359.2 304 368C304 376.8 296.8 384 288 384L176 384C167.2 384 160 376.8 160 368z"/></svg>`,
+      name: "مراجعة الفواتير",
+      subItems: [
+        { name: "الفواتير المعلّقة", path: "/dashboard/pending-invoices" },
+      ],
+    },
+    {
       icon:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M53.5 245.1L110.3 131.4C121.2 109.7 143.3 96 167.6 96L472.5 96C496.7 96 518.9 109.7 529.7 131.4L586.5 245.1C590.1 252.3 592 260.2 592 268.3C592 295.6 570.8 318 544 319.9L544 512C544 529.7 529.7 544 512 544C494.3 544 480 529.7 480 512L480 320L384 320L384 496C384 522.5 362.5 544 336 544L144 544C117.5 544 96 522.5 96 496L96 319.9C69.2 318 48 295.6 48 268.3C48 260.3 49.9 252.3 53.5 245.1zM160 320L160 432C160 440.8 167.2 448 176 448L304 448C312.8 448 320 440.8 320 432L320 320L160 320z"/></svg>`,
       name: "ادارة الفروع",
       path:"/dashboard/shops"
@@ -79,6 +86,14 @@ export class AdminDashboardLayoutComponent {
         { name: "العملات",            path: "/dashboard/currencies" },
         { name: "أنواع الخزن",        path: "/dashboard/safe-types" },
         { name: "أسباب المعاملات",    path: "/dashboard/transaction-reasons" },
+      ],
+    },
+
+    {
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m3-6h7a2 2 0 012 2v6a2 2 0 01-2 2h-7a2 2 0 01-2-2v-6a2 2 0 012-2z"/><circle cx="16" cy="14" r="1"/></svg>`,
+      name: "إدارة العهد",
+      subItems: [
+        { name: "كل العهد", path: "/dashboard/conventions" },
       ],
     },
 

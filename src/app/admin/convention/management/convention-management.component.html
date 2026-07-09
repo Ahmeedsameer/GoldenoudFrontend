@@ -1,0 +1,181 @@
+<app-loading [loading]="list.loading || deleteLoading"></app-loading>
+
+<!-- Header -->
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">إدارة العهد</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">عرض وإدارة جميع العهد عبر الفروع</p>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <button (click)="openCreate()"
+      class="flex items-center gap-2 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-xl transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      عهدة جديدة
+    </button>
+
+    <div class="relative">
+      <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        </svg>
+      </span>
+      <input type="text" placeholder="ابحث بالفرع أو الأدمن..." (input)="setSearch($any($event.target).value)"
+        class="h-10 rounded-lg border border-gray-300 bg-transparent pr-8 pl-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+    </div>
+
+    <select (change)="setBranchFilter($any($event.target).value)"
+      class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+      <option value="">كل الفروع</option>
+      @for (shop of shops; track shop.id) {
+        <option [value]="shop.id">{{ shop.name }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5"><app-alert [variant]="alert.type" [message]="alert.message"></app-alert></div>
+}
+
+<!-- Table -->
+<div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+  <div class="overflow-x-auto">
+    <table class="min-w-full">
+      <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+        <tr>
+          <th class="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">#</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">الفرع</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">المسؤول</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">قيمة العهدة</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">المصروف</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">المتبقي</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">الحركات</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+        @for (c of list.result.data; track c.id) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="px-5 py-4 text-sm font-mono text-gray-400">#{{ c.id }}</td>
+            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">{{ c.shop?.name || '—' }}</td>
+            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ c.admin?.name || '—' }}</td>
+            <td class="px-4 py-4 text-sm font-bold font-mono text-gray-800 dark:text-white/90">{{ +c.amount | number:'1.2-2' }}</td>
+            <td class="px-4 py-4 text-sm font-mono text-error-600 dark:text-error-400">{{ spent(c) | number:'1.2-2' }}</td>
+            <td class="px-4 py-4 text-sm font-mono font-bold"
+              [class]="remaining(c) <= 100 ? 'text-error-600 dark:text-error-400' : 'text-success-600 dark:text-success-400'">
+              {{ remaining(c) | number:'1.2-2' }}
+            </td>
+            <td class="px-4 py-4 text-sm text-gray-500">{{ c.transactions_count || 0 }}</td>
+            <td class="px-4 py-4">
+              <div class="flex items-center gap-1.5">
+                <a [routerLink]="['/dashboard/convention', c.id]" title="الحركات"
+                  class="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-brand-600 dark:hover:bg-white/[0.05] transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </a>
+                <button (click)="openEdit(c)" title="تعديل"
+                  class="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-brand-600 dark:hover:bg-white/[0.05] transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button (click)="confirmDelete(c.id)" title="حذف"
+                  class="p-1.5 rounded-lg text-gray-500 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10 transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+        @if (!list.loading && list.result.data.length === 0) {
+          <tr><td colspan="8" class="px-5 py-16 text-center text-sm text-gray-400">لا توجد عهد</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
+</div>
+
+<!-- ══ Create / Edit Modal ══════════════════════════════════ -->
+<app-modal [isOpen]="showFormModal" (close)="showFormModal = false" className="max-w-md m-4">
+  <div class="p-6">
+    <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">
+      {{ editingId ? 'تعديل العهدة' : 'إضافة عهدة جديدة' }}
+    </h3>
+
+    @if (formError) {
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+        <p class="text-sm text-error-600 dark:text-error-400">{{ formError }}</p>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submitForm()">
+      <div class="space-y-4">
+        <!-- Branch -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">الفرع <span class="text-error-500">*</span></label>
+          <select formControlName="shop_id"
+            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+            [class]="isInvalid('shop_id') ? 'border-error-400' : 'border-gray-300 dark:border-gray-700 dark:bg-gray-800'">
+            <option [ngValue]="null" disabled>اختر الفرع...</option>
+            @for (shop of shops; track shop.id) {
+              <option [ngValue]="shop.id">{{ shop.name }}</option>
+            }
+          </select>
+          @if (isInvalid('shop_id')) { <p class="mt-1 text-xs text-error-500">الفرع مطلوب</p> }
+        </div>
+
+        <!-- Amount -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">قيمة العهدة <span class="text-error-500">*</span></label>
+          <input type="number" formControlName="amount" min="0.01" step="0.01" placeholder="0.00"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
+            [class]="isInvalid('amount') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+          @if (isInvalid('amount')) { <p class="mt-1 text-xs text-error-500">المبلغ مطلوب ويجب أن يكون أكبر من صفر</p> }
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button type="submit" [disabled]="formLoading"
+          class="flex-1 h-10 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-colors disabled:opacity-60">
+          @if (formLoading) { جاري الحفظ... } @else { {{ editingId ? 'حفظ التعديلات' : 'إنشاء العهدة' }} }
+        </button>
+        <button type="button" (click)="showFormModal = false" [disabled]="formLoading"
+          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+          إلغاء
+        </button>
+      </div>
+    </form>
+  </div>
+</app-modal>
+
+<!-- ══ Delete Modal ═════════════════════════════════════════ -->
+<app-modal [isOpen]="showDeleteModal" (close)="cancelDelete()" className="max-w-sm m-4">
+  <div class="p-6 text-center">
+    <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-error-100 dark:bg-error-500/15 flex items-center justify-center">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#DC2626">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+    </div>
+    <h3 class="text-base font-bold mb-2 text-gray-800 dark:text-white/90">تأكيد حذف العهدة</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">هل أنت متأكد من حذف هذه العهدة؟ سيتم حذف جميع حركاتها.</p>
+    <div class="flex gap-3">
+      <button (click)="deleteConvention()" [disabled]="deleteLoading"
+        class="flex-1 h-10 rounded-lg bg-error-500 hover:bg-error-600 text-white font-semibold text-sm transition-colors disabled:opacity-60">
+        @if (deleteLoading) { جاري الحذف... } @else { حذف العهدة }
+      </button>
+      <button (click)="cancelDelete()" [disabled]="deleteLoading"
+        class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+        إلغاء
+      </button>
+    </div>
+  </div>
+</app-modal>

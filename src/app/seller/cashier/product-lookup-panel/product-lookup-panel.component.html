@@ -77,6 +77,32 @@
           @if (searchQuery) { لا توجد نتائج لـ "{{ searchQuery }}" }
           @else { لا توجد منتجات متاحة }
         </p>
+
+        <!-- Hint: product exists in catalog but is not stocked in this branch -->
+        @if (unstockedMatches.length > 0) {
+          <div class="mt-4 mx-auto max-w-md rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 p-4 text-right">
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              </svg>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-amber-800 dark:text-amber-300">
+                  المنتج موجود بالكتالوج لكنه غير متوفر في مخزون هذا الفرع
+                </p>
+                <p class="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                  يجب توريده ثم نقله إلى الفرع قبل بيعه:
+                </p>
+                <ul class="mt-2 space-y-1">
+                  @for (p of unstockedMatches; track p.id) {
+                    <li class="text-xs text-amber-800 dark:text-amber-300">
+                      • {{ p.name }} <span class="font-mono text-amber-600 dark:text-amber-400">({{ p.sku }})</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
+        }
       </div>
 
     <!-- Product cards -->
@@ -105,8 +131,18 @@
               {{ g.supply_item.product.sku }}
             </p>
 
-            <!-- Unit indicator -->
-            <p class="text-[10px] text-gray-400 dark:text-gray-500">{{ g.supply_item.product.scalar }}</p>
+            <!-- Unit + traffic-light stock indicator -->
+            <div class="flex items-center justify-between gap-1">
+              <p class="text-[10px] text-gray-400 dark:text-gray-500">{{ g.supply_item.product.scalar }}</p>
+              <span class="inline-block w-2 h-2 rounded-full shrink-0" [class]="stockDot(g)"
+                    [title]="stockNote(g) || 'متوفر'"></span>
+            </div>
+            @if (stockNote(g)) {
+              <p class="text-[10px] mt-0.5 font-medium"
+                 [class]="g.stock_level === 'warning' ? 'text-amber-600 dark:text-amber-400' : 'text-error-600 dark:text-error-400'">
+                {{ stockNote(g) }}
+              </p>
+            }
 
           </button>
         }

@@ -1,24 +1,123 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { DropdownComponent } from '../../ui/dropdown/dropdown.component';
-import { DropdownItemComponent } from '../../ui/dropdown/dropdown-item/dropdown-item.component';
+import { NotificationService } from '../../../../services/notification.service';
+import { PushService } from '../../../../services/push.service';
+import { RealtimeService } from '../../../../services/realtime.service';
+import { AuthService } from '../../../../services/auth.service';
+import { AppNotification } from '../../../../models/convention.model';
 
 @Component({
   selector: 'app-notification-dropdown',
   templateUrl: './notification-dropdown.component.html',
-  imports:[CommonModule,RouterModule,DropdownComponent,DropdownItemComponent]
+  imports: [CommonModule, RouterModule, DropdownComponent],
 })
-export class NotificationDropdownComponent {
+export class NotificationDropdownComponent implements OnInit, OnDestroy {
+  private notificationService = inject(NotificationService);
+  private pushService = inject(PushService);
+  private realtime = inject(RealtimeService);
+  private authService = inject(AuthService);
+
   isOpen = false;
-  notifying = true;
+  notifying = false;
+  notifications: AppNotification[] = [];
+  unreadCount = 0;
+  loading = false;
+  testing = false;
+
+  private userId: number | null = null;
+
+  ngOnInit(): void {
+    if (!this.authService.isAuthenticated()) return;
+
+    this.userId = this.authService.getUser()?.id ?? null;
+
+    // Initial unread count
+    this.refresh();
+
+    // Register the service worker + Web Push subscription (standard VAPID).
+    this.pushService.init();
+
+    // Real-time Notification Center updates via Laravel Reverb (no polling).
+    if (this.userId) {
+      this.realtime.listen(this.userId, (payload) => this.onRealtimeNotification(payload));
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.userId) this.realtime.leave(this.userId);
+  }
+
+  /** Instant update when a broadcast arrives. */
+  private onRealtimeNotification(payload: any) {
+    const n: AppNotification = payload?.notification;
+    if (n && !this.notifications.find((x) => x.id === n.id)) {
+      this.notifications.unshift(n);
+    }
+    this.unreadCount = payload?.unread_count ?? this.unreadCount + 1;
+    this.notifying = this.unreadCount > 0;
+  }
+
+  refresh() {
+    this.notificationService.unreadCount().subscribe({
+      next: (res) => {
+        this.unreadCount = res.unread_count || 0;
+        this.notifying = this.unreadCount > 0;
+      },
+    });
+  }
 
   toggleDropdown() {
     this.isOpen = !this.isOpen;
-    this.notifying = false;
+    if (this.isOpen) {
+      this.load();
+    }
   }
 
   closeDropdown() {
     this.isOpen = false;
+  }
+
+  load() {
+    this.loading = true;
+    this.notificationService.getNotifications({ per_page: 15 }).subscribe({
+      next: (res) => {
+        this.notifications = res.data?.data ?? [];
+        this.unreadCount = res.unread_count || 0;
+        this.notifying = this.unreadCount > 0;
+        this.loading = false;
+      },
+      error: () => { this.loading = false; },
+    });
+  }
+
+  markRead(n: AppNotification) {
+    if (n.read_at) return;
+    this.notificationService.markRead(n.id).subscribe({
+      next: () => {
+        n.read_at = new Date().toISOString();
+        this.unreadCount = Math.max(0, this.unreadCount - 1);
+        this.notifying = this.unreadCount > 0;
+      },
+    });
+  }
+
+  markAllRead() {
+    this.notificationService.markAllRead().subscribe({
+      next: () => {
+        this.notifications.forEach((n) => (n.read_at = n.read_at || new Date().toISOString()));
+        this.unreadCount = 0;
+        this.notifying = false;
+      },
+    });
+  }
+
+  sendTest() {
+    this.testing = true;
+    this.notificationService.sendTest().subscribe({
+      next: () => { this.testing = false; this.refresh(); if (this.isOpen) this.load(); },
+      error: () => { this.testing = false; },
+    });
   }
 }

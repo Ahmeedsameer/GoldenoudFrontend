@@ -25,6 +25,9 @@ export class ProductLookupPanelComponent implements OnInit, OnDestroy {
   goods: GoodsSearchResult[] = [];
   isLoading    = false;
 
+  /** Catalog products matching the search that aren't stocked in this shop. */
+  unstockedMatches: { id: number; name: string; sku: string; scalar: string }[] = [];
+
   // ── Lifecycle ─────────────────────────────────────────────
 
   ngOnInit(): void {
@@ -48,8 +51,25 @@ export class ProductLookupPanelComponent implements OnInit, OnDestroy {
       }),
       takeUntil(this.destroy$),
     ).subscribe({
-      next: (results) => { this.goods = results; this.isLoading = false; },
+      next: (results) => { this.goods = results; this.isLoading = false; this.refreshUnstockedHint(); },
       error: ()        => { this.isLoading = false; },
+    });
+  }
+
+  /**
+   * When a non-empty search returns no in-stock goods, look up whether the
+   * product exists in the catalog but isn't stocked in this shop, so we can
+   * show a helpful hint instead of a bare "no results".
+   */
+  private refreshUnstockedHint(): void {
+    const q = this.searchQuery.trim();
+    if (q.length === 0 || this.goods.length > 0) {
+      this.unstockedMatches = [];
+      return;
+    }
+    this.salesService.searchUnstockedProducts(q).subscribe({
+      next: (products) => { this.unstockedMatches = products; },
+      error: ()        => { this.unstockedMatches = []; },
     });
   }
 
@@ -79,13 +99,45 @@ export class ProductLookupPanelComponent implements OnInit, OnDestroy {
     this.fetchGoods();
   }
 
-  /** Emit the selected goods record to the parent cashier. */
+  /** Emit the selected goods record to the parent cashier (blocked when out). */
   onCardClick(goods: GoodsSearchResult): void {
+    if (this.isOutOfStock(goods)) return;
     this.productSelected.emit(goods);
   }
 
-  isOutOfStock(_goods: GoodsSearchResult): boolean {
-    return false;
+  isOutOfStock(goods: GoodsSearchResult): boolean {
+    return goods.stock_level === 'out' || (goods.product_shop_stock ?? 1) <= 0;
+  }
+
+  /** Traffic-light border/badge classes for a product card. */
+  stockClasses(goods: GoodsSearchResult): string {
+    switch (goods.stock_level) {
+      case 'out':      return 'border-error-300 dark:border-error-500/40 opacity-60';
+      case 'critical': return 'border-error-300 dark:border-error-500/40';
+      case 'warning':  return 'border-amber-300 dark:border-amber-500/40';
+      default:         return 'border-gray-200 dark:border-white/[0.05]';
+    }
+  }
+
+  /** Small colored dot class per level (green/yellow/red). */
+  stockDot(goods: GoodsSearchResult): string {
+    switch (goods.stock_level) {
+      case 'out':
+      case 'critical': return 'bg-error-500';
+      case 'warning':  return 'bg-amber-400';
+      default:         return 'bg-success-500';
+    }
+  }
+
+  /** Lightweight remaining-stock text for low/critical/out (sales-safe). */
+  stockNote(goods: GoodsSearchResult): string | null {
+    const qty = goods.product_shop_stock;
+    const unit = goods.supply_item?.product?.scalar ?? '';
+    if (goods.stock_level === 'out' || (qty ?? 1) <= 0) return 'نفد من المخزون';
+    if (goods.stock_level === 'warning' || goods.stock_level === 'critical') {
+      return `متبقٍ ${qty} ${unit}`;
+    }
+    return null;
   }
 
   // ── Internal ─────────────────────────────────────────────
@@ -95,7 +147,7 @@ export class ProductLookupPanelComponent implements OnInit, OnDestroy {
     this.salesService
       .searchGoods(this.searchQuery, 60, this.activeCategoryId ?? undefined)
       .subscribe({
-        next: (results) => { this.goods = results; this.isLoading = false; },
+        next: (results) => { this.goods = results; this.isLoading = false; this.refreshUnstockedHint(); },
         error: ()        => { this.isLoading = false; },
       });
   }

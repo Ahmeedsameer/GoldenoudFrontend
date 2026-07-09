@@ -116,6 +116,10 @@
                         class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300">
                         تعديل
                       </button>
+                      <button (click)="openRecipe(product)"
+                        class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-brand-600 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
+                        التركيبة (مكوّنات)
+                      </button>
                       <button (click)="openDelete(product)"
                         class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-error-500 hover:bg-error-50 hover:text-error-700 dark:hover:bg-error-500/10">
                         حذف
@@ -200,13 +204,6 @@
           </select>
         </div>
 
-        <!-- SKU -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SKU</label>
-          <input type="text" formControlName="sku" placeholder="رمز المنتج"
-            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-        </div>
-
         <!-- Barcode -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الباركود</label>
@@ -224,6 +221,51 @@
               <option [value]="cat.id">{{ cat.name }}</option>
             }
           </select>
+        </div>
+
+        <!-- Selling price: only for non-oil. Oil price comes from the category (per gram). -->
+        @if (!selectedCategoryIsOil) {
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ priceFieldLabel }}</label>
+            <input type="number" formControlName="selling_price" min="0" step="0.01" placeholder="0.00"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            <p class="text-[11px] text-gray-400 mt-1">الحد الأدنى محدَّد على مستوى الفئة؛ البيع بأقل منه ينبّه الإدارة.</p>
+          </div>
+        } @else {
+          <!-- Oil products price per gram at the product level. -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">سعر الجرام (ج.م) <span class="text-error-500">*</span></label>
+            <input type="number" formControlName="price_per_gram" min="0" step="0.01" placeholder="0.00"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            <p class="text-[11px] text-gray-400 mt-1">يُحسَب سعر البيع تلقائياً: الكمية (جرام) × سعر الجرام. الحد الأدنى محدَّد على مستوى الفئة.</p>
+          </div>
+        }
+
+        <!-- Purchase cost + live profit -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تكلفة الشراء (ج.م)</label>
+          <input type="number" formControlName="purchase_cost" min="0" step="0.01" placeholder="0.00"
+            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+          @if (formProfit !== null) {
+            <p class="text-[11px] mt-1 font-medium" [class]="formProfit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+              الربح لكل وحدة: {{ formProfit | number:'1.2-2' }} ج.م
+            </p>
+          }
+        </div>
+
+        <!-- Warning threshold -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">حد التحذير (مخزون منخفض)</label>
+          <input type="number" formControlName="warning_quantity" min="0" step="0.001" placeholder="مثال: 200"
+            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+          <p class="text-[11px] text-gray-400 mt-1">يُورَّث من الفئة تلقائياً إن تُرك فارغاً.</p>
+        </div>
+
+        <!-- Critical threshold -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحد الحرِج</label>
+          <input type="number" formControlName="critical_quantity" min="0" step="0.001" placeholder="مثال: 50"
+            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
         </div>
 
         <!-- is_active -->
@@ -312,6 +354,101 @@
       </button>
       <button type="button" (click)="showDeleteModal = false" [disabled]="deleteLoading"
         class="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+        إلغاء
+      </button>
+    </div>
+
+  </div>
+</app-modal>
+
+
+<!-- ════════════════════════════════════════════════════════
+     RECIPE (BOM) EDITOR MODAL
+     ════════════════════════════════════════════════════════ -->
+<app-modal [isOpen]="showRecipeModal" (close)="closeRecipe()" className="max-w-2xl m-4 w-full">
+  <div class="p-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">تركيبة المنتج (المكوّنات)</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          حدِّد مكوّنات <span class="font-medium text-gray-700 dark:text-gray-300">{{ recipeProduct?.name }}</span>
+          (زيت + زجاجة + إكسسوارات…). عند البيع يُخصَم كل مكوّن من مخزونه.
+        </p>
+      </div>
+      <button type="button" (click)="closeRecipe()"
+        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    @if (recipeError) {
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+        <p class="text-sm text-error-600 dark:text-error-400">{{ recipeError }}</p>
+      </div>
+    }
+
+    <!-- Add-component search -->
+    <div class="relative mb-4">
+      <input type="text" [(ngModel)]="recipeSearch" (ngModelChange)="onRecipeSearch($event)"
+        placeholder="ابحث عن منتج لإضافته كمكوّن (بالاسم)…"
+        class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+      @if (recipeResults.length) {
+        <div class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          @for (p of recipeResults; track p.id) {
+            <button type="button" (click)="addRecipeComponent(p)"
+              class="flex w-full items-center justify-between px-3 py-2 text-right text-sm hover:bg-gray-50 dark:hover:bg-white/[0.04]">
+              <span class="font-medium text-gray-800 dark:text-white/90">{{ p.name }}</span>
+              <span class="text-xs font-mono text-gray-400">{{ p.sku || '—' }}</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Component rows -->
+    @if (recipeLoading) {
+      <p class="text-sm text-gray-500 dark:text-gray-400 py-6 text-center">جارٍ تحميل التركيبة…</p>
+    } @else if (recipeRows.length === 0) {
+      <p class="text-sm text-gray-400 py-6 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+        لا توجد مكوّنات بعد — ابحث بالأعلى لإضافة أول مكوّن.
+      </p>
+    } @else {
+      <div class="space-y-2">
+        @for (row of recipeRows; track row.component_product_id; let i = $index) {
+          <div class="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ row.name }}</p>
+              <p class="text-xs font-mono text-gray-400">{{ row.sku || '—' }}</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <label class="text-xs text-gray-500 dark:text-gray-400">الكمية</label>
+              <input type="number" min="0.001" step="0.001" [(ngModel)]="row.quantity"
+                class="h-9 w-24 rounded-lg border border-gray-300 px-2 text-sm text-center bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            </div>
+            <button type="button" (click)="removeRecipeRow(i)"
+              class="text-error-500 hover:text-error-700 shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Footer -->
+    <div class="flex gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-white/[0.05]">
+      <button type="button" (click)="saveRecipe()" [disabled]="recipeSaving"
+        class="flex-1 h-10 rounded-lg font-medium text-sm transition-colors"
+        [class]="recipeSaving ? 'bg-brand-400 text-white cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600 text-white'">
+        @if (recipeSaving) { جاري الحفظ... } @else { حفظ التركيبة }
+      </button>
+      <button type="button" (click)="closeRecipe()" [disabled]="recipeSaving"
+        class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
         إلغاء
       </button>
     </div>

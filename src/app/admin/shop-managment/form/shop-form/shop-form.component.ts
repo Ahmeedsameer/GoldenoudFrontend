@@ -67,6 +67,7 @@ export class ShopFormComponent implements OnInit, OnDestroy {
 
   shopForm: FormGroup = this.fb.group({
     name: ['', Validators.required],
+    branch_bonus_percent: [0, [Validators.min(0), Validators.max(100)]],
     address: ['', Validators.required],
     username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
     password: ['', [Validators.required, Validators.minLength(6)]],
@@ -162,6 +163,7 @@ export class ShopFormComponent implements OnInit, OnDestroy {
         this.originalUsername = shop.username;
         this.shopForm.patchValue({
           name: shop.name,
+          branch_bonus_percent: shop.branch_bonus_percent ?? 0,
           address: shop.address,
           username: shop.username,
           status: shop.status,

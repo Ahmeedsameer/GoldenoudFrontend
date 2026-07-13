@@ -75,6 +75,13 @@ import { AdminFinancialReportComponent } from './admin/reports/financial/admin-f
 import { AdminDashboardComponent } from './admin/dashboard/admin-dashboard.component';
 import { AdminStockIntelligenceComponent } from './admin/stock/admin-stock-intelligence.component';
 import { AdminInvoicesComponent } from './admin/invoices/admin-invoices.component';
+import { HrEmployeesComponent } from './admin/hr/employees/hr-employees.component';
+import { HrTransfersComponent } from './admin/hr/transfers/hr-transfers.component';
+import { HrAttendanceComponent } from './admin/hr/attendance/hr-attendance.component';
+import { HrLeavesComponent } from './admin/hr/leaves/hr-leaves.component';
+import { HrPayrollComponent } from './admin/hr/payroll/hr-payroll.component';
+import { MyHrComponent } from './seller/my-hr/my-hr.component';
+import { HrReportsComponent } from './admin/hr/reports/hr-reports.component';
 
 // ── Demo pages ───────────────────────────────────────────────
 import { ShopListComponent } from './demo/components/shop-list/shop-list.component';
@@ -161,6 +168,12 @@ export const routes: Routes = [
       { path: 'reports/financial',  component: AdminFinancialReportComponent },
       { path: 'stock-intelligence', component: AdminStockIntelligenceComponent },
       { path: 'pending-invoices',   component: AdminInvoicesComponent },
+      { path: 'hr/employees',       component: HrEmployeesComponent },
+      { path: 'hr/transfers',       component: HrTransfersComponent },
+      { path: 'hr/attendance',      component: HrAttendanceComponent },
+      { path: 'hr/leaves',          component: HrLeavesComponent },
+      { path: 'hr/payroll',         component: HrPayrollComponent },
+      { path: 'hr/reports',         component: HrReportsComponent },
       { path: '', component: AdminDashboardComponent, pathMatch: 'full' },
       { path: 'calendar', component: CalenderComponent },
       { path: 'profile', component: ProfileComponent },
@@ -214,6 +227,7 @@ export const routes: Routes = [
     canMatch: [sellerGuard],
     children: [
       { path: 'cashier', component: CashierComponent },
+      { path: 'my-hr', component: MyHrComponent },
       {
         path: 'invoices',
         children: [

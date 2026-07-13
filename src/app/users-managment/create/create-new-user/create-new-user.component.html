@@ -59,6 +59,10 @@
         placeholder="اختر الدور"
       ></app-select>
       <app-form-error [control]="userForm.get('role')"></app-form-error>
+      <p class="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+        هذه الصفحة لإنشاء حسابات المدير العام (Admin) فقط. لإضافة مدير فرع أو بائع استخدم
+        «الموارد البشرية ← الموظفون» لأن الموظف يحتاج فرعًا أساسيًا وراتبًا وعمولة وبيانات إجازات.
+      </p>
     </div>
 
     <!-- Shift times -->

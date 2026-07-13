@@ -31,17 +31,17 @@ export class CreateNewUserComponent {
     phone: ['', [ Validators.pattern(/^01\d{9}$/)]],
     shift_start: ['', [Validators.pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)]], // صيغة الوقت HH:mm
     shift_end: ['',[ Validators.pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)]], // صيغة الوقت HH:mm
-    role: ['',[ Validators.required]],
+    role: ['admin',[ Validators.required]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     coPassword: ['', Validators.required]
   }, { validators: this.passwordMatchValidator }); // فاليديشن تطابق الباسورد
   loading:boolean = false;
  
+  // This page creates SYSTEM ADMIN accounts only. Managers and sellers are
+  // employees and must be created from the HR module (full profile + branch +
+  // salary). Backend also enforces this.
   userTypes : Option[] = [
-    { value: 'admin', label: 'مدير موقع' },
-    { value: 'sales', label: 'بائع' },
-    { value: 'manager', label: 'مدير فرع' },
-    
+    { value: 'admin', label: 'مدير عام (Admin)' },
   ]
 
 

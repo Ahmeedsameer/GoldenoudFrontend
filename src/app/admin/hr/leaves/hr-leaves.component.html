@@ -1,0 +1,68 @@
+<app-loading [loading]="list.loading"></app-loading>
+
+<div class="ds-card overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+    <h2 class="text-base font-semibold text-gray-900 dark:text-white">طلبات الإجازات</h2>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">مراجعة واعتماد إجازات الموظفين</p>
+  </div>
+
+  <div class="flex flex-wrap gap-1 px-5 py-3 border-b border-gray-100 dark:border-white/[0.06]">
+    @for (t of statusTabs; track t.value) {
+      <button (click)="setStatus(t.value)"
+        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+        [class]="activeStatus === t.value ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/[0.05] dark:text-gray-300'">
+        {{ t.label }}
+      </button>
+    }
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="ds-table w-full">
+      <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+        <tr>
+          <th class="ds-th">الموظف</th>
+          <th class="ds-th">الفترة</th>
+          <th class="ds-th">الأيام</th>
+          <th class="ds-th">النوع</th>
+          <th class="ds-th">مدفوع / بدون أجر</th>
+          <th class="ds-th">الحالة</th>
+          <th class="ds-th text-center">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (l of list.result.data; track l.id) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="px-4 py-3">
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ l.user?.name || '—' }}</p>
+              <p class="text-xs text-gray-400 font-mono">{{ l.user?.email }}</p>
+            </td>
+            <td class="px-4 py-3 text-xs font-mono text-gray-500 dark:text-gray-400">{{ l.start_date | date:'yyyy-MM-dd' }} → {{ l.end_date | date:'yyyy-MM-dd' }}</td>
+            <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ l.days }}</td>
+            <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ l.type === 'annual' ? 'سنوية' : (l.type === 'sick' ? 'مرضية' : 'بدون أجر') }}</td>
+            <td class="px-4 py-3 text-xs">
+              @if (l.status === 'approved') {
+                <span class="text-success-600 dark:text-success-400">{{ l.paid_days }} مدفوع</span>
+                @if (l.unpaid_days > 0) { <span class="text-error-500"> / {{ l.unpaid_days }} بدون أجر</span> }
+              } @else { <span class="text-gray-300">—</span> }
+            </td>
+            <td class="px-4 py-3">
+              <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium" [class]="statusMeta[l.status]?.cls">{{ statusMeta[l.status]?.label || l.status }}</span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-center gap-2">
+                @if (l.status === 'pending') {
+                  <button (click)="approve(l)" [disabled]="busyId === l.id" class="text-xs font-medium text-success-600 hover:text-success-700 disabled:opacity-50">قبول</button>
+                  <button (click)="reject(l)" [disabled]="busyId === l.id" class="text-xs font-medium text-error-500 hover:text-error-700 disabled:opacity-50">رفض</button>
+                } @else { <span class="text-xs text-gray-300 dark:text-gray-600">—</span> }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="px-4 py-8 text-center text-sm text-gray-400">لا توجد طلبات إجازات</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
+</div>

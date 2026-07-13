@@ -108,18 +108,18 @@
       <table class="min-w-full">
         <thead class="border-b border-gray-100 dark:border-white/[0.05]">
           <tr>
-            <th class="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase cursor-pointer select-none" (click)="setSort('date')">
+            <th class="px-5 py-3 text-start text-xs font-medium text-gray-400 uppercase cursor-pointer select-none" (click)="setSort('date')">
               التاريخ
               @if (sortBy === 'date') { <span>{{ sortDir === 'asc' ? '▲' : '▼' }}</span> }
             </th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase cursor-pointer select-none" (click)="setSort('amount')">
+            <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase cursor-pointer select-none" (click)="setSort('amount')">
               المبلغ
               @if (sortBy === 'amount') { <span>{{ sortDir === 'asc' ? '▲' : '▼' }}</span> }
             </th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">السبب</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">الملاحظات</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">المدير</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">وقت الإنشاء</th>
+            <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">السبب</th>
+            <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">الملاحظات</th>
+            <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">المدير</th>
+            <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">وقت الإنشاء</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">

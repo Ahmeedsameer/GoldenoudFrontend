@@ -1,0 +1,107 @@
+<app-loading [loading]="loading"></app-loading>
+
+@if (summary) {
+  <!-- Header -->
+  <div class="mb-5">
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">ملفّي الوظيفي</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+      {{ summary.employee.name }} — {{ summary.employee.role === 'manager' ? 'مدير فرع' : 'مبيعات' }}
+      · الفرع الحالي: <span class="font-medium">{{ summary.active_branch?.name || '—' }}</span>
+      @if (summary.is_transferred) { <span class="text-amber-600 dark:text-amber-400">(منقول مؤقتًا)</span> }
+    </p>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+    <div class="ds-card p-4">
+      <p class="text-xs text-gray-400 mb-1">مبيعاتي هذا الشهر</p>
+      <p class="text-lg font-bold font-mono text-gray-900 dark:text-white">{{ summary.commission.personal.sales_total | number:'1.0-2' }}</p>
+    </div>
+    <div class="ds-card p-4">
+      <p class="text-xs text-gray-400 mb-1">عمولتي الشخصية ({{ summary.commission.personal.percent }}%)</p>
+      <p class="text-lg font-bold font-mono text-success-600 dark:text-success-400">{{ summary.commission.personal.amount | number:'1.0-2' }}</p>
+    </div>
+    <div class="ds-card p-4">
+      <p class="text-xs text-gray-400 mb-1">بونص الفرع</p>
+      <p class="text-lg font-bold font-mono text-success-600 dark:text-success-400">{{ summary.commission.branch.total | number:'1.0-2' }}</p>
+    </div>
+    <div class="ds-card p-4 border-brand-200 dark:border-brand-500/30">
+      <p class="text-xs text-gray-400 mb-1">الراتب التقديري</p>
+      <p class="text-lg font-bold font-mono text-brand-600 dark:text-brand-400">{{ summary.commission.estimated_salary | number:'1.0-2' }}</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <!-- Attendance + leave summary -->
+    <div class="ds-card p-5">
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">الحضور هذا الشهر</h3>
+      <div class="grid grid-cols-4 gap-2 text-center mb-5">
+        <div class="rounded-lg bg-success-50 dark:bg-success-500/10 py-2"><p class="text-lg font-bold text-success-700 dark:text-success-400">{{ summary.attendance.present }}</p><p class="text-[11px] text-gray-500">حاضر</p></div>
+        <div class="rounded-lg bg-amber-50 dark:bg-amber-500/10 py-2"><p class="text-lg font-bold text-amber-700 dark:text-amber-400">{{ summary.attendance.late }}</p><p class="text-[11px] text-gray-500">متأخر</p></div>
+        <div class="rounded-lg bg-blue-50 dark:bg-blue-500/10 py-2"><p class="text-lg font-bold text-blue-700 dark:text-blue-400">{{ summary.attendance.half_day }}</p><p class="text-[11px] text-gray-500">نصف يوم</p></div>
+        <div class="rounded-lg bg-error-50 dark:bg-error-500/10 py-2"><p class="text-lg font-bold text-error-600 dark:text-error-400">{{ summary.attendance.absent }}</p><p class="text-[11px] text-gray-500">غائب</p></div>
+      </div>
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-2">رصيد الإجازات (هذا الشهر)</h3>
+      @if (leaveBalance) {
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-500">المتبقّي</span>
+          <span class="font-bold text-gray-900 dark:text-white">{{ leaveBalance.remaining }} / {{ leaveBalance.allowance }} يوم</span>
+        </div>
+      }
+      @if (summary.transfers?.length) {
+        <div class="mt-4 pt-3 border-t border-gray-100 dark:border-white/[0.06]">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-2">نقل مؤقت</h3>
+          @for (t of summary.transfers; track t.id) {
+            <p class="text-xs text-gray-600 dark:text-gray-300">→ {{ t.temporary_branch?.name }} ({{ t.start_date | date:'yyyy-MM-dd' }} → {{ t.end_date | date:'yyyy-MM-dd' }}) — {{ t.status === 'active' ? 'نشط' : 'مجدول' }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Leave request + recent payrolls -->
+    <div class="ds-card p-5">
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">طلب إجازة</h3>
+      @if (leaveError) { <p class="text-xs text-error-500 mb-2">{{ leaveError }}</p> }
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <input type="date" [(ngModel)]="form.start_date" class="h-9 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+        <input type="date" [(ngModel)]="form.end_date" class="h-9 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+      </div>
+      <div class="flex gap-2 mb-3">
+        <select [(ngModel)]="form.type" class="h-9 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800">
+          <option value="annual">سنوية</option>
+          <option value="sick">مرضية</option>
+          <option value="unpaid">بدون أجر</option>
+        </select>
+        <input type="text" [(ngModel)]="form.reason" placeholder="السبب (اختياري)" class="flex-1 h-9 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+      </div>
+      <button (click)="submitLeave()" [disabled]="submitting" class="w-full h-9 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">
+        @if (submitting) { جاري الإرسال... } @else { إرسال الطلب }
+      </button>
+
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mt-5 mb-2">آخر كشوف الرواتب</h3>
+      @for (p of summary.recent_payrolls; track p.id) {
+        <div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
+          <span class="text-gray-600 dark:text-gray-300">{{ monthNames[p.period_month] }} {{ p.period_year }}</span>
+          <span class="font-mono font-medium text-gray-900 dark:text-white">{{ p.net_salary | number:'1.2-2' }} ج.م</span>
+        </div>
+      } @empty {
+        <p class="text-xs text-gray-400">لا توجد كشوف رواتب بعد</p>
+      }
+    </div>
+  </div>
+
+  <!-- My leave requests -->
+  <div class="ds-card p-5 mt-5">
+    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">طلبات إجازاتي</h3>
+    <div class="space-y-2">
+      @for (l of leaves; track l.id) {
+        <div class="flex flex-wrap justify-between items-center gap-2 text-sm py-2 border-b border-gray-50 dark:border-white/[0.04]">
+          <span class="font-mono text-gray-500">{{ l.start_date | date:'yyyy-MM-dd' }} → {{ l.end_date | date:'yyyy-MM-dd' }} ({{ l.days }} يوم)</span>
+          <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium" [class]="leaveStatusMeta[l.status]?.cls">{{ leaveStatusMeta[l.status]?.label || l.status }}</span>
+        </div>
+      } @empty {
+        <p class="text-xs text-gray-400">لا توجد طلبات</p>
+      }
+    </div>
+  </div>
+}

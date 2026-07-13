@@ -1,0 +1,53 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="ds-card overflow-hidden">
+  <!-- Header + controls -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+    <div>
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">الحضور اليومي</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">انقر لتحديد حالة كل موظف — يُحفظ فورًا</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      @if (!isManager) {
+        <select [(ngModel)]="shopId" (ngModelChange)="load()"
+          class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+          @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+        </select>
+      }
+      <input type="date" [(ngModel)]="date" (ngModelChange)="load()"
+        class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90" />
+    </div>
+  </div>
+
+  <!-- Summary chips -->
+  <div class="flex flex-wrap gap-2 px-5 py-3 border-b border-gray-100 dark:border-white/[0.06] text-xs">
+    <span class="text-gray-400">{{ branchName }} — {{ roster.length }} موظف:</span>
+    <span class="rounded-full bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400 px-2 py-0.5">حاضر {{ counts().present }}</span>
+    <span class="rounded-full bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 px-2 py-0.5">متأخر {{ counts().late }}</span>
+    <span class="rounded-full bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400 px-2 py-0.5">نصف يوم {{ counts().half_day }}</span>
+    <span class="rounded-full bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400 px-2 py-0.5">غائب {{ counts().absent }}</span>
+  </div>
+
+  <!-- Checklist -->
+  <div class="divide-y divide-gray-100 dark:divide-white/[0.06]">
+    @for (row of roster; track row.user_id) {
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ row.name }}</p>
+          <span class="text-xs text-gray-400">{{ row.role === 'manager' ? 'مدير فرع' : 'مبيعات' }}</span>
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          @for (s of statuses; track s.value) {
+            <button (click)="mark(row, s.value)" [disabled]="savingId === row.user_id"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-50"
+              [class]="row.status === s.value ? s.cls + ' border-transparent' : 'bg-transparent ' + s.idle">
+              {{ s.label }}
+            </button>
+          }
+        </div>
+      </div>
+    } @empty {
+      <div class="px-5 py-10 text-center text-sm text-gray-400">لا يوجد موظفون في هذا الفرع لهذا اليوم</div>
+    }
+  </div>
+</div>

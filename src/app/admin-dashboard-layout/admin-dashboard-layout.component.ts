@@ -79,6 +79,19 @@ export class AdminDashboardLayoutComponent {
     },
 
     {
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M320 80C377.4 80 424 126.6 424 184C424 241.4 377.4 288 320 288C262.6 288 216 241.4 216 184C216 126.6 262.6 80 320 80zM96 152C135.8 152 168 184.2 168 224C168 263.8 135.8 296 96 296C56.2 296 24 263.8 24 224C24 184.2 56.2 152 96 152zM0 480C0 409.3 57.3 352 128 352C140.8 352 153.2 353.9 164.9 357.4C132 394.2 112 442.8 112 496L112 512C112 523.4 114.4 534.2 118.7 544L32 544C14.3 544 0 529.7 0 512L0 480zM160 496C160 407.6 231.6 336 320 336C408.4 336 480 407.6 480 496L480 512C480 529.7 465.7 544 448 544L192 544C174.3 544 160 529.7 160 512L160 496z"/></svg>`,
+      name: "الموارد البشرية",
+      subItems: [
+        { name: "الموظفون", path: "/dashboard/hr/employees" },
+        { name: "نقل الموظفين", path: "/dashboard/hr/transfers" },
+        { name: "الحضور", path: "/dashboard/hr/attendance" },
+        { name: "الإجازات", path: "/dashboard/hr/leaves" },
+        { name: "الرواتب", path: "/dashboard/hr/payroll" },
+        { name: "تقارير الموارد البشرية", path: "/dashboard/hr/reports" },
+      ],
+    },
+
+    {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>`,
       name: "إدارة الخزنة",
       subItems: [

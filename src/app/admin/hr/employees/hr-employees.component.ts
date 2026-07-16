@@ -8,10 +8,11 @@ import { FormHelperService } from '../../../services/form-helper.service';
 import { PaginationComponent } from '../../../pagination/pagination.component';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-hr-employees',
-  imports: [CommonModule, ReactiveFormsModule, PaginationComponent, LoadingComponent, ModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, PaginationComponent, LoadingComponent, ModalComponent, DatePickerComponent],
   templateUrl: './hr-employees.component.html',
 })
 export class HrEmployeesComponent implements OnInit {
@@ -120,6 +121,7 @@ export class HrEmployeesComponent implements OnInit {
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.formError = 'يوجد حقول مطلوبة لم تُملأ أو غير صحيحة — تحقق من الحقول المظللة باللون الأحمر (الاسم، البريد، كلمة المرور، الدور، الفرع الأساسي).';
       return;
     }
     this.formLoading = true;
@@ -151,6 +153,37 @@ export class HrEmployeesComponent implements OnInit {
     this.hr.toggleStatus(emp.id).subscribe({
       next: () => this.list.load(),
       error: () => {},
+    });
+  }
+
+  // ── Employment timeline (Phase 10) ─────────────────────────
+  showTimeline = false;
+  timelineEmployee: any = null;
+  timeline: any[] = [];
+  timelineLoading = false;
+
+  actionLabels: Record<string, string> = {
+    'employee.created': 'تعيين الموظف', 'salary.changed': 'تغيير الراتب الأساسي',
+    'commission.changed': 'تغيير نسبة العمولة', 'role.changed': 'تغيير الدور الوظيفي',
+    'primary_branch.changed': 'تغيير الفرع الأساسي', 'status.changed': 'تغيير الحالة',
+    'transfer.created': 'إنشاء طلب نقل', 'transfer.approved': 'اعتماد نقل', 'transfer.activated': 'تفعيل نقل',
+    'transfer.completed': 'انتهاء نقل', 'transfer.cancelled': 'إلغاء نقل',
+    'leave.created': 'طلب إجازة', 'leave.approved': 'اعتماد إجازة', 'leave.rejected': 'رفض إجازة',
+    'leave.cancelled': 'إلغاء إجازة', 'leave.ended_early': 'إنهاء إجازة مبكرًا',
+    'bonus.created': 'منح مكافأة', 'bonus.updated': 'تعديل مكافأة', 'bonus.deleted': 'حذف مكافأة',
+    'penalty.created': 'تسجيل خصم', 'penalty.updated': 'تعديل خصم', 'penalty.deleted': 'حذف خصم',
+    'payroll.generated': 'توليد كشف راتب', 'payroll.locked': 'قفل كشف راتب', 'payroll.unlocked': 'فتح قفل كشف راتب',
+    'payroll.paid': 'تعليم الراتب كمدفوع',
+  };
+  actionLabel(action: string): string { return this.actionLabels[action] || action; }
+
+  openTimeline(emp: any) {
+    this.timelineEmployee = emp;
+    this.showTimeline = true;
+    this.timelineLoading = true;
+    this.hr.employeeTimeline(emp.id).subscribe({
+      next: (t) => { this.timeline = t || []; this.timelineLoading = false; },
+      error: () => { this.timelineLoading = false; },
     });
   }
 }

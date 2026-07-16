@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { HrService } from '../../../services/hr.service';
 import { ShopService } from '../../../services/shop.service';
 import { LoadingComponent } from '../../../loading/loading.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-hr-reports',
-  imports: [CommonModule, FormsModule, LoadingComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, DatePickerComponent],
   templateUrl: './hr-reports.component.html',
 })
 export class HrReportsComponent implements OnInit {
@@ -33,6 +34,29 @@ export class HrReportsComponent implements OnInit {
     { value: 'monthly_comparison', label: 'المقارنة الشهرية',          filters: ['year'] },
     { value: 'transfers',          label: 'نقل الموظفين',              filters: ['status_transfer', 'shop_id'] },
     { value: 'transfer_earnings',  label: 'المبيعات والبونص خلال النقل', filters: [] },
+    { value: 'schedule_weekly',    label: 'الجدول الأسبوعي',            filters: ['date', 'shop_id'] },
+    { value: 'schedule_employee',  label: 'جدول موظف',                 filters: ['date', 'user_id'] },
+    { value: 'schedule_branch',    label: 'جدول فرع',                  filters: ['date', 'shop_id'] },
+    { value: 'schedule_transferred', label: 'جدول الموظفين المنقولين', filters: ['date', 'shop_id'] },
+    { value: 'attendance_vs_schedule', label: 'الحضور مقابل الجدول',    filters: ['from', 'to', 'shop_id'] },
+    { value: 'leave_vs_schedule',  label: 'الإجازات مقابل الجدول',      filters: ['from', 'to'] },
+    { value: 'schedule_conflicts', label: 'تعارضات الجدول',             filters: ['from', 'to'] },
+    { value: 'late_employees',     label: 'الموظفون المتأخرون',         filters: ['from', 'to', 'shop_id'] },
+    { value: 'bonuses',            label: 'المكافآت',                  filters: ['from', 'to', 'user_id'] },
+    { value: 'penalties',          label: 'الخصومات',                  filters: ['from', 'to', 'user_id'] },
+    { value: 'late_deductions',    label: 'خصومات التأخير',             filters: ['year', 'month'] },
+    { value: 'absence_deductions', label: 'خصومات الغياب',              filters: ['year', 'month'] },
+    { value: 'leave_deductions',   label: 'خصومات الإجازة بدون أجر',    filters: ['year', 'month'] },
+    { value: 'payroll_breakdown',  label: 'تفصيل الرواتب الشهري',       filters: ['year', 'month', 'user_id'] },
+    { value: 'leave_usage',        label: 'استخدام الإجازات',           filters: ['year', 'month', 'shop_id'] },
+    { value: 'advances_pending',   label: 'طلبات السلف قيد المراجعة',   filters: ['user_id'] },
+    { value: 'advances_active',    label: 'السلف النشطة',              filters: ['user_id'] },
+    { value: 'advances_rejected',  label: 'طلبات السلف المرفوضة',      filters: ['user_id'] },
+    { value: 'advances_completed', label: 'السلف المسددة بالكامل',      filters: ['user_id'] },
+    { value: 'advances_deductions', label: 'خصومات السلف الشهرية',      filters: ['year', 'month', 'user_id'] },
+    { value: 'advances_due',       label: 'أقساط السلف المستحقة هذا الشهر', filters: ['user_id'] },
+    { value: 'advances_by_employee', label: 'سجل السلف حسب الموظف',    filters: ['user_id'] },
+    { value: 'advances_by_branch', label: 'سلف الموظفين حسب الفرع',    filters: ['shop_id', 'status_advance'] },
   ];
 
   type = 'employee_sales';
@@ -41,16 +65,22 @@ export class HrReportsComponent implements OnInit {
     to: this.iso(new Date(this.now.getFullYear(), this.now.getMonth() + 1, 0)),
     year: this.now.getFullYear(),
     month: this.now.getMonth() + 1,
+    date: this.iso(this.now),
     shop_id: '',
+    user_id: '',
     status_leave: '',
     status_transfer: '',
+    status_advance: '',
   };
+
+  employees: { id: number; name: string }[] = [];
 
   months = Array.from({ length: 12 }, (_, i) => i + 1);
   years = [this.now.getFullYear() - 1, this.now.getFullYear(), this.now.getFullYear() + 1];
 
   ngOnInit(): void {
     this.shopService.getShops({ page: -1 }).subscribe({ next: (r) => this.shops = r.data?.data || r.data || r || [], error: () => {} });
+    this.hr.getEmployees({ page: -1 }).subscribe({ next: (r) => this.employees = (r.data?.data || r.data || r || []).map((e: any) => ({ id: e.id, name: e.name })), error: () => {} });
     this.run();
   }
 
@@ -67,8 +97,11 @@ export class HrReportsComponent implements OnInit {
     if (f.includes('year')) p.year = this.filters.year;
     if (f.includes('month')) p.month = this.filters.month;
     if (f.includes('shop_id') && this.filters.shop_id) p.shop_id = this.filters.shop_id;
+    if (f.includes('user_id') && this.filters.user_id) p.user_id = this.filters.user_id;
+    if (f.includes('date')) p.date = this.filters.date;
     if (f.includes('status_leave') && this.filters.status_leave) p.status = this.filters.status_leave;
     if (f.includes('status_transfer') && this.filters.status_transfer) p.status = this.filters.status_transfer;
+    if (f.includes('status_advance') && this.filters.status_advance) p.status = this.filters.status_advance;
     return p;
   }
 

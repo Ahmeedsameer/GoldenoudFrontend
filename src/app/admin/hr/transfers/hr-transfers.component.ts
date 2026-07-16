@@ -8,10 +8,11 @@ import { FormHelperService } from '../../../services/form-helper.service';
 import { PaginationComponent } from '../../../pagination/pagination.component';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-hr-transfers',
-  imports: [CommonModule, ReactiveFormsModule, PaginationComponent, LoadingComponent, ModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, PaginationComponent, LoadingComponent, ModalComponent, DatePickerComponent],
   templateUrl: './hr-transfers.component.html',
 })
 export class HrTransfersComponent implements OnInit {

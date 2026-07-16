@@ -14,8 +14,9 @@
           @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
         </select>
       }
-      <input type="date" [(ngModel)]="date" (ngModelChange)="load()"
-        class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90" />
+      <div class="w-40">
+        <app-date-picker id="attendance-date" [value]="date" (valueChange)="date = $event; load()"></app-date-picker>
+      </div>
     </div>
   </div>
 

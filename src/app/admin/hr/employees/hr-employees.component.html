@@ -80,8 +80,12 @@
               </button>
             </td>
             <td class="px-4 py-3 text-center">
-              <button (click)="openEdit(emp)"
-                class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">تعديل</button>
+              <div class="flex items-center justify-center gap-2">
+                <button (click)="openEdit(emp)"
+                  class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">تعديل</button>
+                <button (click)="openTimeline(emp)"
+                  class="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400">السجل الزمني</button>
+              </div>
             </td>
           </tr>
         } @empty {
@@ -120,17 +124,32 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الاسم <span class="text-error-500">*</span></label>
-          <input type="text" formControlName="name" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+          <input type="text" formControlName="name"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
+            [class]="form.get('name')?.invalid && form.get('name')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'" />
+          @if (form.get('name')?.invalid && form.get('name')?.touched) {
+            <p class="mt-1 text-xs text-error-500">الاسم مطلوب</p>
+          }
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">البريد الإلكتروني <span class="text-error-500">*</span></label>
-          <input type="email" formControlName="email" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+          <input type="email" formControlName="email"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
+            [class]="form.get('email')?.invalid && form.get('email')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'" />
+          @if (form.get('email')?.invalid && form.get('email')?.touched) {
+            <p class="mt-1 text-xs text-error-500">أدخل بريدًا إلكترونيًا صحيحًا</p>
+          }
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
             كلمة المرور @if (!isEditing) { <span class="text-error-500">*</span> } @else { <span class="text-gray-400">(اتركها فارغة لعدم التغيير)</span> }
           </label>
-          <input type="password" formControlName="password" autocomplete="new-password" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+          <input type="password" formControlName="password" autocomplete="new-password"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
+            [class]="form.get('password')?.invalid && form.get('password')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'" />
+          @if (form.get('password')?.invalid && form.get('password')?.touched) {
+            <p class="mt-1 text-xs text-error-500">مطلوبة، 6 أحرف على الأقل</p>
+          }
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الهاتف</label>
@@ -143,7 +162,9 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الدور <span class="text-error-500">*</span></label>
-          <select formControlName="role" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <select formControlName="role"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
+            [class]="form.get('role')?.invalid && form.get('role')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'">
             @for (r of roleOptions; track r.value) { <option [value]="r.value">{{ r.label }}</option> }
           </select>
         </div>
@@ -156,7 +177,12 @@
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">تاريخ التعيين</label>
-          <input type="date" formControlName="hire_date" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+          <app-date-picker
+            id="employee-hire-date"
+            [value]="form.get('hire_date')?.value"
+            (valueChange)="form.get('hire_date')?.setValue($event)"
+            placeholder="اختر تاريخ التعيين"
+          ></app-date-picker>
         </div>
       </div>
 
@@ -164,10 +190,15 @@
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">الفرع الأساسي</p>
       <div class="mb-5">
         <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الفرع الأساسي (الدائم) <span class="text-error-500">*</span></label>
-        <select formControlName="shop_id" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+        <select formControlName="shop_id"
+          class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
+          [class]="form.get('shop_id')?.invalid && form.get('shop_id')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'">
           <option [ngValue]="null" disabled>اختر الفرع الأساسي</option>
           @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
         </select>
+        @if (form.get('shop_id')?.invalid && form.get('shop_id')?.touched) {
+          <p class="mt-1 text-xs text-error-500">يجب اختيار الفرع الأساسي</p>
+        }
         <p class="text-[11px] text-gray-400 mt-1">للنقل المؤقت لفرع آخر استخدم صفحة «نقل الموظفين». نسبة بونص الفرع تُضبط على الفرع نفسه في «إدارة الفروع».</p>
       </div>
 
@@ -205,5 +236,37 @@
           class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">إلغاء</button>
       </div>
     </form>
+  </div>
+</app-modal>
+
+
+<!-- ═══ EMPLOYMENT TIMELINE MODAL ═══ -->
+<app-modal [isOpen]="showTimeline" (close)="showTimeline = false" className="max-w-lg m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">السجل الوظيفي الزمني</h2>
+        <p class="text-xs text-gray-400 mt-0.5">{{ timelineEmployee?.name }}</p>
+      </div>
+      <button type="button" (click)="showTimeline = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    @if (timelineLoading) {
+      <p class="text-sm text-gray-400 py-6 text-center">جارٍ التحميل…</p>
+    } @else {
+      <div class="relative space-y-4 ps-4 border-s-2 border-gray-100 dark:border-white/[0.06] max-h-96 overflow-y-auto">
+        @for (t of timeline; track t.id) {
+          <div class="relative">
+            <span class="absolute -start-[21px] top-1 h-2.5 w-2.5 rounded-full bg-brand-400"></span>
+            <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ actionLabel(t.action) }}</p>
+            <p class="text-[11px] text-gray-400 font-mono">{{ t.created_at | date:'yyyy-MM-dd HH:mm' }}</p>
+          </div>
+        } @empty {
+          <p class="text-xs text-gray-400">لا يوجد سجل بعد</p>
+        }
+      </div>
+    }
   </div>
 </app-modal>

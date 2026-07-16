@@ -5,12 +5,13 @@ import { HrService } from '../../../services/hr.service';
 import { ShopService } from '../../../services/shop.service';
 import { AuthService } from '../../../services/auth.service';
 import { LoadingComponent } from '../../../loading/loading.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 interface RosterRow { user_id: number; name: string; role: string; status: string; note: string | null; }
 
 @Component({
   selector: 'app-hr-attendance',
-  imports: [CommonModule, FormsModule, LoadingComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, DatePickerComponent],
   templateUrl: './hr-attendance.component.html',
 })
 export class HrAttendanceComponent implements OnInit {

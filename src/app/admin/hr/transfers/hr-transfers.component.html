@@ -112,11 +112,21 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">تاريخ البداية <span class="text-error-500">*</span></label>
-            <input type="date" formControlName="start_date" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+            <app-date-picker
+              id="transfer-start-date"
+              [value]="form.get('start_date')?.value"
+              (valueChange)="form.get('start_date')?.setValue($event)"
+              placeholder="اختر تاريخ البداية"
+            ></app-date-picker>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">تاريخ النهاية <span class="text-error-500">*</span></label>
-            <input type="date" formControlName="end_date" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+            <app-date-picker
+              id="transfer-end-date"
+              [value]="form.get('end_date')?.value"
+              (valueChange)="form.get('end_date')?.setValue($event)"
+              placeholder="اختر تاريخ النهاية"
+            ></app-date-picker>
           </div>
         </div>
         <div>

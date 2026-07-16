@@ -10,6 +10,8 @@ export class DropdownComponent implements AfterViewInit, OnDestroy {
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
   @Input() className = '';
+  /** Optional inline styles (e.g. fixed positioning) applied to the panel. */
+  @Input() panelStyle: Record<string, string> | null = null;
 
   @ViewChild('dropdownRef') dropdownRef!: ElementRef<HTMLDivElement>;
 

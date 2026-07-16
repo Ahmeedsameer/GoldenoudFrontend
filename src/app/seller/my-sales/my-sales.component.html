@@ -1,0 +1,86 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">مبيعاتي</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">أداؤك الشخصي وعمولتك فقط</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <button (click)="prevMonth()" class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.04]">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <span class="text-sm font-medium text-gray-700 dark:text-gray-200 w-28 text-center">{{ monthNames[month] }} {{ year }}</span>
+    <button (click)="nextMonth()" class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.04]">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+  </div>
+</div>
+
+@if (data) {
+  <!-- Invoices by status -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+    <div class="ds-card p-4">
+      <p class="text-xs text-gray-400 mb-1">فواتير معتمدة</p>
+      <p class="text-lg font-bold text-success-700 dark:text-success-400">{{ data.invoices.approved.count }}</p>
+      <p class="text-sm font-mono text-gray-600 dark:text-gray-300 mt-1">{{ data.invoices.approved.total | number:'1.0-2' }} ج.م</p>
+    </div>
+    <div class="ds-card p-4">
+      <p class="text-xs text-gray-400 mb-1">فواتير قيد الانتظار</p>
+      <p class="text-lg font-bold text-amber-700 dark:text-amber-400">{{ data.invoices.pending.count }}</p>
+      <p class="text-sm font-mono text-gray-600 dark:text-gray-300 mt-1">{{ data.invoices.pending.total | number:'1.0-2' }} ج.م</p>
+    </div>
+    <div class="ds-card p-4">
+      <p class="text-xs text-gray-400 mb-1">فواتير مرفوضة</p>
+      <p class="text-lg font-bold text-error-600 dark:text-error-400">{{ data.invoices.rejected.count }}</p>
+      <p class="text-sm font-mono text-gray-600 dark:text-gray-300 mt-1">{{ data.invoices.rejected.total | number:'1.0-2' }} ج.م</p>
+    </div>
+  </div>
+
+  <!-- Commission / bonus / salary -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+    <div class="ds-card p-4">
+      <p class="text-xs text-gray-400 mb-1">عمولتي الشخصية ({{ data.personal_commission.percent }}%)</p>
+      <p class="text-lg font-bold font-mono text-success-700 dark:text-success-400">{{ data.personal_commission.amount | number:'1.0-2' }}</p>
+    </div>
+    <div class="ds-card p-4">
+      <p class="text-xs text-gray-400 mb-1">بونص الفرع</p>
+      <p class="text-lg font-bold font-mono text-success-700 dark:text-success-400">{{ data.branch_bonus.total | number:'1.0-2' }}</p>
+    </div>
+    <div class="ds-card p-4 border-brand-200 dark:border-brand-500/30">
+      <p class="text-xs text-gray-400 mb-1">الراتب التقديري</p>
+      <p class="text-lg font-bold font-mono text-brand-600 dark:text-brand-400">{{ data.estimated_salary | number:'1.0-2' }}</p>
+    </div>
+  </div>
+
+  @if (data.bonus_total > 0 || data.penalty_total > 0) {
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div class="ds-card p-4">
+        <p class="text-xs text-gray-400 mb-1">مكافآت هذا الشهر</p>
+        <p class="text-lg font-bold font-mono text-success-700 dark:text-success-400">+{{ data.bonus_total | number:'1.0-2' }}</p>
+      </div>
+      <div class="ds-card p-4">
+        <p class="text-xs text-gray-400 mb-1">خصومات هذا الشهر</p>
+        <p class="text-lg font-bold font-mono text-error-600 dark:text-error-400">-{{ data.penalty_total | number:'1.0-2' }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Monthly performance -->
+  <div class="ds-card p-5">
+    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">الأداء الشهري</h3>
+    <div class="grid grid-cols-3 gap-4 text-center">
+      <div>
+        <p class="text-lg font-bold text-gray-900 dark:text-white">{{ data.monthly_performance.invoices_count }}</p>
+        <p class="text-xs text-gray-500 mt-1">عدد الفواتير المعتمدة</p>
+      </div>
+      <div>
+        <p class="text-lg font-bold font-mono text-gray-900 dark:text-white">{{ data.monthly_performance.total_sales | number:'1.0-2' }}</p>
+        <p class="text-xs text-gray-500 mt-1">إجمالي المبيعات</p>
+      </div>
+      <div>
+        <p class="text-lg font-bold font-mono text-gray-900 dark:text-white">{{ data.monthly_performance.average_invoice | number:'1.0-2' }}</p>
+        <p class="text-xs text-gray-500 mt-1">متوسط الفاتورة</p>
+      </div>
+    </div>
+  </div>
+}

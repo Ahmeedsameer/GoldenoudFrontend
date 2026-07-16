@@ -1,0 +1,116 @@
+<app-loading [loading]="loading || submitting"></app-loading>
+
+<div class="mb-5">
+  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">سلفتي</h2>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">تقديم طلب سلفة ومتابعة حالته وخطة السداد</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+  <!-- Request form -->
+  <div class="ds-card p-5">
+    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">طلب سلفة جديد</h3>
+    @if (error) { <p class="text-xs text-error-500 mb-2">{{ error }}</p> }
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">المبلغ المطلوب (ج.م)</label>
+        <input type="number" [(ngModel)]="form.requested_amount" min="0.01" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">السبب</label>
+        <input type="text" [(ngModel)]="form.reason" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">تاريخ الطلب</label>
+        <app-date-picker id="advance-request-date" [value]="form.request_date" (valueChange)="form.request_date = $event"></app-date-picker>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">ملاحظات (اختياري)</label>
+        <textarea [(ngModel)]="form.notes" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 resize-none"></textarea>
+      </div>
+    </div>
+
+    <button (click)="submit()" [disabled]="submitting" class="w-full h-10 mt-4 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">
+      @if (submitting) { جاري الإرسال... } @else { إرسال الطلب }
+    </button>
+    <p class="text-[11px] text-gray-400 mt-2">لا يمكن تعديل أو حذف الطلب بعد إرساله.</p>
+  </div>
+
+  <!-- History -->
+  <div class="space-y-4">
+    @for (a of advances; track a.id) {
+      <div class="ds-card p-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-800 dark:text-white/90">{{ a.requested_amount | number:'1.0-2' }} ج.م</span>
+          <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium" [class]="statusLabels[a.status]?.cls">{{ statusLabels[a.status]?.label }}</span>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ a.reason }} · {{ a.request_date | date:'yyyy-MM-dd' }}</p>
+
+        @if (a.status === 'rejected' && a.rejection_reason) {
+          <p class="text-xs text-error-500">سبب الرفض: {{ a.rejection_reason }}</p>
+        }
+
+        @if (a.status === 'active' || a.status === 'completed') {
+          <div class="grid grid-cols-3 gap-2 my-3">
+            <div class="rounded-lg bg-gray-50 dark:bg-white/[0.03] p-2 text-center">
+              <p class="text-sm font-bold font-mono text-gray-900 dark:text-white">{{ a.approved_amount | number:'1.0-2' }}</p>
+              <p class="text-[10px] text-gray-500">المعتمد</p>
+            </div>
+            <div class="rounded-lg bg-success-50 dark:bg-success-500/10 p-2 text-center">
+              <p class="text-sm font-bold font-mono text-success-700 dark:text-success-400">{{ a.paid_amount | number:'1.0-2' }}</p>
+              <p class="text-[10px] text-gray-500">المدفوع</p>
+            </div>
+            <div class="rounded-lg bg-error-50 dark:bg-error-500/10 p-2 text-center">
+              <p class="text-sm font-bold font-mono text-error-600 dark:text-error-400">{{ a.remaining_balance | number:'1.0-2' }}</p>
+              <p class="text-[10px] text-gray-500">المتبقي</p>
+            </div>
+          </div>
+
+          <!-- Completion % -->
+          <div class="mb-3">
+            <div class="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+              <span>نسبة الإنجاز</span>
+              <span class="font-mono">{{ completionPercent(a) }}%</span>
+            </div>
+            <div class="h-1.5 rounded-full bg-gray-100 dark:bg-white/[0.06] overflow-hidden">
+              <div class="h-full bg-success-500" [style.width.%]="completionPercent(a)"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400 mb-2">
+            <span>طريقة التقسيط: <span class="text-gray-700 dark:text-gray-300">{{ modeLabels[a.installment_mode] || '—' }}</span></span>
+            <span>البداية → النهاية: <span class="font-mono text-gray-700 dark:text-gray-300">{{ startMonthLabel(a) }} → {{ endMonthLabel(a) }}</span></span>
+            @if (currentInstallment(a); as current) {
+              <span>القسط الحالي: <span class="font-mono text-amber-600 dark:text-amber-400">{{ current.period_month }}/{{ current.period_year }} — {{ current.planned_amount | number:'1.0-2' }}</span></span>
+            }
+            @if (nextInstallment(a); as next) {
+              <span>القسط القادم: <span class="font-mono text-gray-700 dark:text-gray-300">{{ next.period_month }}/{{ next.period_year }} — {{ next.planned_amount | number:'1.0-2' }}</span></span>
+            }
+          </div>
+
+          <details class="mt-2">
+            <summary class="text-xs font-medium text-brand-600 dark:text-brand-400 cursor-pointer">الجدول الزمني للأقساط</summary>
+            <div class="mt-2 space-y-1">
+              @for (i of a.installments; track i.id) {
+                <div class="flex justify-between items-center text-xs py-1 border-b border-gray-50 dark:border-white/[0.04]">
+                  <span class="font-mono text-gray-500">{{ i.period_month }}/{{ i.period_year }}</span>
+                  <span class="font-mono text-gray-700 dark:text-gray-300">{{ i.planned_amount | number:'1.2-2' }}</span>
+                  <span>{{ installmentIcons[i.effective_status] }} {{ installmentLabels[i.effective_status] }}</span>
+                </div>
+              }
+              @for (r of a.repayments; track r.id) {
+                <div class="flex justify-between text-xs py-1 border-b border-gray-50 dark:border-white/[0.04]">
+                  <span class="font-mono text-gray-500">{{ r.date | date:'yyyy-MM-dd' }}</span>
+                  <span class="font-mono text-success-600">-{{ r.amount | number:'1.2-2' }}</span>
+                  <span class="text-gray-400">سداد مبكر</span>
+                </div>
+              }
+            </div>
+          </details>
+        }
+      </div>
+    } @empty {
+      <div class="ds-card p-8 text-center text-sm text-gray-400">لا توجد طلبات سلف بعد</div>
+    }
+  </div>
+</div>

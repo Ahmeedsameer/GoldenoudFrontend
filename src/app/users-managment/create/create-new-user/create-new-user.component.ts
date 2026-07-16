@@ -12,11 +12,10 @@ import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validator
 import { UserManagmentService } from '../../../services/user-managment.service';
 import { AlertState, FormHelperService } from '../../../services/form-helper.service';
 import { FormErrorComponent } from '../../../form-error/form-error.component';
-import { TimePickerComponent } from "../../../shared/components/form/time-picker/time-picker.component";
 
 @Component({
   selector: 'app-create-new-user',
-  imports: [ComponentCardComponent, InputFieldComponent, LabelComponent, SelectComponent, ButtonComponent, LoadingComponent, AlertComponent, ReactiveFormsModule, FormErrorComponent, TimePickerComponent],
+  imports: [ComponentCardComponent, InputFieldComponent, LabelComponent, SelectComponent, ButtonComponent, LoadingComponent, AlertComponent, ReactiveFormsModule, FormErrorComponent],
   templateUrl: './create-new-user.component.html',
   styleUrl: './create-new-user.component.css',
 })
@@ -29,8 +28,6 @@ export class CreateNewUserComponent {
     name: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', [ Validators.pattern(/^01\d{9}$/)]],
-    shift_start: ['', [Validators.pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)]], // صيغة الوقت HH:mm
-    shift_end: ['',[ Validators.pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)]], // صيغة الوقت HH:mm
     role: ['admin',[ Validators.required]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     coPassword: ['', Validators.required]

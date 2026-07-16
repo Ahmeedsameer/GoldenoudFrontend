@@ -82,6 +82,15 @@ import { HrLeavesComponent } from './admin/hr/leaves/hr-leaves.component';
 import { HrPayrollComponent } from './admin/hr/payroll/hr-payroll.component';
 import { MyHrComponent } from './seller/my-hr/my-hr.component';
 import { HrReportsComponent } from './admin/hr/reports/hr-reports.component';
+import { HrScheduleComponent } from './admin/hr/schedule/hr-schedule.component';
+import { HrBonusesPenaltiesComponent } from './admin/hr/bonuses-penalties/hr-bonuses-penalties.component';
+import { HrAdvancesComponent } from './admin/hr/advances/hr-advances.component';
+import { MyAdvancesComponent } from './seller/my-advances/my-advances.component';
+import { MyScheduleComponent } from './seller/my-schedule/my-schedule.component';
+import { MyAttendanceComponent } from './seller/my-attendance/my-attendance.component';
+import { MyLeaveComponent } from './seller/my-leave/my-leave.component';
+import { MyProfileComponent } from './seller/my-profile/my-profile.component';
+import { MySalesComponent } from './seller/my-sales/my-sales.component';
 
 // ── Demo pages ───────────────────────────────────────────────
 import { ShopListComponent } from './demo/components/shop-list/shop-list.component';
@@ -174,6 +183,9 @@ export const routes: Routes = [
       { path: 'hr/leaves',          component: HrLeavesComponent },
       { path: 'hr/payroll',         component: HrPayrollComponent },
       { path: 'hr/reports',         component: HrReportsComponent },
+      { path: 'hr/schedule',        component: HrScheduleComponent },
+      { path: 'hr/bonuses-penalties', component: HrBonusesPenaltiesComponent },
+      { path: 'hr/advances',        component: HrAdvancesComponent },
       { path: '', component: AdminDashboardComponent, pathMatch: 'full' },
       { path: 'calendar', component: CalenderComponent },
       { path: 'profile', component: ProfileComponent },
@@ -215,6 +227,15 @@ export const routes: Routes = [
       { path: 'safe/my-shop/:safeId/transactions', component: ManagerTransactionsComponent },
       { path: 'conventions',        component: ManagerConventionComponent },
       { path: 'reconciliation',     component: SafeReconciliationComponent },
+      // ── HR self-service — identical to the Seller dashboard ──
+      { path: 'my-hr',              component: MyHrComponent },
+      { path: 'my-schedule',        component: MyScheduleComponent },
+      { path: 'my-attendance',      component: MyAttendanceComponent },
+      { path: 'my-leave',           component: MyLeaveComponent },
+      { path: 'my-profile',         component: MyProfileComponent },
+      { path: 'my-sales',           component: MySalesComponent },
+      { path: 'my-advances',        component: MyAdvancesComponent },
+      { path: 'hr/advances',        component: HrAdvancesComponent },
       { path: '', redirectTo: 'override-requests', pathMatch: 'full' },
     ],
   },
@@ -228,6 +249,12 @@ export const routes: Routes = [
     children: [
       { path: 'cashier', component: CashierComponent },
       { path: 'my-hr', component: MyHrComponent },
+      { path: 'my-schedule',   component: MyScheduleComponent },
+      { path: 'my-attendance', component: MyAttendanceComponent },
+      { path: 'my-leave',      component: MyLeaveComponent },
+      { path: 'my-profile',    component: MyProfileComponent },
+      { path: 'my-sales',      component: MySalesComponent },
+      { path: 'my-advances',   component: MyAdvancesComponent },
       {
         path: 'invoices',
         children: [

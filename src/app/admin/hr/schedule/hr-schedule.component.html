@@ -1,0 +1,391 @@
+<app-loading [loading]="loading || saving || publishing || exporting"></app-loading>
+
+<div class="ds-card overflow-hidden">
+
+  <!-- Toolbar -->
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+    <div>
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">الجدول الأسبوعي</h2>
+      @if (roster) {
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ roster.from }} → {{ roster.to }}</p>
+      }
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <button (click)="prevWeek()" class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.04]">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <div class="w-36"><app-date-picker id="schedule-anchor-date" [value]="anchorDate" (valueChange)="onDatePicked($event)"></app-date-picker></div>
+      <button (click)="nextWeek()" class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.04]">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <button (click)="openShiftAdmin()" class="h-9 px-3 rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.04]">قوالب الشيفتات</button>
+      <button (click)="saveWeek()" [disabled]="saving || !pendingCount"
+        class="h-9 px-3 rounded-lg text-white text-sm font-medium disabled:opacity-40 relative"
+        [class]="pendingCount ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'">
+        حفظ التعديلات @if (pendingCount) { ({{ pendingCount }}) }
+      </button>
+      <button (click)="publish()" [disabled]="publishing"
+        class="h-9 px-3 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">نشر الجدول</button>
+      <button (click)="cancelPublish()" [disabled]="publishing"
+        class="h-9 px-3 rounded-lg border border-gray-300 text-gray-600 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.04] disabled:opacity-50">إلغاء النشر</button>
+      <button (click)="exportPdf()" [disabled]="exporting"
+        class="h-9 px-3 rounded-lg border border-error-300 text-error-600 text-sm font-medium hover:bg-error-50 dark:border-error-500/40 dark:text-error-400 disabled:opacity-50">تصدير PDF</button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap items-center gap-2 px-5 py-3 border-b border-gray-100 dark:border-white/[0.06]">
+    <select [(ngModel)]="filters.shop_id" (ngModelChange)="load()"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <option value="">كل الفروع</option>
+      @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+    </select>
+    <select [(ngModel)]="filters.role" (ngModelChange)="load()"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <option value="">كل الأقسام</option>
+      <option value="manager">مدراء الفروع</option>
+      <option value="sales">مبيعات</option>
+    </select>
+    <select [(ngModel)]="filters.user_id" (ngModelChange)="load()"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <option value="">كل الموظفين</option>
+      @for (e of allEmployees(); track e.user_id) { <option [ngValue]="e.user_id">{{ e.name }}</option> }
+    </select>
+    <select [(ngModel)]="filters.status" (ngModelChange)="load()"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <option value="">كل الحالات</option>
+      <option value="active">نشط</option>
+      <option value="inactive">معطّل</option>
+    </select>
+    @if (pendingCount) {
+      <span class="text-xs text-blue-600 dark:text-blue-400 font-medium">تعديلات غير محفوظة: {{ pendingCount }}</span>
+    }
+  </div>
+
+  <!-- Legend -->
+  <div class="flex flex-wrap gap-3 px-5 py-2 border-b border-gray-100 dark:border-white/[0.06] text-[11px] text-gray-500 dark:text-gray-400">
+    @for (key of ['work','leave','off_day','holiday','transferred','training','business_trip','sick_leave','absent','late','half_day']; track key) {
+      <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" [class]="cellMeta[key].dot"></span>{{ cellMeta[key].label }}</span>
+    }
+  </div>
+
+  @if (roster) {
+    <!-- ═══ DESKTOP / TABLET GRID ═══ -->
+    <div class="hidden sm:block overflow-x-auto">
+      <table class="border-collapse" style="min-width: 1100px; width: 100%;">
+        <thead>
+          <tr>
+            <th class="sticky right-0 top-0 z-20 bg-gray-50 dark:bg-gray-900 border-b border-l border-gray-200 dark:border-gray-700 px-3 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 w-56 min-w-56 text-start">الموظف</th>
+            @for (d of roster.days; track d; let i = $index) {
+              <th class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-2 py-2.5 text-xs font-semibold text-gray-600 dark:text-gray-300 min-w-32">
+                {{ dayLabel(i) }}<br><span class="font-mono font-normal text-gray-400">{{ d }}</span>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (emp of roster.employees; track emp.user_id) {
+            <tr class="hover:bg-gray-50/60 dark:hover:bg-white/[0.02] transition-colors">
+              <td class="sticky right-0 z-10 bg-white dark:bg-gray-900 border-l border-b border-gray-100 dark:border-white/[0.06] px-3 py-2.5 align-middle">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-9 w-9 shrink-0 rounded-full bg-brand-50 dark:bg-brand-500/15 text-brand-600 dark:text-brand-400 flex items-center justify-center text-sm font-semibold">
+                    {{ emp.name.charAt(0) }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ emp.name }}</p>
+                    <p class="text-[11px] text-gray-400">{{ emp.role === 'manager' ? 'مدير فرع' : 'مبيعات' }}</p>
+                    <p class="text-[11px] text-gray-400 truncate">{{ emp.primary_branch || '—' }}</p>
+                  </div>
+                </div>
+              </td>
+              @for (cell of emp.cells; track cell.date) {
+                <td class="border-b border-gray-100 dark:border-white/[0.06] p-1.5 align-top">
+                  <button type="button" (click)="onCellClick(emp, cell)"
+                    class="w-full h-full min-h-[64px] rounded-lg border p-2 text-[11px] text-start transition-transform hover:scale-[1.02] hover:shadow-sm relative"
+                    [class]="effectiveCell(emp, cell).type ? cellMeta[effectiveCell(emp, cell).type!].soft : 'border-dashed border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600'">
+                    @if (isPending(emp, cell)) {
+                      <span class="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-blue-500" title="تعديل غير محفوظ"></span>
+                    }
+                    @let eff = effectiveCell(emp, cell);
+                    @if (eff.type) {
+                      <p class="font-semibold">{{ cellMeta[eff.type].label }}</p>
+                      @if (eff.type === 'transferred') {
+                        <p class="mt-0.5">{{ eff.transfer?.branch_name }}</p>
+                        <p class="font-mono">{{ eff.transfer?.start_date }} → {{ eff.transfer?.end_date }}</p>
+                      } @else if (eff.start_time && eff.end_time) {
+                        <p class="font-mono mt-0.5">{{ eff.start_time }} → {{ eff.end_time }}</p>
+                        @if (eff.shift) { <p class="opacity-80">{{ eff.shift.name }}</p> }
+                      } @else if (eff.notes) {
+                        <p class="mt-0.5 opacity-80 line-clamp-2">{{ eff.notes }}</p>
+                      }
+                    } @else {
+                      <span class="flex items-center justify-center h-full">+</span>
+                    }
+                  </button>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr><td [attr.colspan]="roster.days.length + 1" class="px-4 py-10 text-center text-sm text-gray-400">لا يوجد موظفون مطابقون للفلاتر</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ MOBILE: CARDS GROUPED BY EMPLOYEE ═══ -->
+    <div class="sm:hidden divide-y divide-gray-100 dark:divide-white/[0.06]">
+      @for (emp of roster.employees; track emp.user_id) {
+        <div class="p-4">
+          <div class="flex items-center gap-2.5 mb-3">
+            <div class="h-9 w-9 shrink-0 rounded-full bg-brand-50 dark:bg-brand-500/15 text-brand-600 dark:text-brand-400 flex items-center justify-center text-sm font-semibold">
+              {{ emp.name.charAt(0) }}
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ emp.name }}</p>
+              <p class="text-[11px] text-gray-400">{{ emp.role === 'manager' ? 'مدير فرع' : 'مبيعات' }} · {{ emp.primary_branch || '—' }}</p>
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            @for (cell of emp.cells; track cell.date; let i = $index) {
+              @let eff = effectiveCell(emp, cell);
+              <button type="button" (click)="onCellClick(emp, cell)"
+                class="w-full flex items-center justify-between rounded-lg border px-3 py-2 text-xs text-start"
+                [class]="eff.type ? cellMeta[eff.type].soft : 'border-dashed border-gray-200 dark:border-gray-700 text-gray-400'">
+                <span class="font-medium">{{ dayLabel(i) }} <span class="font-mono opacity-70">{{ cell.date }}</span></span>
+                <span>{{ eff.type ? cellMeta[eff.type].label : 'غير محدد' }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <div class="px-4 py-10 text-center text-sm text-gray-400">لا يوجد موظفون مطابقون للفلاتر</div>
+      }
+    </div>
+  }
+</div>
+
+
+<!-- ═══ CELL EDITOR MODAL ═══ -->
+<app-modal [isOpen]="showEditor" (close)="showEditor = false" className="max-w-md m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">{{ editorEmployee?.name }}</h2>
+        <p class="text-xs text-gray-400 font-mono">{{ editorCell?.date }}</p>
+      </div>
+      <button type="button" (click)="showEditor = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الحالة</label>
+        <select [(ngModel)]="editorForm.type" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          @for (o of typeOptions; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">قالب شيفت (اختياري — يملأ الأوقات تلقائيًا)</label>
+        <select [(ngModel)]="editorForm.shift_template_id" (ngModelChange)="onShiftTemplateChange()" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <option [ngValue]="null">— بدون قالب (إدخال يدوي) —</option>
+          @for (s of shiftTemplates; track s.id) { <option [ngValue]="s.id">{{ s.name }} ({{ s.start_time }}–{{ s.end_time }})</option> }
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">من الساعة</label>
+          <input type="time" [(ngModel)]="editorForm.start_time" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">إلى الساعة</label>
+          <input type="time" [(ngModel)]="editorForm.end_time" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+        </div>
+      </div>
+      <p class="text-[11px] text-gray-400">الإدخال اليدوي للأوقات هو الافتراضي — القالب مجرّد اختصار اختياري ويمكن تعديل الأوقات بعده.</p>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الفرع</label>
+        <select [(ngModel)]="editorForm.shop_id" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <option [ngValue]="null">— الفرع الأساسي —</option>
+          @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">ملاحظات</label>
+        <textarea [(ngModel)]="editorForm.notes" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none resize-none"></textarea>
+      </div>
+    </div>
+
+    <div class="flex gap-3 pt-4 mt-4 border-t border-gray-100 dark:border-white/[0.05]">
+      <button (click)="saveCellLocally()" class="flex-1 h-10 rounded-lg font-medium text-sm text-white bg-brand-500 hover:bg-brand-600">تحديد (يُحفظ مع الأسبوع)</button>
+      <button type="button" (click)="showEditor = false" class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">إلغاء</button>
+    </div>
+  </div>
+</app-modal>
+
+
+<!-- ═══ TRANSFER INFO (READ-ONLY) MODAL ═══ -->
+<app-modal [isOpen]="showTransferInfo" (close)="showTransferInfo = false" className="max-w-md m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">نقل مؤقت</h2>
+      <button type="button" (click)="showTransferInfo = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="rounded-lg bg-indigo-50 border border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/30 p-4 mb-4">
+      <p class="text-sm text-indigo-700 dark:text-indigo-400">هذا الموظف منقول مؤقتًا خلال هذه الفترة.</p>
+    </div>
+
+    <div class="space-y-2 text-sm">
+      <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">الموظف</span><span class="font-medium text-gray-800 dark:text-white/90">{{ transferInfoEmployee?.name }}</span></div>
+      <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">الفرع المؤقت</span><span class="font-medium text-gray-800 dark:text-white/90">{{ transferInfoCell?.transfer?.branch_name }}</span></div>
+      <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">الفترة</span><span class="font-mono text-gray-800 dark:text-white/90">{{ transferInfoCell?.transfer?.start_date }} → {{ transferInfoCell?.transfer?.end_date }}</span></div>
+    </div>
+
+    <p class="text-[11px] text-gray-400 mt-3">سجل النقل هو المرجع الوحيد لهذه البيانات — لا يمكن تعديل هذه الخلية مباشرة من الجدول.</p>
+
+    <div class="flex gap-3 pt-4 mt-4 border-t border-gray-100 dark:border-white/[0.05]">
+      <button (click)="goToTransfer()" class="flex-1 h-10 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium">عرض / تعديل سجل النقل</button>
+      <button type="button" (click)="showTransferInfo = false" class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">إغلاق</button>
+    </div>
+  </div>
+</app-modal>
+
+
+<!-- ═══ SHIFT TEMPLATES ADMIN MODAL ═══ -->
+<app-modal [isOpen]="showShiftAdmin" (close)="showShiftAdmin = false" className="max-w-lg m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">قوالب الشيفتات</h2>
+      <button type="button" (click)="showShiftAdmin = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="space-y-2 mb-5 max-h-80 overflow-y-auto">
+      @for (t of manageTemplates; track t.id) {
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2" [class.opacity-50]="!t.is_active">
+          @if (editingTemplateId === t.id) {
+            <!-- Inline edit form -->
+            <div class="space-y-2">
+              <input type="text" [(ngModel)]="templateEditForm.name" placeholder="الاسم" class="h-9 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+              <div class="grid grid-cols-2 gap-2">
+                <input type="time" [(ngModel)]="templateEditForm.start_time" class="h-9 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+                <input type="time" [(ngModel)]="templateEditForm.end_time" class="h-9 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+              </div>
+              <select [(ngModel)]="templateEditForm.color" class="h-9 w-full rounded-lg border border-gray-300 px-2 text-xs bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800">
+                @for (c of colorOptions; track c) { <option [value]="c">{{ c }}</option> }
+              </select>
+              <input type="text" [(ngModel)]="templateEditForm.description" placeholder="وصف (اختياري)" class="h-9 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+              <div class="flex gap-2 pt-1">
+                <button (click)="submitTemplateEdit(t)" [disabled]="templateBusyId === t.id" class="flex-1 h-8 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium disabled:opacity-50">حفظ</button>
+                <button type="button" (click)="cancelEditTemplate()" class="px-4 h-8 rounded-lg border border-gray-300 text-xs font-medium text-gray-600 dark:border-gray-700 dark:text-gray-400">إلغاء</button>
+              </div>
+            </div>
+          } @else {
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5">
+                  <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ t.name }}</p>
+                  @if (!t.is_active) { <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-gray-400">معطّل</span> }
+                  @if (t.used_in_future) { <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">مستخدم مستقبلاً</span> }
+                </div>
+                <p class="text-xs font-mono text-gray-400">{{ t.start_time }} → {{ t.end_time }}</p>
+                @if (t.description) { <p class="text-[11px] text-gray-400 truncate">{{ t.description }}</p> }
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded-full shrink-0" [class]="cellMeta['work'].soft">{{ t.color }}</span>
+              <div class="flex items-center gap-2 shrink-0 text-xs font-medium">
+                <button (click)="startEditTemplate(t)" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">تعديل</button>
+                @if (t.is_active) {
+                  <button (click)="archiveTemplate(t)" [disabled]="templateBusyId === t.id" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 disabled:opacity-50">تعطيل</button>
+                } @else {
+                  <button (click)="restoreTemplate(t)" [disabled]="templateBusyId === t.id" class="text-success-600 hover:text-success-700 dark:text-success-400 disabled:opacity-50">تفعيل</button>
+                }
+                @if (!t.used_in_future) {
+                  <button (click)="deleteTemplate(t)" [disabled]="templateBusyId === t.id" class="text-error-500 hover:text-error-700 disabled:opacity-50">حذف</button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @empty {
+        <p class="text-xs text-gray-400 text-center py-3">لا توجد قوالب شيفتات بعد</p>
+      }
+    </div>
+
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">إضافة قالب جديد</p>
+    <div class="grid grid-cols-2 gap-3 mb-2">
+      <div class="col-span-2">
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الاسم</label>
+        <input type="text" [(ngModel)]="shiftForm.name" placeholder="مثال: الشيفت الصباحي" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">من</label>
+        <input type="time" [(ngModel)]="shiftForm.start_time" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">إلى</label>
+        <input type="time" [(ngModel)]="shiftForm.end_time" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">اللون</label>
+        <select [(ngModel)]="shiftForm.color" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          @for (c of colorOptions; track c) { <option [value]="c">{{ c }}</option> }
+        </select>
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">وصف (اختياري)</label>
+        <input type="text" [(ngModel)]="shiftForm.description" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+      </div>
+    </div>
+    <button (click)="saveShiftTemplate()" [disabled]="shiftSaving" class="w-full h-10 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">
+      @if (shiftSaving) { جاري الحفظ... } @else { إضافة القالب }
+    </button>
+  </div>
+</app-modal>
+
+
+<!-- ═══ EDIT-PROPAGATION SCOPE DIALOG ═══ -->
+@if (showScopeDialog) {
+  <div class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/40 p-4" (click)="showScopeDialog = false">
+    <div class="ds-card w-full max-w-md p-6" (click)="$event.stopPropagation()">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-1">كيف تريد تطبيق تغيير الأوقات؟</h3>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">الجداول السابقة المنشورة لا تتأثر أبدًا لأنها سجلات تاريخية.</p>
+
+      <div class="space-y-2">
+        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer" [class]="scopeChoice === 'future' ? 'border-brand-400 bg-brand-50 dark:bg-brand-500/10' : 'border-gray-200 dark:border-gray-700'">
+          <input type="radio" name="scope" value="future" [(ngModel)]="scopeChoice" class="mt-1" />
+          <span>
+            <span class="block text-sm font-medium text-gray-800 dark:text-white/90">الجداول المستقبلية فقط (مستحسن)</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">الجداول السابقة تبقى كما هي، والجداول المستقبلية المنشورة بالفعل لا تتأثر.</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer" [class]="scopeChoice === 'unpublished' ? 'border-brand-400 bg-brand-50 dark:bg-brand-500/10' : 'border-gray-200 dark:border-gray-700'">
+          <input type="radio" name="scope" value="unpublished" [(ngModel)]="scopeChoice" class="mt-1" />
+          <span>
+            <span class="block text-sm font-medium text-gray-800 dark:text-white/90">كل الجداول غير المنشورة</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">أي مسودة لم تُنشر بعد، بغض النظر عن التاريخ. الجداول المنشورة لا تتأثر.</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer" [class]="scopeChoice === 'all' ? 'border-brand-400 bg-brand-50 dark:bg-brand-500/10' : 'border-gray-200 dark:border-gray-700'">
+          <input type="radio" name="scope" value="all" [(ngModel)]="scopeChoice" class="mt-1" />
+          <span>
+            <span class="block text-sm font-medium text-gray-800 dark:text-white/90">في كل مكان (بما فيها المنشورة المستقبلية)</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">كل شيء ما عدا الجداول السابقة المنشورة — لا تُعدَّل أبدًا.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="flex gap-3 pt-4 mt-4 border-t border-gray-100 dark:border-white/[0.05]">
+        <button (click)="confirmScopeAndSave()" class="flex-1 h-10 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium">تطبيق</button>
+        <button type="button" (click)="showScopeDialog = false" class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">إلغاء</button>
+      </div>
+    </div>
+  </div>
+}

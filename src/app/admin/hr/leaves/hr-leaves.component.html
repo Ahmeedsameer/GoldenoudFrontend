@@ -53,6 +53,8 @@
                 @if (l.status === 'pending') {
                   <button (click)="approve(l)" [disabled]="busyId === l.id" class="text-xs font-medium text-success-600 hover:text-success-700 disabled:opacity-50">قبول</button>
                   <button (click)="reject(l)" [disabled]="busyId === l.id" class="text-xs font-medium text-error-500 hover:text-error-700 disabled:opacity-50">رفض</button>
+                } @else if (canEndEarly(l)) {
+                  <button (click)="openEndEarly(l)" [disabled]="busyId === l.id" class="text-xs font-medium text-amber-600 hover:text-amber-700 disabled:opacity-50">إنهاء مبكرًا</button>
                 } @else { <span class="text-xs text-gray-300 dark:text-gray-600">—</span> }
               </div>
             </td>
@@ -66,3 +68,24 @@
 
   <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
 </div>
+
+<!-- End-early modal -->
+@if (showEndEarly) {
+  <div class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/40 p-4" (click)="showEndEarly = false">
+    <div class="ds-card w-full max-w-sm p-6" (click)="$event.stopPropagation()">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-1">إنهاء الإجازة مبكرًا</h3>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">{{ endEarlyLeave?.user?.name }} — الإجازة الأصلية حتى {{ endEarlyLeave?.end_date | date:'yyyy-MM-dd' }}</p>
+
+      @if (endEarlyError) { <p class="text-xs text-error-500 mb-2">{{ endEarlyError }}</p> }
+
+      <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">تاريخ الإنهاء الفعلي</label>
+      <app-date-picker id="end-early-date" [value]="endEarlyDate" (valueChange)="endEarlyDate = $event"></app-date-picker>
+      <p class="text-[11px] text-gray-400 mt-2">سيتم استعادة الأيام التالية لهذا التاريخ كأيام عمل تلقائيًا في الجدول والحضور.</p>
+
+      <div class="flex gap-3 pt-4 mt-4 border-t border-gray-100 dark:border-white/[0.05]">
+        <button (click)="confirmEndEarly()" [disabled]="busyId === endEarlyLeave?.id" class="flex-1 h-10 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium disabled:opacity-50">تأكيد الإنهاء</button>
+        <button type="button" (click)="showEndEarly = false" class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">إلغاء</button>
+      </div>
+    </div>
+  </div>
+}

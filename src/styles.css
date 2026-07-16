@@ -2,6 +2,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "swiper/css/bundle";
+/* CDK overlay base styles — enables the notification panel (and any future
+   overlays) to render at the document root, escaping header/backdrop-filter
+   containing blocks and overflow clipping. */
+@import "@angular/cdk/overlay-prebuilt.css";
 
 /* ============================================================
    NEW DESIGN SYSTEM — Alpha Business Dashboard
@@ -470,6 +474,10 @@
   table td { vertical-align: middle; }
   table thead th { white-space: nowrap; text-align: start; }
 }
+
+/* CDK overlay container must sit above the sticky header (z-99999) so overlays
+   such as the notification panel overlay the entire UI. */
+.cdk-overlay-container { z-index: 100000; }
 
 /* -----------------------------------------------------------
    FORM UTILITIES

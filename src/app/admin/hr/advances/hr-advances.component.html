@@ -1,0 +1,354 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="ds-card overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+    <h2 class="text-base font-semibold text-gray-900 dark:text-white">سلف الرواتب</h2>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+      {{ isAdmin ? 'مراجعة طلبات السلف وتحديد خطط التقسيط' : 'عرض طلبات سلف موظفي فرعك (للاطلاع فقط)' }}
+    </p>
+  </div>
+
+  <div class="flex flex-wrap gap-1 px-5 py-3 border-b border-gray-100 dark:border-white/[0.06]">
+    @for (t of statusTabs; track t.value) {
+      <button (click)="setStatus(t.value)"
+        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+        [class]="activeStatus === t.value ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/[0.05] dark:text-gray-300'">
+        {{ t.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap items-center gap-2 px-5 py-3 border-b border-gray-100 dark:border-white/[0.06]">
+    <select [(ngModel)]="filters.shop_id" (ngModelChange)="load()"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <option value="">كل الفروع</option>
+      @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+    </select>
+    <select [(ngModel)]="filters.user_id" (ngModelChange)="load()"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <option value="">كل الموظفين</option>
+      @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
+    </select>
+    <input type="text" [(ngModel)]="filters.search" (keyup.enter)="load()" placeholder="بحث بالاسم/الإيميل..."
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90 w-48" />
+    <button (click)="load()" class="h-9 px-3 rounded-lg border border-gray-200 text-gray-600 text-xs font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">بحث</button>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="ds-table w-full">
+      <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+        <tr>
+          <th class="ds-th">الموظف</th>
+          <th class="ds-th">الفرع</th>
+          <th class="ds-th">المعتمد</th>
+          <th class="ds-th">المتبقي</th>
+          <th class="ds-th">المدفوع</th>
+          <th class="ds-th">الأقساط</th>
+          <th class="ds-th">القسط القادم</th>
+          <th class="ds-th">الحالة</th>
+          <th class="ds-th text-center">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows; track r.id) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="px-4 py-3">
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ r.user?.name || '—' }}</p>
+              <p class="text-xs text-gray-400 font-mono">{{ r.user?.email }}</p>
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ r.branch_name || '—' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{{ r.approved_amount ? (r.approved_amount | number:'1.0-2') : (r.requested_amount | number:'1.0-2') + ' (مطلوب)' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{{ r.status === 'active' ? (r.remaining_balance | number:'1.0-2') : '—' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-success-600 dark:text-success-400">{{ r.paid_amount > 0 ? (r.paid_amount | number:'1.0-2') : '—' }}</td>
+            <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ r.installments_count || '—' }}</td>
+            <td class="px-4 py-3 text-xs">
+              @if (r.next_installment) {
+                <span class="font-mono text-gray-600 dark:text-gray-300">{{ r.next_installment.period_month }}/{{ r.next_installment.period_year }} — {{ r.next_installment.planned_amount | number:'1.0-2' }}</span>
+              } @else { <span class="text-gray-300">—</span> }
+            </td>
+            <td class="px-4 py-3">
+              <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium" [class]="statusLabels[r.status]?.cls">{{ statusLabels[r.status]?.label }}</span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-center gap-2 text-xs font-medium">
+                @if (r.status === 'pending' && isAdmin) {
+                  <button (click)="openApprove(r)" [disabled]="busyId === r.id" class="text-success-600 hover:text-success-700 disabled:opacity-50">موافقة</button>
+                  <button (click)="openReject(r)" [disabled]="busyId === r.id" class="text-error-500 hover:text-error-700 disabled:opacity-50">رفض</button>
+                } @else if (r.status === 'active') {
+                  <button (click)="openDetail(r)" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">التفاصيل</button>
+                  @if (canCancel(r)) {
+                    <button (click)="cancelAdvance(r)" [disabled]="busyId === r.id" class="text-error-500 hover:text-error-700 disabled:opacity-50">إلغاء</button>
+                  }
+                } @else {
+                  <button (click)="openDetail(r)" class="text-gray-500 hover:text-gray-700 dark:text-gray-400">عرض</button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="9" class="px-4 py-10 text-center text-sm text-gray-400">لا توجد طلبات في هذه الحالة</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══ APPROVE + PLAN BUILDER MODAL ═══ -->
+<app-modal [isOpen]="showApprove" (close)="showApprove = false" className="max-w-lg m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">الموافقة على طلب السلفة وتحديد خطة التقسيط</h2>
+      <button type="button" (click)="showApprove = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+      {{ approveTarget?.user?.name }} — طلب {{ approveTarget?.requested_amount | number:'1.0-2' }} ج.م
+    </p>
+    @if (approveError) { <p class="text-xs text-error-500 mb-3">{{ approveError }}</p> }
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">المبلغ المعتمد (ج.م)</label>
+        <input type="number" [(ngModel)]="approveForm.approved_amount" min="0.01" [max]="approveTarget?.requested_amount"
+          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">طريقة التقسيط</label>
+        <select [(ngModel)]="approveForm.mode" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <option value="date_range">بداية ونهاية الشهر (مستحسن — يُقسَّم بالتساوي)</option>
+          <option value="fixed_amount">مبلغ شهري ثابت (يُحسب عدد الأشهر تلقائيًا)</option>
+          <option value="fixed_months">عدد أشهر ثابت (يُحسب القسط الشهري تلقائيًا)</option>
+          <option value="custom">خطة تقسيط مخصصة بالكامل</option>
+        </select>
+      </div>
+
+      @if (approveForm.mode === 'date_range') {
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">شهر البداية</label>
+            <div class="grid grid-cols-2 gap-1.5">
+              <input type="number" [(ngModel)]="approveForm.start_month" min="1" max="12" placeholder="شهر"
+                class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+              <input type="number" [(ngModel)]="approveForm.start_year" placeholder="سنة"
+                class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">شهر النهاية</label>
+            <div class="grid grid-cols-2 gap-1.5">
+              <input type="number" [(ngModel)]="approveForm.end_month" min="1" max="12" placeholder="شهر"
+                class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+              <input type="number" [(ngModel)]="approveForm.end_year" placeholder="سنة"
+                class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+            </div>
+          </div>
+        </div>
+        @if (estimatedMonthlyAmount) {
+          <p class="text-[11px] text-success-600 dark:text-success-400">القسط الشهري التقديري: {{ estimatedMonthlyAmount | number:'1.0-2' }} ج.م × {{ estimatedInstallments }} شهر</p>
+        }
+      }
+
+      @if (approveForm.mode === 'fixed_amount') {
+        <div>
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">القسط الشهري (ج.م)</label>
+          <input type="number" [(ngModel)]="approveForm.monthly_amount" min="0.01"
+            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <input type="number" [(ngModel)]="approveForm.start_month" min="1" max="12" placeholder="شهر البداية"
+            class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+          <input type="number" [(ngModel)]="approveForm.start_year" placeholder="سنة البداية"
+            class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+        </div>
+      }
+      @if (approveForm.mode === 'fixed_months') {
+        <div>
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">عدد الأشهر</label>
+          <input type="number" [(ngModel)]="approveForm.months" min="1" max="60"
+            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <input type="number" [(ngModel)]="approveForm.start_month" min="1" max="12" placeholder="شهر البداية"
+            class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+          <input type="number" [(ngModel)]="approveForm.start_year" placeholder="سنة البداية"
+            class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+        </div>
+      }
+      @if (approveForm.mode === 'custom') {
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400">أقساط الأشهر (بالترتيب)</label>
+            <span class="text-[11px]" [class]="scheduleSum === approveForm.approved_amount ? 'text-success-600' : 'text-error-500'">
+              الإجمالي: {{ scheduleSum | number:'1.0-2' }} / {{ approveForm.approved_amount | number:'1.0-2' }}
+            </span>
+          </div>
+          <div class="space-y-1.5 max-h-40 overflow-y-auto">
+            @for (v of approveForm.schedule; track $index) {
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-400 w-14">شهر {{ $index + 1 }}</span>
+                <input type="number" [(ngModel)]="approveForm.schedule[$index]" min="0.01"
+                  class="h-9 flex-1 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+                <button type="button" (click)="removeScheduleRow($index)" class="text-error-500 text-xs">حذف</button>
+              </div>
+            }
+          </div>
+          <button type="button" (click)="addScheduleRow()" class="mt-2 text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">+ إضافة شهر</button>
+          <div class="grid grid-cols-2 gap-3 mt-2">
+            <input type="number" [(ngModel)]="approveForm.start_month" min="1" max="12" placeholder="شهر البداية"
+              class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+            <input type="number" [(ngModel)]="approveForm.start_year" placeholder="سنة البداية"
+              class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+          </div>
+        </div>
+      }
+
+      @if (estimatedInstallments && approveForm.mode !== 'date_range') {
+        <p class="text-[11px] text-gray-400">عدد الأقساط التقديري: {{ estimatedInstallments }}</p>
+      }
+    </div>
+
+    <div class="flex gap-3 pt-4 mt-4 border-t border-gray-100 dark:border-white/[0.05]">
+      <button (click)="confirmApprove()" [disabled]="busyId === approveTarget?.id" class="flex-1 h-10 rounded-lg bg-success-500 hover:bg-success-600 text-white text-sm font-medium disabled:opacity-50">تأكيد الموافقة</button>
+      <button type="button" (click)="showApprove = false" class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">إلغاء</button>
+    </div>
+  </div>
+</app-modal>
+
+
+<!-- ═══ REJECT MODAL ═══ -->
+<app-modal [isOpen]="showReject" (close)="showReject = false" className="max-w-sm m-4 w-full">
+  <div class="p-6">
+    <h2 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-3">رفض طلب السلفة</h2>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ rejectTarget?.user?.name }}</p>
+    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">سبب الرفض (اختياري)</label>
+    <textarea [(ngModel)]="rejectReason" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 resize-none"></textarea>
+    <div class="flex gap-3 pt-4 mt-4 border-t border-gray-100 dark:border-white/[0.05]">
+      <button (click)="confirmReject()" [disabled]="busyId === rejectTarget?.id" class="flex-1 h-10 rounded-lg bg-error-500 hover:bg-error-600 text-white text-sm font-medium disabled:opacity-50">تأكيد الرفض</button>
+      <button type="button" (click)="showReject = false" class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">إلغاء</button>
+    </div>
+  </div>
+</app-modal>
+
+
+<!-- ═══ DETAIL / REPAYMENT MODAL ═══ -->
+<app-modal [isOpen]="showDetail" (close)="showDetail = false" className="max-w-xl m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">تفاصيل السلفة</h2>
+      <button type="button" (click)="showDetail = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    @if (detailLoading) {
+      <p class="text-sm text-gray-400 py-6 text-center">جارٍ التحميل…</p>
+    } @else if (detail) {
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        <div class="ds-card p-3 text-center"><p class="text-sm font-bold font-mono text-gray-900 dark:text-white">{{ detail.approved_amount | number:'1.0-2' }}</p><p class="text-[10px] text-gray-500">المعتمد</p></div>
+        <div class="ds-card p-3 text-center"><p class="text-sm font-bold font-mono text-success-600 dark:text-success-400">{{ detail.paid_amount | number:'1.0-2' }}</p><p class="text-[10px] text-gray-500">المدفوع</p></div>
+        <div class="ds-card p-3 text-center"><p class="text-sm font-bold font-mono text-error-500">{{ detail.remaining_balance | number:'1.0-2' }}</p><p class="text-[10px] text-gray-500">المتبقي</p></div>
+        <div class="ds-card p-3 text-center"><p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ modeLabels[detail.installment_mode] || '—' }}</p><p class="text-[10px] text-gray-500">طريقة التقسيط</p></div>
+      </div>
+
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">خطة الأقساط</h3>
+        @if (isAdmin && detail.status === 'active') {
+          <button (click)="openPlanEdit()" class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">تعديل الخطة المتبقية</button>
+        }
+      </div>
+      <div class="space-y-1.5 mb-5 max-h-48 overflow-y-auto">
+        @for (i of detail.installments; track i.id) {
+          <div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
+            <span class="font-mono text-gray-500">{{ i.period_month }}/{{ i.period_year }}</span>
+            <span class="font-mono font-medium text-gray-800 dark:text-white/90">{{ i.planned_amount | number:'1.2-2' }}</span>
+            <span class="text-xs" [class]="installmentStatusClass(i.effective_status)">{{ installmentStatusLabel(i.effective_status) }}</span>
+          </div>
+        } @empty {
+          <p class="text-xs text-gray-400">لا توجد أقساط</p>
+        }
+      </div>
+
+      @if (detail.repayments?.length) {
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-2">سجل السداد المبكر</h3>
+        <div class="space-y-1.5 mb-5">
+          @for (r of detail.repayments; track r.id) {
+            <div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
+              <span class="font-mono text-gray-500">{{ r.date }}</span>
+              <span class="font-mono font-medium text-success-600">{{ r.amount | number:'1.2-2' }}</span>
+              <span class="text-xs text-gray-400">{{ r.recorded_by?.name }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      @if (isAdmin && detail.status === 'active') {
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-2">تسجيل سداد مبكر</h3>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <input type="number" [(ngModel)]="repaymentForm.amount" min="0.01" placeholder="المبلغ"
+            class="h-9 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+          <app-date-picker id="repayment-date" [value]="repaymentForm.date" (valueChange)="repaymentForm.date = $event"></app-date-picker>
+        </div>
+        <input type="text" [(ngModel)]="repaymentForm.notes" placeholder="ملاحظات (اختياري)"
+          class="h-9 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-2" />
+        <button (click)="recordRepayment()" [disabled]="busyId === detail.id" class="w-full h-9 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">تسجيل السداد</button>
+      }
+    }
+  </div>
+</app-modal>
+
+
+<!-- ═══ PLAN EDIT MODAL (remaining balance only) ═══ -->
+<app-modal [isOpen]="showPlanEdit" (close)="showPlanEdit = false" className="max-w-md m-4 w-full">
+  <div class="p-6">
+    <h2 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-1">تعديل خطة التقسيط المتبقية</h2>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">الأقساط المدفوعة بالفعل لا تتأثر — فقط الرصيد المتبقي ({{ detail?.remaining_balance | number:'1.0-2' }} ج.م) يُعاد توزيعه على الأشهر القادمة.</p>
+
+    <select [(ngModel)]="planEditForm.mode" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-3">
+      <option value="date_range">بداية ونهاية الشهر</option>
+      <option value="fixed_amount">مبلغ شهري ثابت</option>
+      <option value="fixed_months">عدد أشهر ثابت</option>
+      <option value="custom">خطة مخصصة</option>
+    </select>
+
+    @if (planEditForm.mode === 'date_range') {
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <input type="number" [(ngModel)]="planEditForm.end_month" min="1" max="12" placeholder="شهر النهاية"
+          class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+        <input type="number" [(ngModel)]="planEditForm.end_year" placeholder="سنة النهاية"
+          class="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+      </div>
+      <p class="text-[11px] text-gray-400 mb-3">البداية تكون تلقائيًا الشهر التالي لآخر قسط مدفوع.</p>
+    }
+    @if (planEditForm.mode === 'fixed_amount') {
+      <input type="number" [(ngModel)]="planEditForm.monthly_amount" placeholder="القسط الشهري" min="0.01"
+        class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-3" />
+    }
+    @if (planEditForm.mode === 'fixed_months') {
+      <input type="number" [(ngModel)]="planEditForm.months" placeholder="عدد الأشهر" min="1" max="60"
+        class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-3" />
+    }
+    @if (planEditForm.mode === 'custom') {
+      <div class="space-y-1.5 mb-3 max-h-40 overflow-y-auto">
+        @for (v of planEditForm.schedule; track $index) {
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-400 w-14">شهر {{ $index + 1 }}</span>
+            <input type="number" [(ngModel)]="planEditForm.schedule[$index]" min="0.01"
+              class="h-9 flex-1 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+            <button type="button" (click)="removePlanScheduleRow($index)" class="text-error-500 text-xs">حذف</button>
+          </div>
+        }
+      </div>
+      <button type="button" (click)="addPlanScheduleRow()" class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 mb-3 block">+ إضافة شهر</button>
+    }
+
+    <div class="flex gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/[0.05]">
+      <button (click)="savePlanEdit()" [disabled]="busyId === detail?.id" class="flex-1 h-10 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">حفظ الخطة</button>
+      <button type="button" (click)="showPlanEdit = false" class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">إلغاء</button>
+    </div>
+  </div>
+</app-modal>

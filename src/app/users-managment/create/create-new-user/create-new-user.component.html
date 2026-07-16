@@ -65,28 +65,6 @@
       </p>
     </div>
 
-    <!-- Shift times -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <app-time-picker
-          label="بداية الشيفت"
-          [defaultTime]="userForm.get('shift_start')?.value"
-          (valueChange)="userForm.get('shift_start')?.setValue($event)"
-          placeholder="اختر وقت البداية"
-        ></app-time-picker>
-        <app-form-error [control]="userForm.get('shift_start')"></app-form-error>
-      </div>
-      <div>
-        <app-time-picker
-          label="نهاية الشيفت"
-          [defaultTime]="userForm.get('shift_end')?.value"
-          (valueChange)="userForm.get('shift_end')?.setValue($event)"
-          placeholder="اختر وقت النهاية"
-        ></app-time-picker>
-        <app-form-error [control]="userForm.get('shift_end')"></app-form-error>
-      </div>
-    </div>
-
     <!-- Passwords -->
     <div class="grid grid-cols-2 gap-4">
       <div>

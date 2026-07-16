@@ -83,9 +83,12 @@ export class AdminDashboardLayoutComponent {
       name: "الموارد البشرية",
       subItems: [
         { name: "الموظفون", path: "/dashboard/hr/employees" },
+        { name: "الجدول الأسبوعي", path: "/dashboard/hr/schedule" },
         { name: "نقل الموظفين", path: "/dashboard/hr/transfers" },
         { name: "الحضور", path: "/dashboard/hr/attendance" },
         { name: "الإجازات", path: "/dashboard/hr/leaves" },
+        { name: "المكافآت والخصومات", path: "/dashboard/hr/bonuses-penalties" },
+        { name: "سلف الرواتب", path: "/dashboard/hr/advances" },
         { name: "الرواتب", path: "/dashboard/hr/payroll" },
         { name: "تقارير الموارد البشرية", path: "/dashboard/hr/reports" },
       ],

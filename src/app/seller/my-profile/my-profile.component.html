@@ -1,0 +1,111 @@
+<app-loading [loading]="loading"></app-loading>
+
+@if (data) {
+  <div class="mb-5">
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">ملفي الشخصي</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ data.employee.employee_code }}</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+    <!-- Personal info -->
+    <div class="ds-card p-5 lg:col-span-1">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="h-14 w-14 shrink-0 rounded-full bg-brand-50 dark:bg-brand-500/15 text-brand-600 dark:text-brand-400 flex items-center justify-center text-xl font-semibold">
+          {{ data.employee.name.charAt(0) }}
+        </div>
+        <div>
+          <p class="text-base font-semibold text-gray-900 dark:text-white">{{ data.employee.name }}</p>
+          <p class="text-xs text-gray-400">{{ data.employee.role === 'manager' ? 'مدير فرع' : 'مبيعات' }}</p>
+        </div>
+      </div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-gray-500">البريد الإلكتروني</span><span class="text-gray-800 dark:text-white/90">{{ data.employee.email }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">الهاتف</span><span class="text-gray-800 dark:text-white/90">{{ data.employee.phone || '—' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">الفرع الأساسي</span><span class="text-gray-800 dark:text-white/90">{{ data.primary_branch?.name || '—' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">الفرع الحالي</span><span class="text-gray-800 dark:text-white/90">{{ data.active_branch?.name || '—' }} @if (data.is_transferred) { <span class="text-amber-600 dark:text-amber-400">(منقول)</span> }</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">تاريخ التعيين</span><span class="text-gray-800 dark:text-white/90 font-mono">{{ data.employee.hire_date || '—' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">الحالة</span><span class="text-gray-800 dark:text-white/90">{{ data.employee.status === 'active' ? 'نشط' : 'معطّل' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">الراتب الأساسي</span><span class="font-mono text-gray-800 dark:text-white/90">{{ data.employee.base_salary | number:'1.0-2' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">نسبة العمولة الشخصية</span><span class="font-mono text-gray-800 dark:text-white/90">{{ data.employee.personal_commission_percent }}%</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">رصيد الإجازة الشهري</span><span class="font-mono text-gray-800 dark:text-white/90">{{ data.employee.monthly_leave_allowance }} يوم</span></div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-2 space-y-5">
+      <!-- Summary cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="ds-card p-3 text-center">
+          <p class="text-lg font-bold text-gray-900 dark:text-white">{{ data.leave_balance?.remaining }}</p>
+          <p class="text-[11px] text-gray-500">رصيد إجازة متبقّي</p>
+        </div>
+        <div class="ds-card p-3 text-center">
+          <p class="text-lg font-bold text-success-700 dark:text-success-400">{{ data.attendance_summary?.present }}</p>
+          <p class="text-[11px] text-gray-500">أيام حضور (الشهر)</p>
+        </div>
+        <div class="ds-card p-3 text-center">
+          <p class="text-lg font-bold font-mono text-gray-900 dark:text-white">{{ data.sales_summary?.sales_total | number:'1.0-2' }}</p>
+          <p class="text-[11px] text-gray-500">مبيعاتي (الشهر)</p>
+        </div>
+        <div class="ds-card p-3 text-center">
+          <p class="text-lg font-bold font-mono text-success-700 dark:text-success-400">{{ data.branch_bonus | number:'1.0-2' }}</p>
+          <p class="text-[11px] text-gray-500">بونص الفرع (الشهر)</p>
+        </div>
+      </div>
+
+      <!-- Payroll history -->
+      <div class="ds-card p-5">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">سجل الرواتب</h3>
+        @for (p of data.payroll_history; track p.id) {
+          <div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
+            <span class="text-gray-600 dark:text-gray-300">{{ monthNames[p.period_month] }} {{ p.period_year }}</span>
+            <span class="font-mono font-medium text-gray-900 dark:text-white">{{ p.net_salary | number:'1.2-2' }} ج.م</span>
+          </div>
+        } @empty {
+          <p class="text-xs text-gray-400">لا توجد كشوف رواتب بعد</p>
+        }
+      </div>
+
+      <!-- Transfer history -->
+      <div class="ds-card p-5">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">سجل النقل المؤقت</h3>
+        @for (t of data.transfer_history; track t.id) {
+          <div class="flex flex-wrap justify-between items-center gap-2 text-sm py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
+            <span class="text-gray-600 dark:text-gray-300">{{ t.temporary_branch?.name }} — <span class="font-mono">{{ t.start_date }} → {{ t.end_date }}</span></span>
+            <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium" [class]="transferStatusMeta[t.status]?.cls">{{ transferStatusMeta[t.status]?.label || t.status }}</span>
+          </div>
+        } @empty {
+          <p class="text-xs text-gray-400">لا يوجد سجل نقل</p>
+        }
+      </div>
+
+      <!-- Recent notifications -->
+      <div class="ds-card p-5">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">آخر الإشعارات</h3>
+        @for (n of data.recent_notifications; track n.id) {
+          <div class="text-sm py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
+            <p class="font-medium text-gray-800 dark:text-white/90">{{ n.title }}</p>
+            <p class="text-xs text-gray-500">{{ n.message }}</p>
+          </div>
+        } @empty {
+          <p class="text-xs text-gray-400">لا توجد إشعارات</p>
+        }
+      </div>
+
+      <!-- Employment timeline -->
+      <div class="ds-card p-5">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">السجل الوظيفي الزمني</h3>
+        <div class="relative space-y-4 ps-4 border-s-2 border-gray-100 dark:border-white/[0.06]">
+          @for (t of timeline; track t.id) {
+            <div class="relative">
+              <span class="absolute -start-[21px] top-1 h-2.5 w-2.5 rounded-full bg-brand-400"></span>
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ actionLabel(t.action) }}</p>
+              <p class="text-[11px] text-gray-400 font-mono">{{ t.created_at | date:'yyyy-MM-dd HH:mm' }}</p>
+            </div>
+          } @empty {
+            <p class="text-xs text-gray-400">لا يوجد سجل بعد</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

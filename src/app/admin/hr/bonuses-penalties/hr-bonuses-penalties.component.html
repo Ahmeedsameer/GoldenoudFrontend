@@ -1,0 +1,99 @@
+<app-loading [loading]="loading || saving"></app-loading>
+
+<div class="mb-5">
+  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">المكافآت والخصومات</h2>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">منح مكافآت يدوية أو تسجيل خصومات — تنعكس تلقائيًا في كشف الراتب</p>
+</div>
+
+<!-- Tabs -->
+<div class="flex gap-2 mb-5 border-b border-gray-100 dark:border-white/[0.06]">
+  <button (click)="switchTab('bonuses')" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px"
+    [class]="tab === 'bonuses' ? 'border-brand-500 text-brand-600 dark:text-brand-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'">المكافآت</button>
+  <button (click)="switchTab('penalties')" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px"
+    [class]="tab === 'penalties' ? 'border-error-500 text-error-600 dark:text-error-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'">الخصومات</button>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+  <!-- Create form -->
+  <div class="ds-card p-5 lg:col-span-1">
+    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">
+      {{ tab === 'bonuses' ? 'إضافة مكافأة' : 'إضافة خصم' }}
+    </h3>
+    @if (error) { <p class="text-xs text-error-500 mb-2">{{ error }}</p> }
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الموظف</label>
+        <select [(ngModel)]="form.user_id" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <option [ngValue]="null">— اختر الموظف —</option>
+          @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">المبلغ (ج.م)</label>
+        <input type="number" [(ngModel)]="form.amount" min="0.01" step="0.01" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">السبب</label>
+        <input type="text" [(ngModel)]="form.reason" list="reason-presets" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+        <datalist id="reason-presets">
+          @for (r of reasonPresets[tab]; track r) { <option [value]="r"></option> }
+        </datalist>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">التاريخ</label>
+        <app-date-picker id="bp-date" [value]="form.date" (valueChange)="form.date = $event"></app-date-picker>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">ملاحظات (اختياري)</label>
+        <textarea [(ngModel)]="form.notes" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none resize-none"></textarea>
+      </div>
+    </div>
+
+    <button (click)="submit()" [disabled]="saving"
+      class="w-full h-10 mt-4 rounded-lg text-white text-sm font-medium disabled:opacity-50"
+      [class]="tab === 'bonuses' ? 'bg-success-500 hover:bg-success-600' : 'bg-error-500 hover:bg-error-600'">
+      {{ tab === 'bonuses' ? 'إضافة المكافأة' : 'إضافة الخصم' }}
+    </button>
+  </div>
+
+  <!-- List -->
+  <div class="ds-card overflow-hidden lg:col-span-2">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-gray-100 dark:border-white/[0.06]">
+            <th class="ds-th text-start">الموظف</th>
+            <th class="ds-th text-start">المبلغ</th>
+            <th class="ds-th text-start">السبب</th>
+            <th class="ds-th text-start">التاريخ</th>
+            <th class="ds-th text-start">أُضيفت بواسطة</th>
+            <th class="ds-th text-start"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows; track row.id) {
+            <tr class="border-b border-gray-50 dark:border-white/[0.04]">
+              <td class="ds-td">{{ row.user?.name }}</td>
+              <td class="ds-td font-mono" [class]="tab === 'bonuses' ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                {{ tab === 'bonuses' ? '+' : '-' }}{{ row.amount | number:'1.2-2' }}
+              </td>
+              <td class="ds-td">{{ row.reason }}</td>
+              <td class="ds-td font-mono">{{ row.date | date:'yyyy-MM-dd' }}</td>
+              <td class="ds-td text-gray-500">{{ row.creator?.name }}</td>
+              <td class="ds-td">
+                <button (click)="remove(row)" class="text-xs text-error-500 hover:underline">حذف</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="px-4 py-10 text-center text-sm text-gray-400">لا توجد سجلات بعد</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

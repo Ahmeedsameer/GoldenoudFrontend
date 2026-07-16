@@ -1,0 +1,56 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="mb-5">
+  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">إجازاتي</h2>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">تقديم طلب إجازة ومتابعة رصيدك وحالة الطلبات</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+  <!-- Leave request + balance -->
+  <div class="ds-card p-5">
+    @if (leaveBalance) {
+      <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-100 dark:border-white/[0.06]">
+        <span class="text-sm text-gray-500 dark:text-gray-400">الرصيد المتبقّي هذا الشهر</span>
+        <span class="text-lg font-bold text-gray-900 dark:text-white">{{ leaveBalance.remaining }} / {{ leaveBalance.allowance }} يوم</span>
+      </div>
+    }
+
+    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">طلب إجازة جديد</h3>
+    @if (leaveError) { <p class="text-xs text-error-500 mb-2">{{ leaveError }}</p> }
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <app-date-picker id="my-leave-start-date" [value]="form.start_date" (valueChange)="form.start_date = $event" placeholder="تاريخ البداية"></app-date-picker>
+      <app-date-picker id="my-leave-end-date" [value]="form.end_date" (valueChange)="form.end_date = $event" placeholder="تاريخ النهاية"></app-date-picker>
+    </div>
+    <div class="flex gap-2 mb-3">
+      <select [(ngModel)]="form.type" class="h-9 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800">
+        <option value="annual">سنوية</option>
+        <option value="sick">مرضية</option>
+        <option value="unpaid">بدون أجر</option>
+      </select>
+      <input type="text" [(ngModel)]="form.reason" placeholder="السبب (اختياري)" class="flex-1 h-9 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
+    </div>
+    <button (click)="submitLeave()" [disabled]="submitting" class="w-full h-9 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">
+      @if (submitting) { جاري الإرسال... } @else { إرسال الطلب }
+    </button>
+  </div>
+
+  <!-- Leave history -->
+  <div class="ds-card p-5">
+    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">طلبات إجازاتي</h3>
+    <div class="space-y-2">
+      @for (l of leaves; track l.id) {
+        <div class="flex flex-wrap justify-between items-center gap-2 text-sm py-2 border-b border-gray-50 dark:border-white/[0.04]">
+          <span class="font-mono text-gray-500">{{ l.start_date | date:'yyyy-MM-dd' }} → {{ l.end_date | date:'yyyy-MM-dd' }} ({{ l.days }} يوم)</span>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium" [class]="leaveStatusMeta[l.status]?.cls">{{ leaveStatusMeta[l.status]?.label || l.status }}</span>
+            @if (l.status === 'pending') {
+              <button (click)="cancel(l)" [disabled]="cancellingId === l.id" class="text-xs font-medium text-error-500 hover:text-error-700 disabled:opacity-50">إلغاء</button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="text-xs text-gray-400">لا توجد طلبات</p>
+      }
+    </div>
+  </div>
+</div>

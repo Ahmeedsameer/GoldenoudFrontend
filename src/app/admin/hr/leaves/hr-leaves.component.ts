@@ -2,33 +2,45 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ListManager } from '../../../services/list-manager';
 import { HrService } from '../../../services/hr.service';
+import { AuthService } from '../../../services/auth.service';
 import { PaginationComponent } from '../../../pagination/pagination.component';
 import { LoadingComponent } from '../../../loading/loading.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-hr-leaves',
-  imports: [CommonModule, PaginationComponent, LoadingComponent],
+  imports: [CommonModule, PaginationComponent, LoadingComponent, DatePickerComponent],
   templateUrl: './hr-leaves.component.html',
 })
 export class HrLeavesComponent implements OnInit {
   private hr = inject(HrService);
+  private auth = inject(AuthService);
 
   list = new ListManager<any>((params) => this.hr.getLeaves(params));
   busyId: number | null = null;
   activeStatus = '';
+  myRole = this.auth.getUserRole();
 
   statusTabs = [
     { value: '', label: 'الكل' },
     { value: 'pending', label: 'قيد المراجعة' },
     { value: 'approved', label: 'مقبولة' },
     { value: 'rejected', label: 'مرفوضة' },
+    { value: 'cancelled', label: 'ملغاة' },
   ];
 
   statusMeta: Record<string, { label: string; cls: string }> = {
-    pending:  { label: 'قيد المراجعة', cls: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' },
-    approved: { label: 'مقبولة',       cls: 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400' },
-    rejected: { label: 'مرفوضة',       cls: 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400' },
+    pending:   { label: 'قيد المراجعة', cls: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' },
+    approved:  { label: 'مقبولة',       cls: 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400' },
+    rejected:  { label: 'مرفوضة',       cls: 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400' },
+    cancelled: { label: 'ملغاة',        cls: 'bg-gray-100 text-gray-600 dark:bg-white/[0.05] dark:text-gray-400' },
   };
+
+  // ── End-early modal ─────────────────────────────
+  showEndEarly = false;
+  endEarlyLeave: any = null;
+  endEarlyDate = '';
+  endEarlyError = '';
 
   ngOnInit(): void { this.list.setLimitAndReload(20); }
 
@@ -48,6 +60,31 @@ export class HrLeavesComponent implements OnInit {
     this.hr.rejectLeave(l.id, note).subscribe({
       next: () => { this.busyId = null; this.list.load(); },
       error: (e) => { this.busyId = null; alert(e?.error?.message || 'تعذّر'); },
+    });
+  }
+
+  /** Managers cannot end another manager's leave — only Admin can; managers are also
+   *  restricted to their own branch (enforced server-side, hidden here as a UX hint). */
+  canEndEarly(l: any): boolean {
+    if (l.status !== 'approved') return false;
+    if (this.myRole === 'admin') return true;
+    if (this.myRole === 'manager') return l.user?.role !== 'manager';
+    return false;
+  }
+
+  openEndEarly(l: any) {
+    this.endEarlyLeave = l;
+    this.endEarlyDate = l.start_date;
+    this.endEarlyError = '';
+    this.showEndEarly = true;
+  }
+
+  confirmEndEarly() {
+    if (!this.endEarlyDate) { this.endEarlyError = 'حدد تاريخ الإنهاء'; return; }
+    this.busyId = this.endEarlyLeave.id;
+    this.hr.endLeaveEarly(this.endEarlyLeave.id, this.endEarlyDate).subscribe({
+      next: () => { this.busyId = null; this.showEndEarly = false; this.list.load(); },
+      error: (e) => { this.busyId = null; this.endEarlyError = e?.error?.message || 'تعذّر إنهاء الإجازة'; },
     });
   }
 }

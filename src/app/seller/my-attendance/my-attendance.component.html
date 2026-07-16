@@ -1,0 +1,69 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">حضوري</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">سجل حضورك الشخصي فقط</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <button (click)="prevMonth()" class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.04]">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <span class="text-sm font-medium text-gray-700 dark:text-gray-200 w-28 text-center">{{ monthNames[month] }} {{ year }}</span>
+    <button (click)="nextMonth()" class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.04]">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+  </div>
+</div>
+
+@if (data) {
+  <!-- Monthly summary -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+    <div class="ds-card p-4 text-center">
+      <p class="text-2xl font-bold text-success-700 dark:text-success-400">{{ data.summary.present }}</p>
+      <p class="text-xs text-gray-500 mt-1">حاضر</p>
+    </div>
+    <div class="ds-card p-4 text-center">
+      <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">{{ data.summary.late }}</p>
+      <p class="text-xs text-gray-500 mt-1">متأخر</p>
+    </div>
+    <div class="ds-card p-4 text-center">
+      <p class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ data.summary.half_day }}</p>
+      <p class="text-xs text-gray-500 mt-1">نصف يوم</p>
+    </div>
+    <div class="ds-card p-4 text-center">
+      <p class="text-2xl font-bold text-error-600 dark:text-error-400">{{ data.summary.absent }}</p>
+      <p class="text-xs text-gray-500 mt-1">غائب</p>
+    </div>
+  </div>
+
+  <!-- History table -->
+  <div class="ds-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-gray-100 dark:border-white/[0.06]">
+            <th class="ds-th text-start">التاريخ</th>
+            <th class="ds-th text-start">الحالة</th>
+            <th class="ds-th text-start">الفرع</th>
+            <th class="ds-th text-start">ملاحظة</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (h of data.history; track h.id) {
+            <tr class="border-b border-gray-50 dark:border-white/[0.04]">
+              <td class="ds-td font-mono">{{ h.date | date:'yyyy-MM-dd' }}</td>
+              <td class="ds-td">
+                <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium" [class]="statusMeta[h.status]?.cls">{{ statusMeta[h.status]?.label || h.status }}</span>
+              </td>
+              <td class="ds-td">{{ h.shop?.name || '—' }}</td>
+              <td class="ds-td text-gray-500">{{ h.note || '—' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-gray-400">لا يوجد سجل حضور لهذا الشهر</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

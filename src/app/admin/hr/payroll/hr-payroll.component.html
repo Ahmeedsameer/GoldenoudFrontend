@@ -30,6 +30,9 @@
           <th class="ds-th">أساسي</th>
           <th class="ds-th">عمولة شخصية</th>
           <th class="ds-th">بونص فرع</th>
+          <th class="ds-th">مكافآت</th>
+          <th class="ds-th">عقوبات</th>
+          <th class="ds-th">قسط سلفة</th>
           <th class="ds-th">خصومات</th>
           <th class="ds-th">الصافي</th>
           <th class="ds-th">الحالة</th>
@@ -43,6 +46,9 @@
             <td class="px-4 py-3 text-sm font-mono text-gray-600 dark:text-gray-400">{{ p.base_salary | number:'1.0-2' }}</td>
             <td class="px-4 py-3 text-sm font-mono text-success-600 dark:text-success-400">+{{ p.personal_commission_amount | number:'1.0-2' }}</td>
             <td class="px-4 py-3 text-sm font-mono text-success-600 dark:text-success-400">+{{ p.branch_commission_amount | number:'1.0-2' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-success-600 dark:text-success-400">{{ p.bonus_total > 0 ? '+' + (p.bonus_total | number:'1.0-2') : '—' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-error-500">{{ p.penalty_total > 0 ? '-' + (p.penalty_total | number:'1.0-2') : '—' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-error-500">{{ p.advance_deduction > 0 ? '-' + (p.advance_deduction | number:'1.0-2') : '—' }}</td>
             <td class="px-4 py-3 text-sm font-mono text-error-500">-{{ p.total_deductions | number:'1.0-2' }}</td>
             <td class="px-4 py-3 text-sm font-mono font-bold text-gray-900 dark:text-white">{{ p.net_salary | number:'1.0-2' }}</td>
             <td class="px-4 py-3">
@@ -71,7 +77,7 @@
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="8" class="px-4 py-8 text-center text-sm text-gray-400">لا توجد كشوف لهذا الشهر — اضغط «توليد كشوف الشهر»</td></tr>
+          <tr><td colspan="11" class="px-4 py-8 text-center text-sm text-gray-400">لا توجد كشوف لهذا الشهر — اضغط «توليد كشوف الشهر»</td></tr>
         }
       </tbody>
     </table>

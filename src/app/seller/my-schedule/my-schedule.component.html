@@ -1,0 +1,61 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="mb-5">
+  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">جدولي الأسبوعي</h2>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">عرض جدول العمل الخاص بك — الأسبوع الحالي والقادم فقط</p>
+</div>
+
+@for (week of [currentWeek, nextWeek]; track $index) {
+  @if (week) {
+    <div class="ds-card overflow-hidden mb-5">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+        <div>
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ $index === 0 ? 'الأسبوع الحالي' : 'الأسبوع القادم' }}</h3>
+          <p class="text-xs text-gray-400 font-mono mt-0.5">{{ week.from }} → {{ week.to }}</p>
+        </div>
+        <span class="text-xs text-gray-500 dark:text-gray-400">الفرع: <span class="font-medium text-gray-800 dark:text-white/90">{{ week.branch || '—' }}</span></span>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 px-5 py-3 border-b border-gray-100 dark:border-white/[0.06]">
+        <div class="rounded-lg bg-success-50 dark:bg-success-500/10 py-2 text-center">
+          <p class="text-lg font-bold text-success-700 dark:text-success-400">{{ workingDaysCount(week.cells) }}</p>
+          <p class="text-[11px] text-gray-500">أيام عمل</p>
+        </div>
+        <div class="rounded-lg bg-gray-100 dark:bg-white/[0.05] py-2 text-center">
+          <p class="text-lg font-bold text-gray-700 dark:text-gray-300">{{ offDaysCount(week.cells) }}</p>
+          <p class="text-[11px] text-gray-500">أيام إجازة أسبوعية</p>
+        </div>
+        <div class="rounded-lg bg-blue-50 dark:bg-blue-500/10 py-2 text-center">
+          <p class="text-lg font-bold text-blue-700 dark:text-blue-400">{{ leaveDaysCount(week.cells) }}</p>
+          <p class="text-[11px] text-gray-500">إجازات</p>
+        </div>
+        <div class="rounded-lg bg-indigo-50 dark:bg-indigo-500/10 py-2 text-center">
+          <p class="text-lg font-bold text-indigo-700 dark:text-indigo-400">{{ transferDaysCount(week.cells) }}</p>
+          <p class="text-[11px] text-gray-500">أيام نقل مؤقت</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-7 gap-2 p-4">
+        @for (cell of week.cells; track cell.date; let i = $index) {
+          <div class="rounded-lg border p-2.5 text-xs" [class]="cell.type ? cellMeta[cell.type].soft : 'border-dashed border-gray-200 dark:border-gray-700 text-gray-400'">
+            <p class="font-semibold">{{ dayLabel(i) }}</p>
+            <p class="font-mono text-[10px] opacity-70 mb-1">{{ cell.date }}</p>
+            @if (cell.type) {
+              <p class="font-medium">{{ cellMeta[cell.type].label }}</p>
+              @if (cell.type === 'transferred') {
+                <p class="mt-0.5">{{ cell.transfer?.branch_name }}</p>
+                <p class="font-mono">{{ cell.transfer?.start_date }} → {{ cell.transfer?.end_date }}</p>
+              } @else if (cell.start_time && cell.end_time) {
+                <p class="font-mono mt-0.5">{{ cell.start_time }} → {{ cell.end_time }}</p>
+              }
+            } @else {
+              <p class="text-gray-300 dark:text-gray-600">غير محدد</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (!loading) {
+    <div class="ds-card p-8 text-center text-sm text-gray-400 mb-5">لا يوجد جدول منشور بعد لهذا الأسبوع</div>
+  }
+}

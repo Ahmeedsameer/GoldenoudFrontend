@@ -9,45 +9,46 @@
   <div class="lp-dots"    aria-hidden="true"></div>
   <div class="lp-ambient" aria-hidden="true"></div>
 
-  <!-- Theme toggle -->
-  <div class="lp-toggle">
-    <app-theme-toggle-two />
-  </div>
-
   <!-- ═══ Main centered composition ═══════════════════════ -->
   <div class="lp-compose">
 
     <!-- ── 1. Brand identity (above card) ────────────────── -->
+    @let company = (company$ | async);
     <div class="lp-identity">
 
-      <!-- Animated mark -->
-      <div class="lp-mark">
-        <div class="lp-ring r1" aria-hidden="true"></div>
-        <div class="lp-ring r2" aria-hidden="true"></div>
-        <div class="lp-ring r3" aria-hidden="true"></div>
-
-        <!-- Gold gem icon -->
-        <div class="lp-gem">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <path
-              d="M16 2L2 9.5V22.5L16 30L30 22.5V9.5L16 2Z"
-              stroke="rgba(255,255,255,0.96)"
-              stroke-width="1.6"
-              stroke-linejoin="round"
-              fill="rgba(255,255,255,0.18)"
-            />
-            <path
-              d="M16 2V30M2 9.5L30 22.5M30 9.5L2 22.5"
-              stroke="rgba(255,255,255,0.55)"
-              stroke-width="0.8"
-              opacity="0.8"
-            />
-          </svg>
+      @if (company?.logo_url) {
+        <!-- Full company logo — shown large, proportions preserved, never cropped/distorted -->
+        <div class="lp-logo-wrap">
+          <img [src]="company!.logo_url" alt="{{ company?.name }}" class="lp-logo-full" />
         </div>
-      </div>
+      } @else {
+        <!-- Animated mark (fallback when no logo has been configured yet) -->
+        <div class="lp-mark">
+          <div class="lp-ring r1" aria-hidden="true"></div>
+          <div class="lp-ring r2" aria-hidden="true"></div>
+          <div class="lp-ring r3" aria-hidden="true"></div>
 
-      <h1 class="lp-brand-name">Alpha Business</h1>
-      <p class="lp-tagline">منصة إدارة الأعمال المتكاملة</p>
+          <div class="lp-gem">
+            <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+              <path
+                d="M16 2L2 9.5V22.5L16 30L30 22.5V9.5L16 2Z"
+                stroke="rgba(255,255,255,0.96)"
+                stroke-width="1.6"
+                stroke-linejoin="round"
+                fill="rgba(255,255,255,0.18)"
+              />
+              <path
+                d="M16 2V30M2 9.5L30 22.5M30 9.5L2 22.5"
+                stroke="rgba(255,255,255,0.55)"
+                stroke-width="0.8"
+                opacity="0.8"
+              />
+            </svg>
+          </div>
+        </div>
+      }
+
+      <h1 class="lp-brand-name">{{ company?.name || 'Alpha Business' }}</h1>
 
     </div>
     <!-- /brand identity -->
@@ -182,7 +183,7 @@
 
     <!-- ── 3. Footer ──────────────────────────────────────── -->
     <p class="lp-foot">
-      Alpha Business &copy; 2025 &nbsp;·&nbsp; جميع الحقوق محفوظة
+      {{ company?.name || 'Alpha Business' }} &copy; 2025 &nbsp;·&nbsp; جميع الحقوق محفوظة
     </p>
 
   </div>

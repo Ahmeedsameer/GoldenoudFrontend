@@ -2,18 +2,17 @@ import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ThemeToggleButtonComponent } from '../shared/components/common/theme-toggle/theme-toggle-button.component';
 import { UserDropdownComponent } from '../shared/components/header/user-dropdown/user-dropdown.component';
 import { NotificationDropdownComponent } from '../shared/components/header/notification-dropdown/notification-dropdown.component';
 import { SidebarService } from '../shared/services/sidebar.service';
 import { AuthService } from '../services/auth.service';
+import { CompanySettingsService } from '../services/company-settings.service';
 
 @Component({
   selector: 'app-header',
   imports: [
     CommonModule,
     RouterModule,
-    ThemeToggleButtonComponent,
     NotificationDropdownComponent,
     UserDropdownComponent,
   ],
@@ -24,6 +23,8 @@ export class AppHeaderComponent {
   isApplicationMenuOpen = false;
   readonly isMobileOpen$;
   private authService = inject(AuthService);
+  companySettings = inject(CompanySettingsService);
+  company$ = this.companySettings.settings$;
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 

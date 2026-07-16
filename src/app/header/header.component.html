@@ -21,15 +21,20 @@
     </button>
 
     <!-- ── Mobile brand ───────────────────────────────────── -->
+    @let company = (company$ | async);
     <a routerLink="/" class="xl:hidden nh-mob-brand">
       <span class="nh-mob-gem">
-        <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
-          <path d="M16 2L2 9.5V22.5L16 30L30 22.5V9.5L16 2Z"
-            stroke="rgba(255,255,255,0.95)" stroke-width="1.8" stroke-linejoin="round"
-            fill="rgba(255,255,255,0.15)"/>
-        </svg>
+        @if (company?.logo_url) {
+          <img [src]="company!.logo_url" alt="" class="nh-mob-logo-img" />
+        } @else {
+          <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
+            <path d="M16 2L2 9.5V22.5L16 30L30 22.5V9.5L16 2Z"
+              stroke="rgba(255,255,255,0.95)" stroke-width="1.8" stroke-linejoin="round"
+              fill="rgba(255,255,255,0.15)"/>
+          </svg>
+        }
       </span>
-      <span class="nh-mob-name">Alpha</span>
+      <span class="nh-mob-name">{{ company?.name || 'Alpha Business' }}</span>
     </a>
 
     <!-- ── Breadcrumb trail (desktop) ─────────────────────── -->
@@ -92,7 +97,6 @@
 
     <!-- ── Action cluster ─────────────────────────────────── -->
     <div class="nh-cluster">
-      <app-theme-toggle-button />
       <app-notification-dropdown />
     </div>
 

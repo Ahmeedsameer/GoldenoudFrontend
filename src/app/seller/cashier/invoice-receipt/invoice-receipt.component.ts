@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PAYMENT_METHODS } from '../../../models/sales.model';
+import { CompanySettingsService } from '../../../services/company-settings.service';
 
 @Component({
   selector: 'app-invoice-receipt',
@@ -9,6 +10,8 @@ import { PAYMENT_METHODS } from '../../../models/sales.model';
   templateUrl: './invoice-receipt.component.html',
 })
 export class InvoiceReceiptComponent {
+  companySettings = inject(CompanySettingsService);
+
   /** The invoice object returned by the API after a successful submission. */
   @Input() invoice: any = null;
   /** Controls visibility — parent toggles this. */
@@ -40,6 +43,7 @@ export class InvoiceReceiptComponent {
   printReceipt(): void {
     if (!this.invoice) return;
     const inv = this.invoice;
+    const company = this.companySettings.current;
 
     const itemRows = (inv.items ?? []).map((item: any) => `
       <tr>
@@ -85,6 +89,8 @@ export class InvoiceReceiptComponent {
       color: #111;
     }
     .center { text-align: center; }
+    .co-logo { height: 34px; margin-bottom: 3px; }
+    .co-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
     .shop-name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
     .subtitle  { font-size: 11px; color: #555; margin-bottom: 6px; }
     .divider   { border: none; border-top: 1px dashed #aaa; margin: 5px 0; }
@@ -106,7 +112,9 @@ export class InvoiceReceiptComponent {
 </head>
 <body>
   <div class="center">
-    <p class="shop-name">${inv.shop?.name ?? 'AlphaBusiness'}</p>
+    ${company.logo_url ? `<img class="co-logo" src="${company.logo_url}" alt="">` : ''}
+    <p class="co-name">${company.name}</p>
+    <p class="shop-name">${inv.shop?.name ?? ''}</p>
     <p class="subtitle">فاتورة مبيعات</p>
   </div>
   <hr class="divider">

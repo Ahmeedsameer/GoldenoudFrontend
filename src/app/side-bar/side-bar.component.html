@@ -10,21 +10,25 @@
 >
 
   <!-- ─── Brand Block ───────────────────────────────────── -->
+  @let company = (company$ | async);
   <a routerLink="/" class="nb-brand-block">
     <div class="nb-gem" aria-hidden="true">
-      <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
-        <path d="M16 2L2 9.5V22.5L16 30L30 22.5V9.5L16 2Z"
-          stroke="rgba(255,255,255,0.95)" stroke-width="1.6" stroke-linejoin="round"
-          fill="rgba(255,255,255,0.18)"/>
-        <path d="M16 2V30M2 9.5L30 22.5M30 9.5L2 22.5"
-          stroke="rgba(255,255,255,0.55)" stroke-width="0.75"/>
-      </svg>
+      @if (company?.logo_url) {
+        <img [src]="company!.logo_url" alt="" class="nb-logo-img" />
+      } @else {
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+          <path d="M16 2L2 9.5V22.5L16 30L30 22.5V9.5L16 2Z"
+            stroke="rgba(255,255,255,0.95)" stroke-width="1.6" stroke-linejoin="round"
+            fill="rgba(255,255,255,0.18)"/>
+          <path d="M16 2V30M2 9.5L30 22.5M30 9.5L2 22.5"
+            stroke="rgba(255,255,255,0.55)" stroke-width="0.75"/>
+        </svg>
+      }
     </div>
 
     @if (expanded) {
       <div class="nb-brand">
-        <span class="nb-brand-name">Alpha Business</span>
-        <span class="nb-brand-tag">workspace</span>
+        <span class="nb-brand-name">{{ company?.name || 'Alpha Business' }}</span>
       </div>
     }
   </a>

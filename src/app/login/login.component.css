@@ -151,16 +151,40 @@
     0 4px 20px rgba(212,175,55,0.40),
     0 2px 6px rgba(0,0,0,0.10),
     inset 0 1px 0 rgba(255,255,255,0.25);
+  overflow: hidden;
 }
 
-/* Brand name */
+/* Full company logo, shown large above the login card — aspect ratio always
+   preserved (object-fit: contain), never cropped or stretched. */
+.lp-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 130px;
+  margin-bottom: 0.75rem;
+}
+
+.lp-logo-full {
+  max-width: 220px;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Brand name — premium gold treatment echoing the logo's own lettering */
 .lp-brand-name {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.04em;
-  line-height: 1;
+  font-size: 1.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
   margin-bottom: 0.3rem;
+  background: linear-gradient(135deg, #C9A227 0%, #D4AF37 40%, #E8D26D 65%, #D4AF37 85%, #C9A227 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Arabic tagline */

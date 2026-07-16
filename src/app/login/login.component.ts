@@ -3,24 +3,28 @@ import { FormsModule } from '@angular/forms';
 import { CheckboxComponent } from '../shared/components/form/input/checkbox.component';
 import { InputFieldComponent } from '../shared/components/form/input/input-field.component';
 import { RouterModule } from '@angular/router';
-import { ThemeToggleTwoComponent } from '../shared/components/common/theme-toggle-two/theme-toggle-two.component';
 import { AuthService } from '../services/auth.service';
 import { LoadingComponent } from '../loading/loading.component';
+import { CommonModule } from '@angular/common';
+import { CompanySettingsService } from '../services/company-settings.service';
 
 @Component({
   selector: 'app-login',
   imports: [
+    CommonModule,
     FormsModule,
     CheckboxComponent,
     InputFieldComponent,
     RouterModule,
-    ThemeToggleTwoComponent,
     LoadingComponent,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
 export class LoginComponent {
+  companySettings = inject(CompanySettingsService);
+  company$ = this.companySettings.settings$;
+
   email: string = '';
   showPassword: boolean = false;
   password: string = '';

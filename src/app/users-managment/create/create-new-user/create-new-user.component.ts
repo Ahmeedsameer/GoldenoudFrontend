@@ -3,7 +3,6 @@ import { InputFieldComponent } from '../../../shared/components/form/input/input
 import { ComponentCardComponent } from '../../../shared/components/common/component-card/component-card.component';
 import { LabelComponent } from '../../../shared/components/form/label/label.component';
 import { Option, SelectComponent } from '../../../shared/components/form/select/select.component';
-import { SelectInputsComponent } from "../../../shared/components/form/form-elements/select-inputs/select-inputs.component";
 import { ButtonComponent } from "../../../shared/components/ui/button/button.component";
 import { User } from '../../../models/User.model';
 import { LoadingComponent } from '../../../loading/loading.component';

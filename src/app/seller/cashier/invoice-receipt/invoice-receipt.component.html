@@ -27,9 +27,13 @@
       <!-- Receipt preview (scrollable) -->
       <div class="px-5 py-4 max-h-[60vh] overflow-y-auto space-y-3 text-sm">
 
-        <!-- Shop + meta -->
+        <!-- Company + shop + meta -->
         <div class="text-center pb-3 border-b border-dashed border-gray-200 dark:border-white/[0.08]">
-          <p class="text-base font-bold text-gray-900 dark:text-white">{{ invoice.shop?.name ?? 'AlphaBusiness' }}</p>
+          @if (companySettings.current.logo_url) {
+            <img [src]="companySettings.current.logo_url" alt="" class="h-8 mx-auto mb-1" />
+          }
+          <p class="text-sm font-semibold text-gray-700 dark:text-white/80">{{ companySettings.current.name }}</p>
+          <p class="text-base font-bold text-gray-900 dark:text-white">{{ invoice.shop?.name }}</p>
           <p class="text-xs text-gray-400">فاتورة مبيعات</p>
         </div>
 

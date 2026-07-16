@@ -1,0 +1,80 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="mb-5">
+  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">إعدادات الشركة</h2>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+    اسم الشركة وشعارها وبيانات التواصل — تُستخدم في الشريط الجانبي وصفحة الدخول والتقارير المصدّرة.
+  </p>
+</div>
+
+<app-component-card title="بيانات الشركة" className="max-w-2xl">
+
+  @if (alert.show) {
+    <div class="mb-4">
+      <app-alert
+        [variant]="alert.type === 'success' ? 'success' : 'error'"
+        [message]="alert.message"
+      ></app-alert>
+    </div>
+  }
+
+  <div class="space-y-5">
+
+    <!-- Logo -->
+    <div>
+      <app-label>شعار الشركة</app-label>
+      <div class="flex items-center gap-4">
+        <div class="w-20 h-20 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-white/[0.03] shrink-0">
+          @if (logoPreview || currentLogoUrl) {
+            <img [src]="logoPreview || currentLogoUrl" alt="شعار الشركة" class="w-full h-full object-contain p-1" />
+          } @else {
+            <span class="text-xs text-gray-400">لا يوجد شعار</span>
+          }
+        </div>
+        <div>
+          <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" (change)="onLogoSelected($event)"
+            class="text-xs text-gray-600 dark:text-gray-400 file:me-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-brand-50 file:text-brand-600 dark:file:bg-brand-500/10 dark:file:text-brand-400 hover:file:bg-brand-100" />
+          <p class="text-[11px] text-gray-400 mt-1">PNG, JPG, SVG أو WEBP — بحد أقصى 2 ميجابايت</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <app-label for="co-name">اسم الشركة</app-label>
+      <app-input-field id="co-name" [value]="form.name" (valueChange)="form.name = $event.toString()" />
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <app-label for="co-email">البريد الإلكتروني</app-label>
+        <app-input-field id="co-email" type="email" [value]="form.email" (valueChange)="form.email = $event.toString()" />
+      </div>
+      <div>
+        <app-label for="co-phone">رقم الهاتف</app-label>
+        <app-input-field id="co-phone" [value]="form.phone" (valueChange)="form.phone = $event.toString()" />
+      </div>
+    </div>
+
+    <div>
+      <app-label for="co-address">العنوان</app-label>
+      <app-input-field id="co-address" [value]="form.address" (valueChange)="form.address = $event.toString()" />
+    </div>
+
+    <div>
+      <app-label for="co-website">الموقع الإلكتروني (اختياري)</app-label>
+      <app-input-field id="co-website" [value]="form.website" (valueChange)="form.website = $event.toString()" placeholder="https://example.com" />
+    </div>
+
+    <div>
+      <app-label for="co-desc">وصف الشركة (اختياري)</app-label>
+      <textarea id="co-desc" rows="3" [(ngModel)]="form.description"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 resize-none focus:border-brand-400 focus:outline-none"></textarea>
+    </div>
+
+    <app-button (btnClick)="save()" [disabled]="loading">
+      حفظ التغييرات
+    </app-button>
+
+  </div>
+
+</app-component-card>

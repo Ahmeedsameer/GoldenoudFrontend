@@ -1,0 +1,157 @@
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">تتبّع دفعات المخزون (FIFO)</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">دورة حياة كل دفعة شراء من المورّد حتى الاستهلاك الكامل</p>
+    </div>
+    <app-report-toolbar exportPath="/branch-operations/reports/batches/export" [params]="exportParams" fileName="تتبع-الدفعات" [showRefresh]="true" (refresh)="load()"></app-report-toolbar>
+  </div>
+
+  <!-- Filters -->
+  <div class="mb-5 flex flex-wrap items-center gap-2">
+    <input type="text" [(ngModel)]="search" (change)="applyFilters()" placeholder="بحث برقم الدفعة/المنتج/الكود"
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 min-w-[220px]"/>
+    <select [(ngModel)]="productId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل المنتجات</option>
+      @for (p of products; track p.id) { <option [ngValue]="p.id">{{ p.name }} ({{ p.sku }})</option> }
+    </select>
+    <select [(ngModel)]="supplierId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل الموردين</option>
+      @for (s of suppliers; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+    </select>
+    <select [(ngModel)]="shopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل الفروع</option>
+      @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+    </select>
+    <app-date-picker id="batch-from" [value]="from" (valueChange)="from = $event; applyFilters()"></app-date-picker>
+    <app-date-picker id="batch-to" [value]="to" (valueChange)="to = $event; applyFilters()"></app-date-picker>
+    @if (from || to) {
+      <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء التاريخ</button>
+    }
+  </div>
+
+  @if (errorMsg) { <div class="mb-5"><app-alert variant="error" [message]="errorMsg"></app-alert></div> }
+
+  @if (summary) {
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <app-report-kpi-card title="عدد الدفعات" [value]="summary.total_batches" icon="📦" color="brand"></app-report-kpi-card>
+      <app-report-kpi-card title="الكمية الأصلية" [value]="summary.total_original_quantity" icon="🧾" color="neutral"></app-report-kpi-card>
+      <app-report-kpi-card title="المتبقي" [value]="summary.total_remaining_quantity" icon="📊" color="success"></app-report-kpi-card>
+      <app-report-kpi-card title="منقول" [value]="summary.total_transferred_quantity" icon="🔁" color="info"></app-report-kpi-card>
+      <app-report-kpi-card title="هالك" [value]="summary.total_wasted_quantity" icon="🗑️" color="error"></app-report-kpi-card>
+      <app-report-kpi-card title="مباع" [value]="summary.total_sold_quantity" icon="💰" color="warning"></app-report-kpi-card>
+    </div>
+  }
+
+  @if (loading) {
+    <app-report-loading-skeleton [kpiCount]="0" [rowCount]="8"></app-report-loading-skeleton>
+  } @else {
+    <div class="db-tbl-card">
+      <div class="db-tbl-wrap">
+        <table class="db-tbl">
+          <thead>
+            <tr><th>رقم الدفعة</th><th>فاتورة الشراء</th><th>المورّد</th><th>المنتج</th><th>تاريخ الشراء</th><th>الأصلية</th><th>المتبقي</th><th>منقول</th><th>هالك</th><th>مباع</th></tr>
+          </thead>
+          <tbody>
+            @for (r of rows; track r.id) {
+              <tr class="cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03]" (click)="openBatch(r.id)">
+                <td class="font-mono" style="color:#9A7B1A">{{ r.batch_number }}</td>
+                <td class="font-mono" style="color:#6B7280">{{ r.purchase_invoice }}</td>
+                <td style="color:#6B7280">{{ r.supplier || '—' }}</td>
+                <td style="color:#1f2937">{{ r.product_name }} <span class="text-xs text-gray-400">({{ r.sku }})</span></td>
+                <td style="color:#9CA3AF">{{ r.purchase_date | date:'yyyy-MM-dd' }}</td>
+                <td class="font-mono">{{ r.original_quantity }}</td>
+                <td class="font-mono font-semibold" style="color:#059669">{{ r.remaining_quantity }}</td>
+                <td class="font-mono">{{ r.transferred_quantity || '—' }}</td>
+                <td class="font-mono" style="color:#DC2626">{{ r.wasted_quantity || '—' }}</td>
+                <td class="font-mono">{{ r.sold_quantity || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!rows.length) { <app-report-empty-state message="لا توجد دفعات مطابقة"></app-report-empty-state> }
+      </div>
+    </div>
+
+    @if (meta.last_page > 1) {
+      <div class="flex items-center justify-center gap-2 mt-4">
+        <button type="button" (click)="goToPage(meta.current_page - 1)" [disabled]="meta.current_page <= 1"
+          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 disabled:opacity-40">السابق</button>
+        <span class="text-sm text-gray-500 dark:text-gray-400">{{ meta.current_page }} / {{ meta.last_page }}</span>
+        <button type="button" (click)="goToPage(meta.current_page + 1)" [disabled]="meta.current_page >= meta.last_page"
+          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 disabled:opacity-40">التالي</button>
+      </div>
+    }
+  }
+
+  <!-- Batch detail / timeline modal -->
+  @if (selectedBatch || loadingDetail) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="closeBatch()">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 max-w-3xl w-full max-h-[85vh] overflow-y-auto p-5" (click)="$event.stopPropagation()">
+        @if (loadingDetail) {
+          <app-report-loading-skeleton [kpiCount]="4" [rowCount]="6"></app-report-loading-skeleton>
+        } @else if (selectedBatch) {
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ selectedBatch.batch.batch_number }}</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ selectedBatch.batch.product_name }} ({{ selectedBatch.batch.sku }})</p>
+            </div>
+            <button type="button" (click)="closeBatch()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none">×</button>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-5">
+            <div><p class="text-xs text-gray-400 mb-0.5">فاتورة الشراء</p><p class="font-mono text-gray-700 dark:text-gray-300">{{ selectedBatch.batch.purchase_invoice }}</p></div>
+            <div><p class="text-xs text-gray-400 mb-0.5">المورّد</p><p class="text-gray-700 dark:text-gray-300">{{ selectedBatch.batch.supplier || '—' }}</p></div>
+            <div><p class="text-xs text-gray-400 mb-0.5">تاريخ الشراء</p><p class="text-gray-700 dark:text-gray-300">{{ selectedBatch.batch.purchase_date | date:'yyyy-MM-dd' }}</p></div>
+            <div><p class="text-xs text-gray-400 mb-0.5">تاريخ الصلاحية</p><p class="text-gray-700 dark:text-gray-300">{{ selectedBatch.batch.expiry_date || 'غير متتبَّع' }}</p></div>
+            <div><p class="text-xs text-gray-400 mb-0.5">الكمية الأصلية</p><p class="font-mono font-semibold text-gray-900 dark:text-white">{{ selectedBatch.batch.original_quantity }}</p></div>
+            <div><p class="text-xs text-gray-400 mb-0.5">محجوز</p><p class="font-mono text-gray-700 dark:text-gray-300">{{ selectedBatch.batch.reserved_quantity }} (لا يوجد نظام حجز)</p></div>
+            <div><p class="text-xs text-gray-400 mb-0.5">منقول</p><p class="font-mono text-gray-700 dark:text-gray-300">{{ selectedBatch.batch.transferred_quantity }}</p></div>
+            <div><p class="text-xs text-gray-400 mb-0.5">هالك</p><p class="font-mono text-error-600">{{ selectedBatch.batch.wasted_quantity }}</p></div>
+          </div>
+
+          @if (selectedBatch.locations.length) {
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">التوزيع الحالي حسب الموقع</p>
+              <div class="flex flex-wrap gap-2">
+                @for (loc of selectedBatch.locations; track loc.shop_name) {
+                  <span class="px-3 py-1 rounded-lg text-xs bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300">{{ loc.shop_name }}: <b class="font-mono">{{ loc.current_quantity }}</b></span>
+                }
+              </div>
+            </div>
+          }
+
+          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">دورة حياة الدفعة</p>
+          <div class="space-y-2 mb-4">
+            @for (e of selectedBatch.timeline; track $index) {
+              <div class="flex items-center gap-3 text-sm border-r-2 pr-3" [style.borderColor]="e.quantity_delta >= 0 ? '#059669' : '#DC2626'">
+                <div class="flex-1">
+                  <span class="font-semibold text-gray-800 dark:text-white/90">{{ e.type_label }}</span>
+                  <span class="text-gray-400 mx-1">·</span>
+                  <span class="font-mono text-xs text-gray-500">{{ e.reference_number }}</span>
+                  @if (e.shop_name) { <span class="text-gray-400 mx-1">·</span><span class="text-xs text-gray-500">{{ e.shop_name }}</span> }
+                  @if (e.notes) { <span class="block text-xs text-gray-400">{{ e.notes }}</span> }
+                </div>
+                <div class="text-xs text-gray-400">{{ e.date | date:'yyyy-MM-dd HH:mm' }}</div>
+                <div class="font-mono font-semibold w-16 text-left" [style.color]="e.quantity_delta >= 0 ? '#059669' : '#DC2626'">{{ e.quantity_delta > 0 ? '+' : '' }}{{ e.quantity_delta }}</div>
+              </div>
+            }
+            @if (!selectedBatch.timeline.length) { <app-report-empty-state message="لا توجد أحداث مسجّلة لهذه الدفعة بعد الشراء"></app-report-empty-state> }
+          </div>
+
+          <div class="rounded-xl border border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 px-4 py-3 flex items-center justify-between">
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">الكمية المتبقية الحالية</span>
+            <span class="font-mono font-bold text-lg text-gray-900 dark:text-white">{{ selectedBatch.current_remaining_quantity }}</span>
+          </div>
+          @if (selectedBatch.untracked_gap !== 0) {
+            <p class="text-xs text-gray-400 mt-2">
+              يوجد فارق {{ selectedBatch.untracked_gap }} بين مجموع الأحداث المسجّلة والكمية الفعلية — ناتج عن حركة سابقة لتفعيل تتبّع الدفعات على مستوى العنصر الواحد، وليس خطأ في الحساب.
+            </p>
+          }
+        }
+      </div>
+    </div>
+  }
+
+</div>

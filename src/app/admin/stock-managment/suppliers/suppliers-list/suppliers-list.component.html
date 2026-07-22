@@ -70,7 +70,7 @@
         </thead>
         <tbody>
           @for (supplier of list.result.data; track supplier.id) {
-            <tr class="ds-tr">
+            <tr class="ds-tr cursor-pointer" [routerLink]="['/dashboard/stock/suppliers', supplier.id]">
               <td class="ds-td font-medium text-gray-800 dark:text-white/90">{{ supplier.name }}</td>
               <td class="ds-td font-mono text-sm text-gray-500 dark:text-gray-400">{{ supplier.phone }}</td>
               <td class="ds-td">
@@ -79,7 +79,7 @@
                 </span>
               </td>
               <td class="ds-td text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ supplier.created_at | date:'mediumDate' }}</td>
-              <td class="ds-td">
+              <td class="ds-td" (click)="$event.stopPropagation()">
                 <div class="flex items-center justify-center gap-1.5">
                   <a [routerLink]="['/dashboard/stock/suppliers/edit', supplier.id]"
                     class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10 transition-colors">تعديل</a>

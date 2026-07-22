@@ -1,0 +1,96 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">جلسات جرد المخزون</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ meta?.total ?? 0 }} جلسة</p>
+    </div>
+    <button type="button" (click)="toggleForm()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors">
+      + جلسة جرد جديدة
+    </button>
+  </div>
+
+  @if (showForm) {
+    <div class="mb-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+      @if (formError) { <app-alert variant="error" [message]="formError"></app-alert> }
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الفرع</label>
+        <select [(ngModel)]="form.shop_id" [disabled]="isManager"
+          class="w-full md:w-64 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-60">
+          <option [ngValue]="null">اختر الفرع</option>
+          @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">الموظفون المكلّفون بالجرد</label>
+        <div class="flex flex-wrap gap-2">
+          @for (e of employees; track e.id) {
+            <button type="button" (click)="toggleEmployee(e.id)"
+              class="px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
+              [class]="form.employee_ids.includes(e.id)
+                ? 'bg-brand-50 dark:bg-brand-500/10 border-brand-300 dark:border-brand-500/40 text-brand-700 dark:text-brand-300'
+                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400'">
+              {{ e.name }}
+            </button>
+          }
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">ملاحظات</label>
+        <textarea [(ngModel)]="form.notes" rows="2" class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"></textarea>
+      </div>
+      <button type="button" (click)="submitForm()" [disabled]="saving" class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-50">
+        بدء الجرد
+      </button>
+    </div>
+  }
+
+  <div class="mb-5 flex flex-wrap items-center gap-2">
+    <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option value="">كل الحالات</option>
+      <option value="counting">جاري الجرد</option>
+      <option value="review">قيد المراجعة</option>
+      <option value="approved">تمت الموافقة</option>
+      <option value="completed">مكتمل</option>
+    </select>
+    @if (!isManager) {
+      <select (change)="shopFilter = $any($event.target).value ? +$any($event.target).value : null; applyFilters()"
+        class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+        <option value="">كل الفروع</option>
+        @for (s of shops; track s.id) { <option [value]="s.id">{{ s.name }}</option> }
+      </select>
+    }
+  </div>
+
+  <div class="db-tbl-card">
+    <div class="db-tbl-wrap">
+      <table class="db-tbl">
+        <thead><tr><th>#</th><th>الفرع</th><th>عدد الأصناف</th><th>الحالة</th><th>بواسطة</th><th>التاريخ</th></tr></thead>
+        <tbody>
+          @for (s of sessions; track s.id) {
+            <tr [routerLink]="['/dashboard/branch-operations/counts', s.id]" style="cursor:pointer">
+              <td class="font-mono font-medium" style="color:#9A7B1A">#{{ s.id }}</td>
+              <td style="color:#6B7280">{{ s.shop?.name }}</td>
+              <td style="color:#6B7280">{{ s.items_count ?? 0 }}</td>
+              <td><span class="text-xs font-medium px-2.5 py-1 rounded-full" [class]="statusClass(s.status)">{{ statusLabel(s.status) }}</span></td>
+              <td style="color:#6B7280">{{ s.created_by_user?.name }}</td>
+              <td style="color:#9CA3AF">{{ s.created_at | date:'d MMM yyyy' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (!sessions.length && !loading) { <app-report-empty-state message="لا توجد جلسات جرد"></app-report-empty-state> }
+    </div>
+  </div>
+
+  @if (meta && meta.last_page > 1) {
+    <div class="flex items-center justify-between mt-4">
+      <button type="button" (click)="prevPage()" [disabled]="page <= 1" class="lux-btn lux-btn-sm disabled:opacity-40">السابق</button>
+      <span class="text-xs text-gray-400">صفحة {{ meta.current_page }} من {{ meta.last_page }}</span>
+      <button type="button" (click)="nextPage()" [disabled]="page >= meta.last_page" class="lux-btn lux-btn-sm disabled:opacity-40">التالي</button>
+    </div>
+  }
+
+</div>

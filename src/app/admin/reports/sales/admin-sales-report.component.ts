@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import {
@@ -21,18 +22,21 @@ import {
 import { ShopService } from '../../../services/shop.service';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
+import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 interface PeriodOption { key: ReportPeriod; label: string; }
 
 @Component({
   selector: 'app-admin-sales-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent],
+  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent, ReportToolbarComponent, DatePickerComponent],
   templateUrl: './admin-sales-report.component.html',
 })
 export class AdminSalesReportComponent implements OnInit {
   private svc  = inject(AdminSalesReportService);
   private shopSvc = inject(ShopService);
+  private route = inject(ActivatedRoute);
 
   // ── Period ───────────────────────────────────────────────────────
   period: ReportPeriod = 'month';
@@ -103,7 +107,23 @@ export class AdminSalesReportComponent implements OnInit {
         this.shops = (res.data || []).map((s: any) => ({ id: s.id, name: s.name }));
       },
     });
+
+    // Lets Reports Hub cards ("Daily Sales", "Customer Sales", ...) deep-link
+    // straight into the right period/section of this page instead of a
+    // duplicate report page.
+    const qp = this.route.snapshot.queryParamMap;
+    const requestedPeriod = qp.get('period') as ReportPeriod | null;
+    if (requestedPeriod && this.periods.some((p) => p.key === requestedPeriod)) {
+      this.period = requestedPeriod;
+    }
+
     this.load();
+  }
+
+  private scrollToRequestedSection(): void {
+    const section = this.route.snapshot.queryParamMap.get('section');
+    if (!section) return;
+    setTimeout(() => document.getElementById(section)?.scrollIntoView({ behavior: 'auto', block: 'start' }), 300);
   }
 
   // ── Filter actions ───────────────────────────────────────────────
@@ -143,6 +163,12 @@ export class AdminSalesReportComponent implements OnInit {
     return [undefined, undefined];
   }
 
+  /** Same filters currently applied on screen — passed straight through to the export endpoint. */
+  get exportParams(): Record<string, any> {
+    const [from, to] = this.dateRange();
+    return { period: this.customRangeActive ? undefined : this.period, from, to, shop_id: this.selectedShopId };
+  }
+
   // ── Main load ────────────────────────────────────────────────────
   private load(): void {
     this.loading  = true;
@@ -174,6 +200,7 @@ export class AdminSalesReportComponent implements OnInit {
         // Reset invoice filters and reload
         this.invoicePage = 1;
         this.loadInvoices();
+        this.scrollToRequestedSection();
       },
       error: () => {
         this.loading  = false;

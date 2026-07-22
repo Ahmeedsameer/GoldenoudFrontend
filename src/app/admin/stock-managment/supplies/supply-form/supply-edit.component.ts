@@ -22,8 +22,7 @@ import { BadgeComponent } from '../../../../shared/components/ui/badge/badge.com
     LabelComponent,
     ButtonComponent,
     LoadingComponent,
-    FormErrorComponent
-    
+    FormErrorComponent,
   ],
   templateUrl: './supply-edit.component.html',
   styleUrl: './supply-form.component.css',
@@ -44,7 +43,7 @@ export class SupplyEditComponent implements OnInit {
 
   form: FormGroup = this.fb.group({
     supplier_id: [null, Validators.required],
-    date: ['', Validators.required],
+    date: [{ value: '', disabled: true }],
     payment_method: ['immediate', Validators.required],
   });
 

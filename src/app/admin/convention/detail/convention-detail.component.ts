@@ -12,10 +12,11 @@ import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { PaginationComponent } from '../../../pagination/pagination.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-convention-detail',
-  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, PaginationComponent],
+  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, PaginationComponent, DatePickerComponent],
   templateUrl: './convention-detail.component.html',
 })
 export class ConventionDetailComponent implements OnInit, OnDestroy {
@@ -51,8 +52,10 @@ export class ConventionDetailComponent implements OnInit, OnDestroy {
     amount:     [null, [Validators.required, Validators.min(0.01)]],
     reason:     ['', Validators.required],
     notes:      [''],
-    date:       ['', Validators.required],
   });
+
+  /** Read-only display of the transaction's document date — server-generated, never user-editable. */
+  txDisplayDate = '';
 
   // Manager typeahead
   managerSearch = '';
@@ -156,7 +159,8 @@ export class ConventionDetailComponent implements OnInit, OnDestroy {
     this.txError = '';
     this.managerSearch = '';
     this.managerResults = [];
-    this.txForm.reset({ manager_id: null, amount: null, reason: '', notes: '', date: new Date().toISOString().slice(0, 10) });
+    this.txForm.reset({ manager_id: null, amount: null, reason: '', notes: '' });
+    this.txDisplayDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
     this.showTxModal = true;
   }
 
@@ -170,8 +174,8 @@ export class ConventionDetailComponent implements OnInit, OnDestroy {
       amount: +tx.amount,
       reason: tx.reason || '',
       notes: tx.notes || '',
-      date: (tx.date || '').slice(0, 10),
     });
+    this.txDisplayDate = (tx.date || '').slice(0, 10);
     this.showTxModal = true;
   }
 
@@ -186,7 +190,6 @@ export class ConventionDetailComponent implements OnInit, OnDestroy {
       amount: +v.amount,
       reason: v.reason,
       notes: v.notes || undefined,
-      date: v.date,
     };
     const req$ = this.editingTxId
       ? this.conventionService.updateTransaction(this.editingTxId, body)

@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import {
   AdminStockIntelligenceService,
@@ -15,16 +16,18 @@ import {
 import { ShopService } from '../../services/shop.service';
 import { LoadingComponent } from '../../loading/loading.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
+import { DatePickerComponent } from '../../shared/components/form/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-admin-stock-intelligence',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, DatePickerComponent],
   templateUrl: './admin-stock-intelligence.component.html',
 })
 export class AdminStockIntelligenceComponent implements OnInit {
   private svc     = inject(AdminStockIntelligenceService);
   private shopSvc = inject(ShopService);
+  private route   = inject(ActivatedRoute);
 
   // ── Shops ─────────────────────────────────────────────────────────
   shops: { id: number; name: string }[] = [];
@@ -82,12 +85,20 @@ export class AdminStockIntelligenceComponent implements OnInit {
         this.loading  = false;
         this.invPage  = 1;
         this.loadInventory();
+        this.scrollToRequestedSection();
       },
       error: () => {
         this.loading  = false;
         this.errorMsg = 'فشل تحميل بيانات المخزون. يرجى المحاولة مرة أخرى.';
       },
     });
+  }
+
+  /** Lets Reports Hub cards like "Low Stock" deep-link straight to this section instead of a duplicate page. */
+  private scrollToRequestedSection(): void {
+    const section = this.route.snapshot.queryParamMap.get('section');
+    if (!section) return;
+    setTimeout(() => document.getElementById(section)?.scrollIntoView({ behavior: 'auto', block: 'start' }), 300);
   }
 
   reload(): void { this.invPage = 1; this.load(); }

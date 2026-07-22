@@ -1,8 +1,8 @@
 <!-- Page header -->
 <div class="crud-page-head">
   <div>
-    <h1 class="page-title">المستخدمون</h1>
-    <p class="page-subtitle">إدارة حسابات المستخدمين والصلاحيات</p>
+    <h1 class="page-title">حسابات الأدمن</h1>
+    <p class="page-subtitle">إدارة حسابات مديري النظام (الأدمن) فقط — الموظفون الآخرون (مدراء الفروع والبائعون) تحت "الموظفون" في قسم الموارد البشرية</p>
   </div>
 
   <div class="flex flex-wrap items-center gap-2">
@@ -22,13 +22,6 @@
         (change)="setNameFilter($event.target.value)"
       />
     </div>
-
-    <!-- Role filter -->
-    <app-select
-      placeholder="كل الأدوار"
-      [options]="userTypes"
-      (valueChange)="setTypeFilter($event)"
-    />
 
   </div>
 </div>

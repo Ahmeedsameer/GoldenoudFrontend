@@ -1,0 +1,96 @@
+<div class="flex flex-wrap items-center gap-2" dir="rtl">
+
+  @if (showSearch) {
+    <input type="text" [ngModel]="value.search" (ngModelChange)="onSearchChange($event)" [placeholder]="searchPlaceholder"
+      class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+  }
+
+  @if (showBranch) {
+    <select (change)="setShop($any($event.target).value)"
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <option value="">كل الفروع</option>
+      @for (s of shops; track s.id) { <option [value]="s.id" [selected]="value.shopId === s.id">{{ s.name }}</option> }
+    </select>
+  }
+
+  @if (showProductType) {
+    <select (change)="setProductType($any($event.target).value)"
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <option value="">كل الأنواع</option>
+      @for (t of productTypes; track t.id) { <option [value]="t.id" [selected]="value.productType === t.id">{{ t.name }}</option> }
+    </select>
+  }
+
+  @if (showCategory) {
+    <select (change)="setCategory($any($event.target).value)"
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <option value="">كل الفئات</option>
+      @for (c of categories; track c.id) { <option [value]="c.id" [selected]="value.categoryId === c.id">{{ c.name }}</option> }
+    </select>
+  }
+
+  @if (showSupplier) {
+    <select (change)="setSupplier($any($event.target).value)"
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <option value="">كل الموردين</option>
+      @for (s of suppliers; track s.id) { <option [value]="s.id" [selected]="value.supplierId === s.id">{{ s.name }}</option> }
+    </select>
+  }
+
+  @if (showSeller) {
+    <select (change)="setSeller($any($event.target).value)"
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <option value="">كل البائعين</option>
+      @for (s of sellers; track s.id) { <option [value]="s.id" [selected]="value.sellerId === s.id">{{ s.name }}</option> }
+    </select>
+  }
+
+  @if (showPeriod) {
+    <div class="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-white/[0.05]">
+      @for (p of periods; track p.key) {
+        <button type="button" (click)="setPeriod(p.key)" [disabled]="value.customRangeActive"
+          class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
+          [class]="value.period === p.key && !value.customRangeActive
+            ? 'bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+
+    <button type="button" (click)="showCustomPicker = !showCustomPicker"
+      class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors"
+      [class]="value.customRangeActive
+        ? 'bg-brand-50 dark:bg-brand-500/10 border-brand-300 dark:border-brand-500/40 text-brand-700 dark:text-brand-300'
+        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50'">
+      @if (value.customRangeActive) { {{ value.from }} — {{ value.to }} }
+      @else { تخصيص الفترة }
+    </button>
+
+    @if (value.customRangeActive) {
+      <button type="button" (click)="clearRange()"
+        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors">
+        إلغاء
+      </button>
+    }
+  }
+</div>
+
+@if (showPeriod && showCustomPicker && !value.customRangeActive) {
+  <div class="mt-3 mb-2 flex flex-wrap items-end gap-3 p-4 rounded-2xl border border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10" dir="rtl">
+    <div>
+      <app-date-picker id="filter-bar-from" label="من تاريخ" [value]="value.from" (valueChange)="onFromChange($event)"></app-date-picker>
+    </div>
+    <div>
+      <app-date-picker id="filter-bar-to" label="إلى تاريخ" [value]="value.to" (valueChange)="onToChange($event)"></app-date-picker>
+    </div>
+    <button type="button" (click)="applyRange()" [disabled]="!value.from || !value.to"
+      class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-40">
+      تطبيق
+    </button>
+    <button type="button" (click)="showCustomPicker = false"
+      class="px-4 py-1.5 rounded-lg text-sm text-gray-500 hover:text-gray-700 transition-colors">
+      إلغاء
+    </button>
+  </div>
+}

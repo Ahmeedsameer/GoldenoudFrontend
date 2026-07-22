@@ -9,9 +9,13 @@
   <div class="flex flex-wrap gap-1 px-5 py-3 border-b border-gray-100 dark:border-white/[0.06]">
     @for (t of statusTabs; track t.value) {
       <button (click)="setStatus(t.value)"
-        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5"
         [class]="activeStatus === t.value ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/[0.05] dark:text-gray-300'">
         {{ t.label }}
+        @if (t.value === 'pending' && pendingCount > 0) {
+          <span class="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold"
+            [class]="activeStatus === t.value ? 'bg-white/25 text-white' : 'bg-error-500 text-white'">{{ pendingCount }}</span>
+        }
       </button>
     }
   </div>

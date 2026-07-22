@@ -12,6 +12,8 @@
   <!-- Controls row -->
   <div class="flex flex-wrap items-center gap-2">
 
+    <app-report-toolbar exportPath="/admin/reports/sales/export" [params]="exportParams" fileName="تقرير-المبيعات" [showRefresh]="false"></app-report-toolbar>
+
     <!-- Shop filter -->
     <select (change)="setShop($any($event.target).value ? +$any($event.target).value : null)"
       class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
@@ -65,13 +67,11 @@
   <div class="mb-5 flex flex-wrap items-end gap-3 p-4 rounded-2xl border border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10">
     <div>
       <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">من تاريخ</label>
-      <input type="date" [(ngModel)]="globalFrom"
-        class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+      <app-date-picker id="sales-rep-from" [value]="globalFrom" (valueChange)="globalFrom = $event"></app-date-picker>
     </div>
     <div>
       <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">إلى تاريخ</label>
-      <input type="date" [(ngModel)]="globalTo"
-        class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+      <app-date-picker id="sales-rep-to" [value]="globalTo" (valueChange)="globalTo = $event"></app-date-picker>
     </div>
     <button type="button" (click)="applyGlobalRange()" [disabled]="!globalFrom || !globalTo"
       class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-40">
@@ -152,7 +152,7 @@
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <!-- SECTION 2 — TREND + HOURLY CHARTS                                -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-6">
+<div id="trend" class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-6">
 
   <!-- Daily trend (2/3 width) -->
   <div class="xl:col-span-2 rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
@@ -271,7 +271,7 @@
 <!-- SECTION 4 — SELLERS                                               -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 @if (sellerStats.length > 0) {
-<div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm mb-6">
+<div id="sellers" class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm mb-6">
 
   <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
@@ -361,7 +361,7 @@
 <!-- SECTION 5 — PRODUCTS                                              -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 @if (productStats.length > 0) {
-<div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm mb-6">
+<div id="products" class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm mb-6">
 
   <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
@@ -543,7 +543,7 @@
 <!-- SECTION 7 — CUSTOMER ANALYSIS                                    -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 @if (customerData) {
-<div class="mb-6">
+<div id="customers" class="mb-6">
 
   <!-- KPI row -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
@@ -652,7 +652,7 @@
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <!-- SECTION 8 — INVOICE EXPLORER                                     -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
-<div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+<div id="invoices" class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
 
   <!-- Header -->
   <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05]">

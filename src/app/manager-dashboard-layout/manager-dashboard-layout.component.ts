@@ -43,6 +43,22 @@ export class ManagerDashboardLayoutComponent {
       ],
     },
     {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M17 7l4 4-4 4M3 11h18M7 21l-4-4 4-4"/></svg>`,
+      name: 'عمليات الفروع',
+      subItems: [
+        { name: 'لوحة عمليات الفرع', path: '/dashboard/branch-operations/dashboard' },
+        { name: 'طلبات النقل بين الفروع', path: '/dashboard/branch-operations/transfers' },
+        { name: 'إدارة الهالك', path: '/dashboard/branch-operations/waste' },
+      ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 2v8m0 0v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+      name: 'إدارة الأسعار',
+      subItems: [
+        { name: 'أسعار المنتجات', path: '/dashboard/pricing' },
+      ],
+    },
+    {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
       name: 'المخزون',
       subItems: [

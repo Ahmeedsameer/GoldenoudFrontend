@@ -1,0 +1,306 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="p-4 md:p-6 space-y-6" dir="rtl">
+
+<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <a routerLink="/dashboard/products" class="text-xs font-medium mb-1 inline-block" style="color: #9A7B1A;">‹ الرجوع للمنتجات</a>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ summary?.general?.name }}</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+      {{ summary?.general?.category || '—' }} · {{ typeLabel(summary?.general?.product_type || '') }}
+      @if (summary?.general?.sku) { · {{ summary?.general?.sku }} }
+    </p>
+  </div>
+  <div class="flex items-center gap-2">
+    <a [routerLink]="['/dashboard/reports/inventory-ledger']" [queryParams]="{ product_id: productId }"
+      class="inline-flex items-center gap-1 rounded-xl text-xs font-medium px-3 py-1.5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5">
+      📒 دفتر حساب المخزون
+    </a>
+    @if (summary) {
+      <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium px-3 py-1.5 w-fit"
+        [style.background]="summary.general.is_active ? '#D1FAE5' : '#F3F4F6'"
+        [style.color]="summary.general.is_active ? '#065F46' : '#6B7280'">
+        {{ summary.general.is_active ? 'نشط' : 'غير نشط' }}
+      </span>
+    }
+  </div>
+</div>
+
+@if (summary) {
+
+  <!-- General Information -->
+  <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+    <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">معلومات عامة</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div><p class="text-xs text-gray-400 mb-0.5">الباركود</p><p class="text-gray-800 dark:text-white/90 font-mono">{{ summary.general.barcode || '—' }}</p></div>
+      <div><p class="text-xs text-gray-400 mb-0.5">الفئة</p><p class="text-gray-800 dark:text-white/90">{{ summary.general.category || '—' }}</p></div>
+      <div><p class="text-xs text-gray-400 mb-0.5">النوع</p><p class="text-gray-800 dark:text-white/90">{{ typeLabel(summary.general.product_type) }}</p></div>
+      <div><p class="text-xs text-gray-400 mb-0.5">الوصف</p><p class="text-gray-800 dark:text-white/90">{{ summary.general.description || '—' }}</p></div>
+    </div>
+    @if (summary.general.notes) {
+      <div class="mt-3 pt-3 border-t border-gray-100 dark:border-white/[0.05]">
+        <p class="text-xs text-gray-400 mb-0.5">ملاحظات</p>
+        <p class="text-sm text-gray-700 dark:text-gray-300">{{ summary.general.notes }}</p>
+      </div>
+    }
+  </div>
+
+  @if (!isCompound && summary.inventory) {
+    <!-- Inventory -->
+    <div>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">المخزون</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">المخزون الحالي</p>
+          <p class="text-xl font-bold text-gray-900 dark:text-white">{{ summary.inventory.current_stock | number:'1.0-2' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">الكمية المتاحة</p>
+          <p class="text-xl font-bold text-gray-900 dark:text-white">{{ summary.inventory.available_quantity | number:'1.0-2' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">الحد الأدنى</p>
+          <p class="text-xl font-bold text-gray-900 dark:text-white">{{ summary.inventory.minimum_stock ?? '—' }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-4 text-white">
+          <p class="text-xs text-brand-100 mb-1">قيمة المخزون</p>
+          <p class="text-xl font-bold">{{ summary.inventory.inventory_value | number:'1.0-0' }} ج.م</p>
+        </div>
+      </div>
+      @if (summary.inventory.last_inventory_update) {
+        <p class="text-xs text-gray-400 mt-2">آخر تحديث للمخزون: {{ summary.inventory.last_inventory_update | date:'d MMM yyyy, h:mm a' }}</p>
+      }
+    </div>
+  }
+
+  <!-- Sales History -->
+  <div>
+    <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">سجل المبيعات</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">عدد المبيعات</p>
+        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ summary.sales.sales_count }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">إجمالي الكمية المباعة</p>
+        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ summary.sales.total_quantity_sold | number:'1.0-2' }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">الإيراد</p>
+        <p class="text-xl font-bold" style="color: #16794F;">{{ summary.sales.revenue | number:'1.0-2' }} ج.م</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">متوسط سعر البيع</p>
+        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ summary.sales.average_selling_price != null ? (summary.sales.average_selling_price | number:'1.0-2') + ' ج.م' : '—' }}</p>
+      </div>
+    </div>
+  </div>
+
+  @if (isCompound && summary.compound_usage) {
+    <!-- Most used oils / bottles — from real sales only -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الزيوت الأكثر استخداماً</h3>
+        @if (summary.compound_usage.most_used_oils.length === 0) {
+          <p class="text-xs text-gray-400 text-center py-4">لا توجد مبيعات بعد</p>
+        } @else {
+          <div class="space-y-1.5">
+            @for (o of summary.compound_usage.most_used_oils; track o.id) {
+              <div class="flex justify-between text-xs px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-white/[0.02]">
+                <span class="text-gray-700 dark:text-gray-300">{{ o.name }}</span>
+                <span class="font-mono text-gray-400">{{ o.times_used }}× — {{ o.total_qty | number:'1.0-1' }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الزجاجات الأكثر استخداماً</h3>
+        @if (summary.compound_usage.most_used_bottles.length === 0) {
+          <p class="text-xs text-gray-400 text-center py-4">لا توجد مبيعات بعد</p>
+        } @else {
+          <div class="space-y-1.5">
+            @for (b of summary.compound_usage.most_used_bottles; track b.id) {
+              <div class="flex justify-between text-xs px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-white/[0.02]">
+                <span class="text-gray-700 dark:text-gray-300">{{ b.name }}</span>
+                <span class="font-mono text-gray-400">{{ b.times_used }}×</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Analytics -->
+  @if (analytics && trendSeries.length > 0) {
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">اتجاه المشتريات والمبيعات</h2>
+      <apx-chart [series]="trendSeries" [chart]="trendOptions.chart" [colors]="trendOptions.colors"
+        [stroke]="trendOptions.stroke" [dataLabels]="trendOptions.dataLabels" [xaxis]="trendOptions.xaxis"
+        [yaxis]="trendOptions.yaxis" [grid]="trendOptions.grid" [legend]="trendOptions.legend" />
+    </div>
+  }
+
+  @if (!isCompound) {
+    <!-- Purchase History -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">سجل المشتريات</h2>
+        <div class="flex items-center gap-2">
+          <input type="text" placeholder="بحث بالمورد..." class="crud-search h-8 text-xs"
+            (change)="onPurchaseSearch($any($event.target).value)" />
+          <app-report-toolbar [exportPath]="'/products/' + productId + '/purchase-history/export'" [params]="purchaseExportParams" fileName="سجل-مشتريات" [showRefresh]="false"></app-report-toolbar>
+        </div>
+      </div>
+      <div class="db-tbl-card">
+        <div class="db-tbl-wrap">
+          <table class="db-tbl">
+            <thead>
+              <tr>
+                <th style="cursor:pointer" (click)="setPurchaseSort('date')">التاريخ</th>
+                <th>المورد</th>
+                <th>رقم التوريد</th>
+                <th style="cursor:pointer" (click)="setPurchaseSort('quantity')">الكمية</th>
+                <th style="cursor:pointer" (click)="setPurchaseSort('unit_price')">سعر الشراء</th>
+                <th style="cursor:pointer" (click)="setPurchaseSort('total_cost')">الإجمالي</th>
+                <th>الفرع</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of purchaseRows; track r.supply_id + '-' + r.date) {
+                <tr>
+                  <td style="color:#6B7280">{{ r.date | date:'d MMM yyyy' }}</td>
+                  <td class="font-medium" style="color:#111827">{{ r.supplier_name }}</td>
+                  <td style="color:#6B7280">#{{ r.supply_id }}</td>
+                  <td class="font-mono" style="color:#6B7280">{{ r.quantity | number:'1.0-3' }}</td>
+                  <td class="font-mono" style="color:#6B7280">{{ r.unit_price | number:'1.2-2' }}</td>
+                  <td class="font-mono font-semibold" style="color:#111827">{{ r.total_cost | number:'1.2-2' }}</td>
+                  <td style="color:#9CA3AF">{{ r.branch_name }}</td>
+                </tr>
+              }
+              @if (!purchaseLoading && purchaseRows.length === 0) {
+                <tr><td colspan="7" style="padding:2.5rem 1rem;text-align:center;color:#9CA3AF">لا يوجد سجل مشتريات</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (purchaseLastPage > 1) {
+          <div class="flex items-center justify-center gap-2 py-3">
+            <button type="button" (click)="loadPurchaseHistory(purchasePage - 1)" [disabled]="purchasePage <= 1" class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">السابق</button>
+            <span class="text-xs text-gray-500">{{ purchasePage }} / {{ purchaseLastPage }}</span>
+            <button type="button" (click)="loadPurchaseHistory(purchasePage + 1)" [disabled]="purchasePage >= purchaseLastPage" class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">التالي</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (['READY_PRODUCT','COMPOUND'].includes(summary.general.product_type)) {
+    <!-- Price History -->
+    <div>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">سجل الأسعار</h2>
+      <div class="db-tbl-card">
+        <div class="db-tbl-wrap">
+          <table class="db-tbl">
+            <thead>
+              <tr><th>التاريخ</th><th>السعر السابق</th><th>السعر الجديد</th><th>بواسطة</th><th>السبب</th></tr>
+            </thead>
+            <tbody>
+              @for (h of priceRows; track h.id) {
+                <tr>
+                  <td style="color:#6B7280">{{ h.created_at | date:'d MMM yyyy, h:mm a' }}</td>
+                  <td class="font-mono" style="color:#6B7280">{{ h.old_selling_price != null ? (h.old_selling_price | number:'1.2-2') : '—' }}</td>
+                  <td class="font-mono font-semibold" style="color:#111827">{{ h.new_selling_price != null ? (h.new_selling_price | number:'1.2-2') : '—' }}</td>
+                  <td style="color:#6B7280">{{ h.updated_by?.name || '—' }}</td>
+                  <td style="color:#9CA3AF">{{ h.reason || '—' }}</td>
+                </tr>
+              }
+              @if (!priceLoading && priceRows.length === 0) {
+                <tr><td colspan="5" style="padding:2.5rem 1rem;text-align:center;color:#9CA3AF">لا يوجد سجل أسعار</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (priceLastPage > 1) {
+          <div class="flex items-center justify-center gap-2 py-3">
+            <button type="button" (click)="loadPriceHistory(pricePage - 1)" [disabled]="pricePage <= 1" class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">السابق</button>
+            <span class="text-xs text-gray-500">{{ pricePage }} / {{ priceLastPage }}</span>
+            <button type="button" (click)="loadPriceHistory(pricePage + 1)" [disabled]="pricePage >= priceLastPage" class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">التالي</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (!isCompound) {
+    <!-- Inventory Movement -->
+    <div>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">حركة المخزون</h2>
+      <p class="text-xs text-gray-400 mb-2">شراء وبيع فقط — لا يوجد سجل تاريخي للتحويلات بين الفروع حالياً.</p>
+      <div class="db-tbl-card">
+        <div class="db-tbl-wrap">
+          <table class="db-tbl">
+            <thead><tr><th>التاريخ</th><th>النوع</th><th>الكمية</th><th>المستخدم</th><th>الفرع</th></tr></thead>
+            <tbody>
+              @for (m of movementRows; track m.type + '-' + m.ref_id) {
+                <tr>
+                  <td style="color:#6B7280">{{ m.date | date:'d MMM yyyy' }}</td>
+                  <td>
+                    @if (m.type === 'purchase') {
+                      <span class="inline-flex items-center rounded-full text-xs font-medium px-2.5 py-1" style="background:#DBEAFE;color:#1E40AF">شراء</span>
+                    } @else {
+                      <span class="inline-flex items-center rounded-full text-xs font-medium px-2.5 py-1" style="background:#D1FAE5;color:#065F46">بيع</span>
+                    }
+                  </td>
+                  <td class="font-mono" style="color:#111827">{{ m.type === 'purchase' ? '+' : '-' }}{{ m.quantity | number:'1.0-3' }}</td>
+                  <td style="color:#6B7280">{{ m.user_name || '—' }}</td>
+                  <td style="color:#9CA3AF">{{ m.branch_name }}</td>
+                </tr>
+              }
+              @if (!movementLoading && movementRows.length === 0) {
+                <tr><td colspan="5" style="padding:2.5rem 1rem;text-align:center;color:#9CA3AF">لا توجد حركات مخزون</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (movementLastPage > 1) {
+          <div class="flex items-center justify-center gap-2 py-3">
+            <button type="button" (click)="loadMovements(movementPage - 1)" [disabled]="movementPage <= 1" class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">السابق</button>
+            <span class="text-xs text-gray-500">{{ movementPage }} / {{ movementLastPage }}</span>
+            <button type="button" (click)="loadMovements(movementPage + 1)" [disabled]="movementPage >= movementLastPage" class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">التالي</button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Supplier History -->
+    <div>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">سجل الموردين</h2>
+      <div class="db-tbl-card">
+        <div class="db-tbl-wrap">
+          <table class="db-tbl">
+            <thead><tr><th>المورد</th><th>عدد المشتريات</th><th>الكمية الإجمالية</th><th>متوسط السعر</th><th>آخر سعر</th></tr></thead>
+            <tbody>
+              @for (s of supplierRows; track s.supplier_id) {
+                <tr [routerLink]="['/dashboard/stock/suppliers', s.supplier_id]" style="cursor:pointer">
+                  <td class="font-medium" style="color:#9A7B1A">{{ s.supplier_name }}</td>
+                  <td style="color:#6B7280">{{ s.purchase_count }}</td>
+                  <td class="font-mono" style="color:#6B7280">{{ s.total_purchased_quantity | number:'1.0-2' }}</td>
+                  <td class="font-mono" style="color:#6B7280">{{ s.average_purchase_price | number:'1.2-2' }}</td>
+                  <td class="font-mono" style="color:#111827">{{ s.latest_purchase_price != null ? (s.latest_purchase_price | number:'1.2-2') : '—' }}</td>
+                </tr>
+              }
+              @if (supplierRows.length === 0) {
+                <tr><td colspan="5" style="padding:2.5rem 1rem;text-align:center;color:#9CA3AF">لا يوجد موردون لهذا المنتج</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+}
+
+</div>

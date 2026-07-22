@@ -16,13 +16,15 @@ import {
 import { ShopService } from '../../../services/shop.service';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
+import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 interface PeriodOption { key: ReportPeriod; label: string; }
 
 @Component({
   selector: 'app-admin-financial-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent],
+  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent, ReportToolbarComponent, DatePickerComponent],
   templateUrl: './admin-financial-report.component.html',
 })
 export class AdminFinancialReportComponent implements OnInit {
@@ -121,6 +123,11 @@ export class AdminFinancialReportComponent implements OnInit {
       return [this.globalFrom, this.globalTo];
     }
     return [undefined, undefined];
+  }
+
+  get exportParams(): Record<string, any> {
+    const [from, to] = this.dateRange();
+    return { period: this.customRangeActive ? undefined : this.period, from, to, shop_id: this.selectedShopId };
   }
 
   // ── Main load ────────────────────────────────────────────────────

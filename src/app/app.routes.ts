@@ -29,11 +29,15 @@ import { CategoryListComponent } from './admin/category-managment/category-list/
 import { CreateCategoryComponent } from './admin/category-managment/create-category/create-category.component';
 import { EditCategoryComponent } from './admin/category-managment/edit-category/edit-category.component';
 import { ProductListComponent } from './admin/product-managment/product-list/product-list.component';
+import { ProductDetailComponent } from './admin/product-managment/product-detail/product-detail.component';
+import { PricingListComponent } from './admin/pricing-managment/pricing-list/pricing-list.component';
+import { PricingDetailComponent } from './admin/pricing-managment/pricing-detail/pricing-detail.component';
 import { ShopListComponent as AdminShopListComponent } from './admin/shop-managment/list/shop-list/shop-list.component';
 import { ShopFormComponent } from './admin/shop-managment/form/shop-form/shop-form.component';
 import { ShopDetailComponent } from './admin/shop-managment/show/shop-detail/shop-detail.component';
 import { StockPageComponent } from './admin/stock-managment/stock-page/stock-page.component';
 import { SupplierFormComponent } from './admin/stock-managment/suppliers/supplier-form/supplier-form.component';
+import { SupplierProfileComponent } from './admin/stock-managment/suppliers/supplier-profile/supplier-profile.component';
 import { SupplyFormComponent } from './admin/stock-managment/supplies/supply-form/supply-form.component';
 import { SupplyEditComponent } from './admin/stock-managment/supplies/supply-form/supply-edit.component';
 import { SupplyDetailComponent } from './admin/stock-managment/supplies/supply-detail/supply-detail.component';
@@ -55,8 +59,31 @@ import { InventoryTransferComponent } from './manager/inventory-transfer/invento
 import { SafeReconciliationComponent } from './manager/safe-reconciliation/safe-reconciliation.component';
 import { AdminSalesReportComponent } from './admin/reports/sales/admin-sales-report.component';
 import { AdminFinancialReportComponent } from './admin/reports/financial/admin-financial-report.component';
+import { PerfumeConsumptionReportComponent } from './admin/reports/perfume-consumption/perfume-consumption-report.component';
+import { BranchComparisonReportComponent } from './admin/reports/branch-comparison/branch-comparison-report.component';
+import { MonthlyProfitReportComponent } from './admin/reports/monthly-profit/monthly-profit-report.component';
+import { TransferListComponent } from './admin/branch-operations/transfers/transfer-list/transfer-list.component';
+import { TransferCreateComponent } from './admin/branch-operations/transfers/transfer-create/transfer-create.component';
+import { TransferDetailComponent } from './admin/branch-operations/transfers/transfer-detail/transfer-detail.component';
+import { BranchDashboardComponent } from './admin/branch-operations/branch-dashboard/branch-dashboard.component';
+import { LogisticsDashboardComponent } from './admin/branch-operations/logistics-dashboard/logistics-dashboard.component';
+import { WasteListComponent } from './admin/branch-operations/waste/waste-list.component';
+import { AdjustmentListComponent } from './admin/branch-operations/adjustments/adjustment-list.component';
+import { CountListComponent } from './admin/branch-operations/counts/count-list/count-list.component';
+import { CountDetailComponent } from './admin/branch-operations/counts/count-detail/count-detail.component';
+import { TransferReportsComponent } from './admin/reports/transfers/transfer-reports.component';
+import { TransferInvoiceReportComponent } from './admin/reports/transfer-invoices/transfer-invoice-report.component';
+import { WasteReportsComponent } from './admin/reports/waste/waste-reports.component';
+import { CountReportsComponent } from './admin/reports/counts/count-reports.component';
+import { AdjustmentReportsComponent } from './admin/reports/adjustments/adjustment-reports.component';
+import { StockMovementReportComponent } from './admin/reports/stock-movement/stock-movement-report.component';
+import { InventoryLedgerComponent } from './admin/reports/inventory-ledger/inventory-ledger.component';
+import { BatchTraceabilityComponent } from './admin/reports/batches/batch-traceability.component';
+import { InventoryAuditReportComponent } from './admin/reports/audit/inventory-audit-report.component';
+import { ReportsHubComponent } from './admin/reports/hub/reports-hub.component';
 import { AdminDashboardComponent } from './admin/dashboard/admin-dashboard.component';
 import { AdminStockIntelligenceComponent } from './admin/stock/admin-stock-intelligence.component';
+import { InventoryDashboardComponent } from './admin/stock/inventory-dashboard/inventory-dashboard.component';
 import { AdminInvoicesComponent } from './admin/invoices/admin-invoices.component';
 import { HrEmployeesComponent } from './admin/hr/employees/hr-employees.component';
 import { HrTransfersComponent } from './admin/hr/transfers/hr-transfers.component';
@@ -127,6 +154,7 @@ export const routes: Routes = [
           { path: '', component: StockPageComponent },
           { path: 'suppliers/create', component: SupplierFormComponent },
           { path: 'suppliers/edit/:id', component: SupplierFormComponent },
+          { path: 'suppliers/:id', component: SupplierProfileComponent },
           { path: 'supplies/create', component: SupplyFormComponent },
           { path: 'supplies/edit/:id', component: SupplyEditComponent },
           { path: 'supplies/show/:id', component: SupplyDetailComponent },
@@ -135,7 +163,10 @@ export const routes: Routes = [
       {
         path: 'products',
         children: [
-          { path: '', children: [{ path: '', component: ProductListComponent }] },
+          { path: '', children: [
+            { path: '', component: ProductListComponent },
+            { path: 'view/:id', component: ProductDetailComponent },
+          ] },
           {
             path: 'categories',
             children: [
@@ -146,8 +177,38 @@ export const routes: Routes = [
           },
         ],
       },
+      {
+        path: 'pricing',
+        children: [
+          { path: '', component: PricingListComponent },
+          { path: ':id', component: PricingDetailComponent },
+        ],
+      },
+      { path: 'reports',            component: ReportsHubComponent },
       { path: 'reports/sales',      component: AdminSalesReportComponent },
       { path: 'reports/financial',  component: AdminFinancialReportComponent },
+      { path: 'reports/perfume-consumption', component: PerfumeConsumptionReportComponent },
+      { path: 'reports/branch-comparison', component: BranchComparisonReportComponent },
+      { path: 'reports/monthly-profit', component: MonthlyProfitReportComponent },
+      { path: 'reports/transfers', component: TransferReportsComponent },
+      { path: 'reports/transfer-invoices', component: TransferInvoiceReportComponent },
+      { path: 'reports/waste', component: WasteReportsComponent },
+      { path: 'reports/counts', component: CountReportsComponent },
+      { path: 'reports/adjustments', component: AdjustmentReportsComponent },
+      { path: 'reports/stock-movement', component: StockMovementReportComponent },
+      { path: 'reports/inventory-ledger', component: InventoryLedgerComponent },
+      { path: 'reports/batches', component: BatchTraceabilityComponent },
+      { path: 'reports/inventory-audit', component: InventoryAuditReportComponent },
+      { path: 'branch-operations/dashboard',          component: BranchDashboardComponent },
+      { path: 'branch-operations/logistics-dashboard', component: LogisticsDashboardComponent },
+      { path: 'branch-operations/transfers',         component: TransferListComponent },
+      { path: 'branch-operations/transfers/create',  component: TransferCreateComponent },
+      { path: 'branch-operations/transfers/:id',     component: TransferDetailComponent },
+      { path: 'branch-operations/waste',             component: WasteListComponent },
+      { path: 'branch-operations/adjustments',       component: AdjustmentListComponent },
+      { path: 'branch-operations/counts',            component: CountListComponent },
+      { path: 'branch-operations/counts/:id',        component: CountDetailComponent },
+      { path: 'inventory-dashboard', component: InventoryDashboardComponent },
       { path: 'stock-intelligence', component: AdminStockIntelligenceComponent },
       { path: 'pending-invoices',   component: AdminInvoicesComponent },
       { path: 'hr/employees',       component: HrEmployeesComponent },
@@ -181,8 +242,20 @@ export const routes: Routes = [
         ],
       },
       { path: 'override-requests',  component: OverrideRequestsComponent },
+      {
+        path: 'pricing',
+        children: [
+          { path: '', component: PricingListComponent },
+          { path: ':id', component: PricingDetailComponent },
+        ],
+      },
       { path: 'reports',            component: ReportsComponent },
       { path: 'inventory-transfer', component: InventoryTransferComponent },
+      { path: 'branch-operations/dashboard',          component: BranchDashboardComponent },
+      { path: 'branch-operations/transfers',         component: TransferListComponent },
+      { path: 'branch-operations/transfers/create',  component: TransferCreateComponent },
+      { path: 'branch-operations/transfers/:id',     component: TransferDetailComponent },
+      { path: 'branch-operations/waste',             component: WasteListComponent },
       { path: 'safe/my-shop',       component: ManagerSafeComponent },
       { path: 'safe/my-shop/:safeId/transactions', component: ManagerTransactionsComponent },
       { path: 'conventions',        component: ManagerConventionComponent },

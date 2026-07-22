@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { ProductService } from '../../../services/product.service';
@@ -18,6 +19,7 @@ import { ProductScalarPipe } from '../../../pips/product-scalar.pipe';
   selector: 'app-product-list',
   imports: [
     CommonModule,
+    RouterLink,
     ReactiveFormsModule,
     FormsModule,
     PaginationComponent,
@@ -44,13 +46,40 @@ export class ProductListComponent implements OnInit {
   isEditing = false;
   editingProduct: any = null;
 
+  // ── Product Type Selector (Step 1 — "what do you want to create?") ──────
+  showTypeSelector = false;
+  selectedCreationType: 'RAW_MATERIAL' | 'PACKAGING' | 'COMPOUND' | 'READY_PRODUCT' | null = null;
+  creationTypes = [
+    { value: 'RAW_MATERIAL' as const, icon: '🛢️', title: 'مادة خام', desc: 'زيوت عطرية، كحول، ثابتات — مخزون فقط، لا تظهر في المبيعات.' },
+    { value: 'PACKAGING' as const,    icon: '🧴', title: 'مواد تغليف (زجاجات)', desc: 'الزجاجات فقط — سعرها يشمل البخاخ والغطاء. لا تظهر في المبيعات.' },
+    { value: 'COMPOUND' as const,     icon: '🧪', title: 'منتج مركّب (عطر)', desc: 'يُباع للعملاء ويُركَّب وقت البيع — بدون مخزون خاص به.' },
+    { value: 'READY_PRODUCT' as const, icon: '📦', title: 'منتج جاهز', desc: 'يعمل تماماً كمنتجات النظام الحالية — سعر ثابت ومخزون خاص.' },
+  ];
+
+  // ── Type filter tabs — same 4-category classification used everywhere
+  //    else in the ERP (Supply, Pricing, …) so the product experience is
+  //    consistent across modules. ───────────────────────────────────────
+  activeTypeFilter: '' | 'RAW_MATERIAL' | 'PACKAGING' | 'READY_PRODUCT' | 'COMPOUND' = '';
+  filterTypes = [
+    { value: '' as const,               icon: '📋', label: 'الكل' },
+    { value: 'RAW_MATERIAL' as const,   icon: '🛢️', label: 'خامات' },
+    { value: 'PACKAGING' as const,      icon: '🧴', label: 'مستلزمات تعبئة' },
+    { value: 'READY_PRODUCT' as const,  icon: '📦', label: 'منتجات جاهزة' },
+    { value: 'COMPOUND' as const,       icon: '🧪', label: 'عطور مركّبة' },
+  ];
+
+  setTypeFilter(value: typeof this.activeTypeFilter): void {
+    this.activeTypeFilter = value;
+    this.list.setFilter('product_type', value);
+  }
+
   showDeleteModal = false;
   deletingProduct: any = null;
 
   // ── Recipe (BOM) editor state ───────────────────────────
   showRecipeModal = false;
   recipeProduct: any = null;
-  recipeRows: { component_product_id: number; name: string; sku: string; quantity: number }[] = [];
+  recipeRows: { component_product_id: number; name: string; sku: string; quantity: number; is_variable_quantity: boolean; component_group: string }[] = [];
   recipeSearch = '';
   recipeResults: any[] = [];
   recipeLoading = false;
@@ -90,7 +119,21 @@ export class ProductListComponent implements OnInit {
     purchase_cost:     [null, [Validators.min(0)]],
     warning_quantity:  [null, [Validators.min(0)]],
     critical_quantity: [null, [Validators.min(0)]],
+    // Catalog separation (Sales invoice redesign)
+    product_type:      [''],
+    show_in_catalog:   [true],
+    capacity_ml:       [null, [Validators.min(0)]],
   });
+
+  /** Convenience getters the template uses to show/hide field groups by creation type. */
+  get isRawMaterial()  { return this.selectedCreationType === 'RAW_MATERIAL'; }
+  get isPackaging()    { return this.selectedCreationType === 'PACKAGING'; }
+  get isCompound()     { return this.selectedCreationType === 'COMPOUND'; }
+  get isReadyProduct() { return this.selectedCreationType === 'READY_PRODUCT'; }
+
+  creationTypeLabel(type: string | null): string {
+    return this.creationTypes.find(t => t.value === type)?.title ?? '';
+  }
 
   /** Live unit profit = selling − cost (null until both are set). */
   get formProfit(): number | null {
@@ -154,16 +197,31 @@ export class ProductListComponent implements OnInit {
 
   // ── Create ──────────────────────────────────────────────
 
+  /** Step 1 — "What do you want to create?" */
   openCreate() {
+    this.selectedCreationType = null;
+    this.showTypeSelector = true;
+  }
+
+  /** Step 2 — chosen a type, now open the (type-specific) form. */
+  chooseCreationType(type: 'RAW_MATERIAL' | 'PACKAGING' | 'COMPOUND' | 'READY_PRODUCT') {
+    this.selectedCreationType = type;
+    this.showTypeSelector = false;
+
     this.isEditing = false;
     this.editingProduct = null;
     this.selectedFile = null;
     this.currentImageUrl = null;
     this.formError = '';
+
+    // Raw Materials/Packaging are inventory-only; Compound/Ready are catalog-visible.
+    const showInCatalog = type === 'COMPOUND' || type === 'READY_PRODUCT';
+
     this.productForm.reset({
       name: '', sku: '', barcode: '', description: '',
       scalar: 'pcs', category_id: '', is_active: true,
       selling_price: null, price_per_gram: null, purchase_cost: null, warning_quantity: null, critical_quantity: null,
+      product_type: type, show_in_catalog: showInCatalog, capacity_ml: null,
     });
     this.showFormModal = true;
   }
@@ -176,6 +234,10 @@ export class ProductListComponent implements OnInit {
     this.selectedFile = null;
     this.currentImageUrl = product.image || null;
     this.formError = '';
+    // The creation type isn't changeable after the fact — it's fixed to
+    // whatever the product was originally created as (drives which fields
+    // this edit form shows).
+    this.selectedCreationType = product.product_type || 'READY_PRODUCT';
     this.productForm.reset({
       name:        product.name        ?? '',
       sku:         product.sku         ?? '',
@@ -189,6 +251,9 @@ export class ProductListComponent implements OnInit {
       purchase_cost:     product.purchase_cost     ?? null,
       warning_quantity:  product.warning_quantity  ?? null,
       critical_quantity: product.critical_quantity ?? null,
+      product_type:      product.product_type      ?? '',
+      show_in_catalog:   product.show_in_catalog   !== undefined ? product.show_in_catalog : true,
+      capacity_ml:       product.capacity_ml        ?? null,
     });
     this.showFormModal = true;
   }
@@ -276,6 +341,8 @@ export class ProductListComponent implements OnInit {
           name: c.name ?? c.component?.name ?? '—',
           sku: c.sku ?? c.component?.sku ?? '',
           quantity: +c.quantity || 1,
+          is_variable_quantity: !!c.is_variable_quantity,
+          component_group: c.component_group ?? '',
         }));
         this.recipeLoading = false;
       },
@@ -304,6 +371,8 @@ export class ProductListComponent implements OnInit {
       name: product.name,
       sku: product.sku ?? '',
       quantity: 1,
+      is_variable_quantity: false,
+      component_group: '',
     });
     this.recipeSearch = '';
     this.recipeResults = [];
@@ -318,7 +387,12 @@ export class ProductListComponent implements OnInit {
     // Only keep rows with a positive quantity
     const components = this.recipeRows
       .filter((r) => r.component_product_id && +r.quantity > 0)
-      .map((r) => ({ component_product_id: r.component_product_id, quantity: +r.quantity }));
+      .map((r) => ({
+        component_product_id: r.component_product_id,
+        quantity: +r.quantity,
+        is_variable_quantity: !!r.is_variable_quantity,
+        component_group: r.component_group?.trim() || null,
+      }));
 
     this.recipeSaving = true;
     this.recipeError = '';

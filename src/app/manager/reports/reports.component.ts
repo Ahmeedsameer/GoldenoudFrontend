@@ -18,6 +18,7 @@ import {
 } from '../../services/reports.service';
 import { LoadingComponent } from '../../loading/loading.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
+import { DatePickerComponent } from '../../shared/components/form/date-picker/date-picker.component';
 
 interface PeriodOption { key: ReportPeriod; label: string; }
 
@@ -26,7 +27,7 @@ type TabKey = 'sales' | 'inventory' | 'customers' | 'financial';
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, NgApexchartsModule],
+  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, NgApexchartsModule, DatePickerComponent],
   templateUrl: './reports.component.html',
 })
 export class ReportsComponent implements OnInit {

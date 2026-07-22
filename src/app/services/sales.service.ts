@@ -11,7 +11,7 @@ const API_BASE = 'http://127.0.0.1:8000/api';
 export class SalesService {
   private http = inject(HttpClient);
 
-  // ── Goods search (for cashier item rows + lookup panel) ───
+  // ── Goods search (for cashier item rows) ───
   searchGoods(search: string, perPage = 20, categoryId?: number): Observable<GoodsSearchResult[]> {
     const params: Record<string, any> = { search, per_page: perPage };
     if (categoryId) params['category_id'] = categoryId;
@@ -20,18 +20,38 @@ export class SalesService {
       .pipe(map((res) => res.data?.data || res.data || []));
   }
 
-  // ── Products that have a saved recipe (for the compose modal) ──────────────
-  searchComposableProducts(search: string): Observable<any[]> {
+  // ── Catalog (finished/sellable) products — show_in_catalog=true ────────────
+  searchCatalogProducts(search: string): Observable<any[]> {
     return this.http
-      .get<any>(`${API_BASE}/sales/composable-products`, { params: { search } })
+      .get<any>(`${API_BASE}/sales/catalog-products`, { params: { search } })
       .pipe(map((res) => res.data || []));
   }
 
-  // ── A product's recipe (BOM) components, resolved for the shop ─────────────
-  getProductComponents(productId: number): Observable<any[]> {
+  // ── Product Builder: raw materials priced as "oil" (per gram) ──────────────
+  searchOilProducts(search: string): Observable<any[]> {
     return this.http
-      .get<any>(`${API_BASE}/sales/products/${productId}/components`)
+      .get<any>(`${API_BASE}/sales/oil-products`, { params: { search } })
       .pipe(map((res) => res.data || []));
+  }
+
+  // ── Product Builder: packaging bottles (capacity_ml required) ──────────────
+  searchBottleProducts(search: string): Observable<any[]> {
+    return this.http
+      .get<any>(`${API_BASE}/sales/bottle-products`, { params: { search } })
+      .pipe(map((res) => res.data || []));
+  }
+
+  // ── Product Builder: live price calculation + bottle-capacity validation ───
+  calculateCompoundPrice(params: {
+    catalog_product_id: number; oil_product_id: number; oil_qty: number; bottle_product_id: number;
+  }): Observable<{
+    oil_unit_price: number; oil_cost: number; oil_stock: number;
+    bottle_unit_price: number; bottle_cost: number; bottle_stock: number; bottle_capacity_ml: number | null;
+    total_cost: number; stock_ok: boolean; default_selling_price: number | null;
+  }> {
+    return this.http
+      .get<any>(`${API_BASE}/sales/compound-price`, { params: params as any })
+      .pipe(map((res) => res.data));
   }
 
   // ── Catalog products matching the search that are NOT stocked in this shop ─

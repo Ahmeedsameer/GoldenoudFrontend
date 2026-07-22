@@ -88,10 +88,8 @@
       <input type="text" placeholder="بحث (السبب/الملاحظة/المدير)..." (input)="setSearch($any($event.target).value)"
         class="h-9 rounded-lg border border-gray-300 bg-transparent pr-8 pl-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
     </div>
-    <input type="date" (change)="setDateFrom($any($event.target).value)"
-      class="h-9 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
-    <input type="date" (change)="setDateTo($any($event.target).value)"
-      class="h-9 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+    <app-date-picker id="conv-date-from" [value]="list.filters['date_from']" (valueChange)="setDateFrom($event)"></app-date-picker>
+    <app-date-picker id="conv-date-to" [value]="list.filters['date_to']" (valueChange)="setDateTo($event)"></app-date-picker>
   </div>
 
   <!-- Table -->
@@ -231,13 +229,12 @@
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent text-gray-800 dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 resize-none placeholder:text-gray-400"></textarea>
         </div>
 
-        <!-- Date -->
+        <!-- Date (system-generated, read-only — never user-editable) -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">التاريخ <span class="text-error-500">*</span></label>
-          <input type="date" formControlName="date"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
-            [class]="txfInvalid('date') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
-          @if (txfInvalid('date')) { <p class="mt-1 text-xs text-error-500">التاريخ مطلوب</p> }
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">التاريخ</label>
+          <div class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 flex items-center text-sm text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+            {{ txDisplayDate }}
+          </div>
         </div>
 
       </div>

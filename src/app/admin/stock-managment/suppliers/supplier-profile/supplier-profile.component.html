@@ -1,0 +1,135 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="p-4 md:p-6 space-y-6" dir="rtl">
+
+<div class="flex items-start justify-between gap-4">
+  <div>
+    <a routerLink="/dashboard/stock" class="text-xs font-medium mb-1 inline-block" style="color: #9A7B1A;">‹ الرجوع للمخزون والتوريدات</a>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ profile?.general?.name }}</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 font-mono">{{ profile?.general?.phone }}</p>
+  </div>
+  <app-report-toolbar [exportPath]="'/stock/suppliers/' + supplierId + '/profile/export'" [params]="{}" fileName="بروفايل-المورد" [showRefresh]="false"></app-report-toolbar>
+</div>
+
+@if (profile) {
+
+  <!-- Badges — where this supplier stands in the global rankings -->
+  @if (insights) {
+    <div class="flex flex-wrap gap-2">
+      @if (isBestFor('RAW_MATERIAL')) { <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:#FEF3C7;color:#92400E">🏆 أفضل مورد للخامات</span> }
+      @if (isBestFor('PACKAGING')) { <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:#FEF3C7;color:#92400E">🏆 أفضل مورد للتعبئة</span> }
+      @if (isBestFor('READY_PRODUCT')) { <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:#FEF3C7;color:#92400E">🏆 أفضل مورد للمنتجات الجاهزة</span> }
+      @if (isMostFrequent) { <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:#DBEAFE;color:#1E40AF">الأكثر استخداماً</span> }
+      @if (isLowestPrice) { <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:#D1FAE5;color:#065F46">أقل متوسط سعر</span> }
+      @if (isHighestVolume) { <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:#EDE9FE;color:#5B21B6">أعلى حجم شراء</span> }
+      @if (isMostStable) { <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:#F3F4F6;color:#374151">أثبت تسعير</span> }
+    </div>
+  }
+
+  <!-- General Information -->
+  <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+    <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">معلومات عامة</h2>
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div><p class="text-xs text-gray-400 mb-0.5">الاسم</p><p class="text-gray-800 dark:text-white/90">{{ profile.general.name }}</p></div>
+      <div><p class="text-xs text-gray-400 mb-0.5">الهاتف</p><p class="text-gray-800 dark:text-white/90 font-mono">{{ profile.general.phone }}</p></div>
+    </div>
+    @if (profile.general.notes) {
+      <div class="mt-3 pt-3 border-t border-gray-100 dark:border-white/[0.05]">
+        <p class="text-xs text-gray-400 mb-0.5">ملاحظات</p>
+        <p class="text-sm text-gray-700 dark:text-gray-300">{{ profile.general.notes }}</p>
+      </div>
+    }
+  </div>
+
+  <!-- Statistics -->
+  <div>
+    <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الإحصائيات</h2>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">عدد المشتريات</p>
+        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ profile.statistics.total_purchases }}</p>
+      </div>
+      <div class="col-span-2 md:col-span-1 bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-4 text-white">
+        <p class="text-xs text-brand-100 mb-1">إجمالي قيمة المشتريات</p>
+        <p class="text-xl font-bold">{{ profile.statistics.total_purchase_value | number:'1.0-0' }} ج.م</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">إجمالي الكمية</p>
+        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ profile.statistics.total_purchased_quantity | number:'1.0-2' }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">متوسط السعر</p>
+        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ profile.statistics.average_purchase_price != null ? (profile.statistics.average_purchase_price | number:'1.2-2') : '—' }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">آخر سعر</p>
+        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ profile.statistics.latest_purchase_price != null ? (profile.statistics.latest_purchase_price | number:'1.2-2') : '—' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics -->
+  @if (analytics) {
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">الفئة الأكثر شراءً</p>
+        <p class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ analytics.most_purchased_category || '—' }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">المنتج الأكثر شراءً</p>
+        <p class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ analytics.most_purchased_product || '—' }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">متوسط عدد عمليات الشراء شهرياً</p>
+        <p class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ analytics.purchase_frequency != null ? analytics.purchase_frequency : '—' }}</p>
+      </div>
+    </div>
+
+    @if (trendSeries.length && trendSeries[0].data.length) {
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">قيمة المشتريات شهرياً</h2>
+        <apx-chart [series]="trendSeries" [chart]="trendOptions.chart" [colors]="trendOptions.colors"
+          [plotOptions]="trendOptions.plotOptions" [dataLabels]="trendOptions.dataLabels"
+          [xaxis]="trendOptions.xaxis" [yaxis]="trendOptions.yaxis" [grid]="trendOptions.grid" />
+      </div>
+    }
+  }
+
+  <!-- Products supplied, grouped by type -->
+  @if (products) {
+    <div>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">المنتجات المورَّدة</h2>
+      @for (g of typeGroups; track g.key) {
+        @if (products[g.key].length > 0) {
+          <div class="mb-4">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">{{ g.icon }} {{ g.label }}</p>
+            <div class="db-tbl-card">
+              <div class="db-tbl-wrap">
+                <table class="db-tbl">
+                  <thead><tr><th>المنتج</th><th>عدد المشتريات</th><th>الكمية الإجمالية</th><th>متوسط السعر</th><th>آخر شراء</th></tr></thead>
+                  <tbody>
+                    @for (p of products[g.key]; track p.id) {
+                      <tr [routerLink]="['/dashboard/products/view', p.id]" style="cursor:pointer">
+                        <td class="font-medium" style="color:#9A7B1A">{{ p.name }} <span class="text-xs font-mono" style="color:#9CA3AF">({{ p.sku }})</span></td>
+                        <td style="color:#6B7280">{{ p.purchase_count }}</td>
+                        <td class="font-mono" style="color:#6B7280">{{ p.total_purchased_quantity | number:'1.0-2' }}</td>
+                        <td class="font-mono" style="color:#6B7280">{{ p.average_purchase_price | number:'1.2-2' }}</td>
+                        <td style="color:#9CA3AF">{{ p.last_purchased_at | date:'d MMM yyyy' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        }
+      }
+      @if (!products.RAW_MATERIAL.length && !products.PACKAGING.length && !products.READY_PRODUCT.length) {
+        <p class="text-sm text-gray-400 text-center py-6">لا توجد منتجات مورَّدة من هذا المورد بعد</p>
+      }
+    </div>
+  }
+
+}
+
+</div>

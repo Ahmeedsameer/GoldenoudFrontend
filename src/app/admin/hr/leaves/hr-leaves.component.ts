@@ -21,6 +21,9 @@ export class HrLeavesComponent implements OnInit {
   activeStatus = '';
   myRole = this.auth.getUserRole();
 
+  /** Every "pending" leave request needs the admin's action — shown as a count badge on the tab itself. */
+  pendingCount = 0;
+
   statusTabs = [
     { value: '', label: 'الكل' },
     { value: 'pending', label: 'قيد المراجعة' },
@@ -42,14 +45,23 @@ export class HrLeavesComponent implements OnInit {
   endEarlyDate = '';
   endEarlyError = '';
 
-  ngOnInit(): void { this.list.setLimitAndReload(20); }
+  ngOnInit(): void {
+    this.list.setLimitAndReload(20);
+    this.loadPendingCount();
+  }
+
+  private loadPendingCount(): void {
+    this.hr.getLeaves({ status: 'pending', per_page: 1 }).subscribe({
+      next: (res) => { this.pendingCount = res?.data?.total ?? res?.total ?? 0; },
+    });
+  }
 
   setStatus(v: string) { this.activeStatus = v; this.list.setFilter('status', v || undefined); }
 
   approve(l: any) {
     this.busyId = l.id;
     this.hr.approveLeave(l.id).subscribe({
-      next: () => { this.busyId = null; this.list.load(); },
+      next: () => { this.busyId = null; this.list.load(); this.loadPendingCount(); },
       error: (e) => { this.busyId = null; alert(e?.error?.message || 'تعذّر'); },
     });
   }
@@ -58,7 +70,7 @@ export class HrLeavesComponent implements OnInit {
     const note = prompt('سبب الرفض (اختياري):') ?? undefined;
     this.busyId = l.id;
     this.hr.rejectLeave(l.id, note).subscribe({
-      next: () => { this.busyId = null; this.list.load(); },
+      next: () => { this.busyId = null; this.list.load(); this.loadPendingCount(); },
       error: (e) => { this.busyId = null; alert(e?.error?.message || 'تعذّر'); },
     });
   }

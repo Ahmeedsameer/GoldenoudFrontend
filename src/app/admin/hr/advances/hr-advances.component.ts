@@ -27,6 +27,8 @@ export class HrAdvancesComponent implements OnInit {
 
   rows: any[] = [];
   activeStatus = 'pending';
+  /** Every "pending" advance request needs the admin's action — managers are read-only here, so the badge is admin-only. */
+  pendingCount = 0;
   statusTabs = [
     { value: 'pending', label: 'قيد المراجعة' },
     { value: 'active', label: 'نشطة' },
@@ -93,6 +95,13 @@ export class HrAdvancesComponent implements OnInit {
     this.shopService.getShops({ page: -1 }).subscribe({ next: (r) => this.shops = r.data?.data || r.data || r || [], error: () => {} });
     this.hr.getEmployees({ page: -1 }).subscribe({ next: (r) => this.employees = (r.data?.data || r.data || r || []).map((e: any) => ({ id: e.id, name: e.name })), error: () => {} });
     this.load();
+    if (this.isAdmin) { this.loadPendingCount(); }
+  }
+
+  private loadPendingCount(): void {
+    this.hr.getAdvances({ status: 'pending', per_page: 1 }).subscribe({
+      next: (r) => { this.pendingCount = r?.total ?? r?.data?.total ?? 0; },
+    });
   }
 
   private iso(d: Date) { return d.toISOString().substring(0, 10); }
@@ -169,7 +178,7 @@ export class HrAdvancesComponent implements OnInit {
 
     this.busyId = this.approveTarget.id;
     this.hr.approveAdvance(this.approveTarget.id, payload).subscribe({
-      next: () => { this.busyId = null; this.showApprove = false; this.load(); },
+      next: () => { this.busyId = null; this.showApprove = false; this.load(); this.loadPendingCount(); },
       error: (e) => { this.busyId = null; this.approveError = e?.error?.message || this.firstValidationError(e) || 'تعذّرت الموافقة'; },
     });
   }
@@ -188,7 +197,7 @@ export class HrAdvancesComponent implements OnInit {
     if (!this.rejectTarget) return;
     this.busyId = this.rejectTarget.id;
     this.hr.rejectAdvance(this.rejectTarget.id, this.rejectReason || undefined).subscribe({
-      next: () => { this.busyId = null; this.showReject = false; this.load(); },
+      next: () => { this.busyId = null; this.showReject = false; this.load(); this.loadPendingCount(); },
       error: (e) => { this.busyId = null; alert(e?.error?.message || 'تعذّر الرفض'); },
     });
   }

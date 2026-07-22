@@ -8,6 +8,7 @@
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">التقرير المالي الشامل</h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">تدفقات نقدية · أرصدة الخزن · سجل المعاملات</p>
     </div>
+    <app-report-toolbar exportPath="/admin/reports/financial/export" [params]="exportParams" fileName="التقرير-المالي" [showRefresh]="false"></app-report-toolbar>
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════
@@ -60,9 +61,9 @@
     <!-- Date picker panel -->
     @if (showCustomPicker) {
       <div class="flex items-center gap-2 flex-wrap">
-        <input type="date" [(ngModel)]="globalFrom" class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <app-date-picker id="fin-rep-from" [value]="globalFrom" (valueChange)="globalFrom = $event"></app-date-picker>
         <span class="text-gray-400 text-sm">إلى</span>
-        <input type="date" [(ngModel)]="globalTo"   class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <app-date-picker id="fin-rep-to" [value]="globalTo" (valueChange)="globalTo = $event"></app-date-picker>
         <button (click)="applyGlobalRange()" class="px-4 py-2 text-sm font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700">تطبيق</button>
       </div>
     }

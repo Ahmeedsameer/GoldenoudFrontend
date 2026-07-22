@@ -46,6 +46,20 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
   loading = false;
   alert: AlertState = { show: false, type: '', message: '' };
 
+  // ── Category — chosen once per supply, scopes which products are pickable
+  //    and drives the Supplier Intelligence panel. Compound Products are
+  //    virtual (composed at sale time) and can never be supplied. ──────────
+  categories: { value: 'RAW_MATERIAL' | 'PACKAGING' | 'READY_PRODUCT' | 'COMPOUND'; label: string; icon: string; disabled: boolean }[] = [
+    { value: 'RAW_MATERIAL',  label: 'خامات',            icon: '🛢️', disabled: false },
+    { value: 'PACKAGING',     label: 'مستلزمات تعبئة',    icon: '🧴', disabled: false },
+    { value: 'READY_PRODUCT', label: 'منتجات جاهزة',      icon: '📦', disabled: false },
+    { value: 'COMPOUND',      label: 'عطور مركّبة',       icon: '🧪', disabled: true },
+  ];
+  selectedCategory: 'RAW_MATERIAL' | 'PACKAGING' | 'READY_PRODUCT' | null = null;
+
+  intelligence: any = null;
+  intelligenceLoading = false;
+
   // Supplier typeahead
   supplierQuery = '';
   supplierResults: Supplier[] = [];
@@ -60,9 +74,13 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
 
   headerForm: FormGroup = this.fb.group({
     supplier_id: [null, Validators.required],
-    date: ['', Validators.required],
     payment_method: ['immediate', Validators.required],
   });
+
+  /** Read-only display of the supply date — the server always stamps the real creation date. */
+  get todayDisplay(): string {
+    return new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
 
   itemsForm: FormGroup = this.fb.group({
     items: this.fb.array([]),
@@ -117,6 +135,36 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
     setTimeout(() => { this.showSupplierDropdown = false; }, 200);
   }
 
+  // ── Category ─────────────────────────────────────────────
+
+  selectCategory(cat: typeof this.categories[number]) {
+    if (cat.disabled || cat.value === 'COMPOUND') {
+      this.alert = { show: true, type: 'error', message: 'العطور المركّبة منتجات افتراضية ولا يمكن توريدها.' };
+      return;
+    }
+    const category = cat.value;
+    if (this.selectedCategory === category) return;
+
+    this.selectedCategory = category;
+    this.alert = { show: false, type: '', message: '' };
+
+    // Any rows picked under the previous category no longer apply.
+    this.items.clear();
+    this.productQueries = [];
+    this.productResults = [];
+    this.showProductDropdown = [];
+    this.productSearchSubjects.forEach((s) => s.complete());
+    this.productSearchSubjects = [];
+    this.addItem();
+
+    this.intelligenceLoading = true;
+    this.intelligence = null;
+    this.stockService.getSupplierIntelligence(category).subscribe({
+      next: (data) => { this.intelligence = data; this.intelligenceLoading = false; },
+      error: () => { this.intelligenceLoading = false; },
+    });
+  }
+
   // ── Product typeahead (per row) ─────────────────────────
 
   addItem() {
@@ -140,7 +188,10 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
       switchMap((q) =>
         q.trim().length === 0
           ? of([])
-          : this.productService.getProducts({ search: q, per_page: 10 }).pipe(
+          // Scoped to the category chosen in Step 1 — Compound Products
+          // (perfumes composed at sale time) have no inventory and are
+          // never a choice here (the category selector excludes them).
+          : this.productService.getProducts({ search: q, per_page: 10, product_type: this.selectedCategory }).pipe(
               map((res) => res.data || [])
             )
       ),
@@ -195,6 +246,10 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
   goToStep2() {
     if (this.headerForm.invalid) {
       this.headerForm.markAllAsTouched();
+      return;
+    }
+    if (!this.selectedCategory) {
+      this.alert = { show: true, type: 'error', message: 'اختر فئة المنتجات أولاً.' };
       return;
     }
     this.step = 2;

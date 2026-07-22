@@ -1,0 +1,82 @@
+<app-loading [loading]="loading && !summary"></app-loading>
+
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">تقارير تسويات المخزون</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        @if (summary) { الفترة: {{ summary.period.from }} — {{ summary.period.to }} }
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <app-date-picker id="adj-from" [value]="from" (valueChange)="from = $event; applyRange()"></app-date-picker>
+      <app-date-picker id="adj-to" [value]="to" (valueChange)="to = $event; applyRange()"></app-date-picker>
+      @if (from || to) {
+        <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء</button>
+      }
+    </div>
+  </div>
+
+  @if (errorMsg) { <div class="mb-5"><app-alert variant="error" [message]="errorMsg"></app-alert></div> }
+
+  @if (loading) {
+    <app-report-loading-skeleton [kpiCount]="7" [rowCount]="6"></app-report-loading-skeleton>
+  } @else if (summary) {
+    <div class="space-y-6">
+
+      <!-- KPIs -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <app-report-kpi-card title="بانتظار الموافقة" [value]="summary.pending_count" icon="⏳" color="warning"></app-report-kpi-card>
+        <app-report-kpi-card title="تمت الموافقة" [value]="summary.approved_count" icon="✅" color="info"></app-report-kpi-card>
+        <app-report-kpi-card title="مرفوضة" [value]="summary.rejected_count" icon="❌" color="error"></app-report-kpi-card>
+        <app-report-kpi-card title="تم التنفيذ" [value]="summary.executed_count" icon="⚙️" color="success"></app-report-kpi-card>
+        <app-report-kpi-card title="إجمالي الزيادة" [value]="summary.total_positive_qty" icon="📈" color="success"></app-report-kpi-card>
+        <app-report-kpi-card title="إجمالي النقص" [value]="summary.total_negative_qty" icon="📉" color="error"></app-report-kpi-card>
+        <app-report-kpi-card title="صافي التغيير" [value]="summary.net_qty" icon="⚖️" color="neutral"></app-report-kpi-card>
+      </div>
+
+      <!-- Report tabs -->
+      <div class="flex flex-wrap gap-2">
+        @for (t of tabs; track t.key) {
+          <button type="button" (click)="setTab(t)"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            [class]="activeTab.key === t.key ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">
+            {{ t.label }}
+          </button>
+        }
+      </div>
+
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ activeTab.label }}</h2>
+        <app-report-toolbar [exportPath]="exportPath" [params]="exportParams" [fileName]="'تقرير-التسويات-' + activeTab.key" [showRefresh]="false"></app-report-toolbar>
+      </div>
+
+      @if (activeTab.key === 'monthly-trend' && trendSeries.length) {
+        <app-report-bar-chart title="الاتجاه الشهري للتسويات" [categories]="trendCategories" [series]="trendSeries" [colors]="['#10b981', '#ef4444']"></app-report-bar-chart>
+      }
+
+      <div class="db-tbl-card">
+        <div class="db-tbl-wrap">
+          <table class="db-tbl">
+            <thead>
+              <tr>
+                @for (c of activeTab.columns; track c.key) { <th>{{ c.label }}</th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of rows; track $index) {
+                <tr>
+                  @for (c of activeTab.columns; track c.key) { <td>{{ cell(r, c.key) }}</td> }
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (!rowsLoading && !rows.length) { <app-report-empty-state message="لا توجد بيانات لهذا التقرير"></app-report-empty-state> }
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

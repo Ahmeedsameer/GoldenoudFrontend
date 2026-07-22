@@ -10,6 +10,7 @@ import { ButtonComponent } from '../../../../shared/components/ui/button/button.
 import { LoadingComponent } from '../../../../loading/loading.component';
 import { ModalComponent } from '../../../../shared/components/ui/modal/modal.component';
 import { Option, SelectComponent } from '../../../../shared/components/form/select/select.component';
+import { DatePickerComponent } from '../../../../shared/components/form/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-supplies-list',
@@ -21,6 +22,7 @@ import { Option, SelectComponent } from '../../../../shared/components/form/sele
     LoadingComponent,
     ModalComponent,
     SelectComponent,
+    DatePickerComponent,
   ],
   templateUrl: './supplies-list.component.html',
   styleUrl: './supplies-list.component.css',

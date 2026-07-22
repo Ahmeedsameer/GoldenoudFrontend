@@ -2,6 +2,8 @@ import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PAYMENT_METHODS } from '../../../models/sales.model';
 import { CompanySettingsService } from '../../../services/company-settings.service';
+import { buildInvoiceDisplayLines, InvoiceDisplayLine } from '../../../models/invoice-display.util';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-invoice-receipt',
@@ -11,6 +13,7 @@ import { CompanySettingsService } from '../../../services/company-settings.servi
 })
 export class InvoiceReceiptComponent {
   companySettings = inject(CompanySettingsService);
+  private authService = inject(AuthService);
 
   /** The invoice object returned by the API after a successful submission. */
   @Input() invoice: any = null;
@@ -23,6 +26,16 @@ export class InvoiceReceiptComponent {
 
   itemSubtotal(item: any): number {
     return +(item.quantity ?? 0) * +(item.price ?? 0);
+  }
+
+  /**
+   * On-screen preview lines. The oil/bottle breakdown of a composed (perfume)
+   * line is visible only to Admin/Branch Managers — regular sellers see the
+   * same minimal summary the customer's printed receipt shows.
+   */
+  get displayLines(): InvoiceDisplayLine[] {
+    const canSeeComposition = this.authService.isAdmin() || this.authService.isManager();
+    return buildInvoiceDisplayLines(this.invoice?.items ?? [], canSeeComposition);
   }
 
   /** Arabic label for a payment-method value (falls back to the raw value). */
@@ -39,19 +52,30 @@ export class InvoiceReceiptComponent {
    * Builds the receipt as a standalone HTML document and opens it in a new
    * browser window, then triggers the system print dialogue.
    * This avoids CSS conflicts with the Angular app's layout.
+   *
+   * Always uses the minimal (non-composition) line set — this is the actual
+   * customer-facing paper document, which must never show the internal
+   * oil/bottle breakdown regardless of who (seller/manager/admin) is printing.
    */
   printReceipt(): void {
     if (!this.invoice) return;
     const inv = this.invoice;
     const company = this.companySettings.current;
+    const printLines = buildInvoiceDisplayLines(this.invoice?.items ?? [], false);
 
-    const itemRows = (inv.items ?? []).map((item: any) => `
+    const itemRows = printLines.map((line) => {
+      const detail = line.composed
+        ? [line.bottleName, line.oilGrams != null ? `وزن الزيت: ${line.oilGrams}${line.oilUnit ?? 'g'}` : null]
+            .filter(Boolean).join(' · ')
+        : '';
+      return `
       <tr>
-        <td class="name">${item.product?.name ?? ''}</td>
-        <td class="num">${(+item.quantity).toLocaleString('ar-EG', { maximumFractionDigits: 3 })} ${item.product?.scalar ?? ''}</td>
-        <td class="num">${(+item.price).toFixed(2)}</td>
-        <td class="num bold">${this.itemSubtotal(item).toFixed(2)}</td>
-      </tr>`).join('');
+        <td class="name">${line.name}${detail ? `<br><span class="sub">${detail}</span>` : ''}</td>
+        <td class="num">${line.composed ? '1' : line.quantity.toLocaleString('ar-EG', { maximumFractionDigits: 3 }) + ' ' + (line.unit ?? '')}</td>
+        <td class="num">${line.price.toFixed(2)}</td>
+        <td class="num bold">${line.lineTotal.toFixed(2)}</td>
+      </tr>`;
+    }).join('');
 
     const customerRow = inv.customer?.name || inv.customer?.phone
       ? `<tr><td class="lbl">العميل</td><td>${inv.customer.name || inv.customer.phone}</td></tr>`
@@ -101,6 +125,7 @@ export class InvoiceReceiptComponent {
     .items th { font-size: 10px; padding: 2px 0; font-weight: 600; }
     .items td { padding: 2px 1px; font-size: 11px; }
     .items .name { width: 40%; }
+    .items .sub { font-size: 9px; color: #666; font-weight: 400; }
     .items .num  { text-align: left; }
     .total-row { font-size: 14px; font-weight: 700; padding: 4px 0; }
     .status-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; }

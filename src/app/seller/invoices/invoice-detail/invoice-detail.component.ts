@@ -7,6 +7,8 @@ import { BadgeComponent } from '../../../shared/components/ui/badge/badge.compon
 import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
+import { buildInvoiceDisplayLines, InvoiceDisplayLine } from '../../../models/invoice-display.util';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-invoice-detail',
@@ -24,6 +26,7 @@ import { AlertComponent } from '../../../shared/components/ui/alert/alert.compon
 export class InvoiceDetailComponent implements OnInit {
   private salesService = inject(SalesService);
   private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
 
   invoiceId!: number;
   invoice: Invoice | null = null;
@@ -79,12 +82,19 @@ export class InvoiceDetailComponent implements OnInit {
     return quantity * price;
   }
 
+  /**
+   * Display lines — composed (perfume) items collapsed into one summarized
+   * row each. The internal oil/bottle breakdown is visible only to Admin/
+   * Branch Managers; a regular seller sees the same minimal line their
+   * customer's printed receipt shows.
+   */
+  get displayLines(): InvoiceDisplayLine[] {
+    const canSeeComposition = this.authService.isAdmin() || this.authService.isManager();
+    return buildInvoiceDisplayLines((this.invoice as any)?.items ?? [], canSeeComposition);
+  }
+
   grandTotal(): number {
-    if (!this.invoice?.items) return 0;
-    return this.invoice.items.reduce(
-      (sum, item) => sum + this.lineTotal(item.quantity, item.price),
-      0
-    );
+    return this.displayLines.reduce((sum, line) => sum + line.lineTotal, 0);
   }
 
   statusBadgeColor(status: string): 'warning' | 'success' | 'error' {

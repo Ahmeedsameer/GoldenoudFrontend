@@ -1,0 +1,165 @@
+<app-loading [loading]="loading && !data"></app-loading>
+
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">لوحة عمليات الفرع</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ shopName }}</p>
+    </div>
+    @if (!isManager) {
+      <select (change)="setShop(+$any($event.target).value)"
+        class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        @for (s of shops; track s.id) { <option [value]="s.id" [selected]="selectedShopId === s.id">{{ s.name }}</option> }
+      </select>
+    }
+  </div>
+
+  @if (loading) {
+    <app-report-loading-skeleton [kpiCount]="8" [rowCount]="5"></app-report-loading-skeleton>
+  } @else if (data) {
+    <div class="space-y-6">
+
+      <!-- Quick Actions -->
+      <div class="flex flex-wrap gap-2">
+        <a [routerLink]="['/dashboard/branch-operations/transfers/create']" class="lux-btn bg-brand-500 hover:bg-brand-600 text-white">➕ إنشاء نقل</a>
+        <a [routerLink]="['/dashboard/branch-operations/transfers']" [queryParams]="{status: 'shipped'}" class="lux-btn" style="border:1px solid #D1D5DB;">📦 استلام شحنة</a>
+        <a [routerLink]="['/dashboard/branch-operations/waste']" class="lux-btn" style="border:1px solid #D1D5DB;">🗑️ تسجيل هالك</a>
+        @if (!isManager) {
+          <a [routerLink]="['/dashboard/branch-operations/counts']" class="lux-btn" style="border:1px solid #D1D5DB;">📋 جلسة جرد جديدة</a>
+          <a [routerLink]="['/dashboard/branch-operations/adjustments']" class="lux-btn" style="border:1px solid #D1D5DB;">⚖️ طلب تسوية</a>
+        }
+      </div>
+
+      <!-- Transfer Requests -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">طلبات النقل</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <app-report-kpi-card title="بانتظار الموافقة" [value]="data.pending_transfers" icon="⏳" color="warning"></app-report-kpi-card>
+          <app-report-kpi-card title="نقل وارد" [value]="data.incoming_transfers" icon="📥" color="info"></app-report-kpi-card>
+          <app-report-kpi-card title="نقل صادر" [value]="data.outgoing_transfers" icon="📤" color="neutral"></app-report-kpi-card>
+          <app-report-kpi-card title="بانتظار الشحن" [value]="data.waiting_shipment" icon="🚚" color="warning"></app-report-kpi-card>
+          <app-report-kpi-card title="بانتظار الاستلام" [value]="data.pending_receipts" icon="📦" color="brand"></app-report-kpi-card>
+          <app-report-kpi-card title="مغلق" [value]="data.closed_count" icon="✅" color="success"></app-report-kpi-card>
+          <app-report-kpi-card title="مرفوض" [value]="data.rejected_count" icon="❌" color="error"></app-report-kpi-card>
+          <app-report-kpi-card title="فواتير نقل داخلية" [value]="data.internal_invoices_count" icon="🧾" color="neutral"></app-report-kpi-card>
+        </div>
+      </div>
+
+      <!-- Inventory Operations -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">عمليات المخزون</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <app-report-kpi-card title="هالك اليوم" [value]="data.today_waste_count" [subtitle]="(data.today_waste_value | number:'1.0-0') + ' ج.م'" icon="🗑️" color="error"></app-report-kpi-card>
+          @if (!isManager) {
+            <app-report-kpi-card title="تسويات بانتظار الموافقة" [value]="data.pending_adjustments" icon="⚖️" color="warning"></app-report-kpi-card>
+            <app-report-kpi-card title="جرد قيد التنفيذ" [value]="data.pending_inventory_counts" icon="📋" color="neutral"></app-report-kpi-card>
+          }
+          <app-report-kpi-card title="قيمة المخزون" [value]="stockOverview ? (stockOverview.total_stock_value | number:'1.0-0') : '—'" suffix="ج.م" icon="💰" color="brand"></app-report-kpi-card>
+        </div>
+      </div>
+
+      <!-- Today's KPIs -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">مؤشرات اليوم</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <app-report-kpi-card title="تحويلات اليوم" [value]="data.today_transfers_count" icon="🔄" color="brand"></app-report-kpi-card>
+          <app-report-kpi-card title="أصناف مُرسلة" [value]="data.items_sent_today" icon="📤" color="neutral"></app-report-kpi-card>
+          <app-report-kpi-card title="أصناف مُستلمة" [value]="data.items_received_today" icon="📥" color="neutral"></app-report-kpi-card>
+          <app-report-kpi-card title="تالف" [value]="data.damaged_items_today" icon="💔" color="error"></app-report-kpi-card>
+          <app-report-kpi-card title="مفقود" [value]="data.missing_items_today" icon="❓" color="warning"></app-report-kpi-card>
+          <app-report-kpi-card title="دقة الجرد" [value]="data.inventory_accuracy_percent != null ? data.inventory_accuracy_percent : '—'" [suffix]="data.inventory_accuracy_percent != null ? '%' : ''" icon="🎯" color="success"></app-report-kpi-card>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <app-report-kpi-card title="أصناف منخفضة المخزون" [value]="stockOverview?.low_stock_count ?? 0" icon="⚠️" color="warning"></app-report-kpi-card>
+        <app-report-kpi-card title="أصناف نافدة" [value]="stockOverview?.out_of_stock_count ?? 0" icon="🚫" color="error"></app-report-kpi-card>
+        <app-report-kpi-card title="عدد الأصناف بالمخزون" [value]="stockOverview?.products_with_stock ?? 0" icon="📦" color="neutral"></app-report-kpi-card>
+      </div>
+
+      <!-- Warehouse (Phase 5.5) — this branch's requests to/from the Main Warehouse -->
+      @if (data.warehouse) {
+        <div>
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">المستودع الرئيسي</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <app-report-kpi-card title="إجمالي الطلبات" [value]="data.warehouse.requests" icon="📨" color="brand"></app-report-kpi-card>
+            <app-report-kpi-card title="طلبات قيد التنفيذ" [value]="data.warehouse.pending_requests" icon="⏳" color="warning"></app-report-kpi-card>
+            <app-report-kpi-card title="عمليات تسليم" [value]="data.warehouse.deliveries" icon="📦" color="success"></app-report-kpi-card>
+          </div>
+          <div class="db-tbl-card">
+            <div class="db-tbl-wrap">
+              <table class="db-tbl">
+                <thead><tr><th>رقم الطلب</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+                <tbody>
+                  @for (t of data.warehouse.history; track t.id) {
+                    <tr [routerLink]="['/dashboard/branch-operations/transfers', t.id]" style="cursor:pointer">
+                      <td class="font-mono font-medium" style="color:#9A7B1A">{{ t.request_number }}</td>
+                      <td style="color:#6B7280">{{ statusLabel(t.status) }}</td>
+                      <td style="color:#6B7280">{{ t.requested_date | date:'d MMM yyyy' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              @if (!data.warehouse.history.length) { <app-report-empty-state message="لا يوجد سجل تعاملات مع المستودع بعد"></app-report-empty-state> }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Charts -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <app-report-bar-chart title="التحويلات هذا الأسبوع" [categories]="transfersWeekCategories" [series]="transfersWeekSeries" [colors]="['#465fff']" [height]="220"></app-report-bar-chart>
+        <app-report-line-chart title="اتجاه الهالك" [categories]="wasteTrendCategories" [series]="wasteTrendSeries" [colors]="['#ef4444']" [height]="220"></app-report-line-chart>
+        <app-report-line-chart title="اتجاه دقة الجرد" [categories]="accuracyTrendCategories" [series]="accuracyTrendSeries" [colors]="['#10b981']" [height]="220"></app-report-line-chart>
+      </div>
+
+      <!-- Low stock -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">منتجات منخفضة المخزون</h2>
+        <div class="db-tbl-card">
+          <div class="db-tbl-wrap">
+            <table class="db-tbl">
+              <thead><tr><th>المنتج</th><th>الفئة</th><th>الكمية المتبقية</th></tr></thead>
+              <tbody>
+                @for (r of lowStock; track r.product_id) {
+                  <tr [routerLink]="['/dashboard/products/view', r.product_id]" style="cursor:pointer">
+                    <td class="font-medium" style="color:#9A7B1A">{{ r.product_name }} <span class="text-xs font-mono" style="color:#9CA3AF">({{ r.sku }})</span></td>
+                    <td style="color:#6B7280">{{ r.category_name }}</td>
+                    <td class="font-mono" style="color:#DC2626">{{ r.total_qty }} {{ r.scalar }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            @if (!lowStock.length) { <app-report-empty-state message="لا توجد أصناف منخفضة المخزون" icon="✅"></app-report-empty-state> }
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent requests -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">أحدث طلبات النقل</h2>
+        <div class="db-tbl-card">
+          <div class="db-tbl-wrap">
+            <table class="db-tbl">
+              <thead><tr><th>رقم الطلب</th><th>من</th><th>إلى</th><th>الحالة</th></tr></thead>
+              <tbody>
+                @for (t of data.recent_requests; track t.id) {
+                  <tr [routerLink]="['/dashboard/branch-operations/transfers', t.id]" style="cursor:pointer">
+                    <td class="font-mono font-medium" style="color:#9A7B1A">{{ t.request_number }}</td>
+                    <td style="color:#6B7280">{{ t.source_shop?.name }}</td>
+                    <td style="color:#6B7280">{{ t.destination_shop?.name }}</td>
+                    <td style="color:#6B7280">{{ statusLabel(t.status) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            @if (!data.recent_requests.length) { <app-report-empty-state message="لا توجد طلبات نقل بعد"></app-report-empty-state> }
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

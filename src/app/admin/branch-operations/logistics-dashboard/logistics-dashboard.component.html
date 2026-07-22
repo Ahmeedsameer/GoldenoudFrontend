@@ -1,0 +1,198 @@
+<app-loading [loading]="loading && !data"></app-loading>
+
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">لوحة العمليات الإدارية للفروع</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+      @if (data) { الفترة: {{ data.period.from }} — {{ data.period.to }} }
+    </p>
+  </div>
+
+  @if (loading) {
+    <app-report-loading-skeleton [kpiCount]="8" [rowCount]="5"></app-report-loading-skeleton>
+  } @else if (data) {
+    <div class="space-y-6">
+
+      <!-- Global KPIs -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">مؤشرات عامة</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <app-report-kpi-card title="تحويلات اليوم" [value]="data.transfers_today_count" icon="📅" color="brand"></app-report-kpi-card>
+          <app-report-kpi-card title="تحويلات مفتوحة" [value]="data.open_transfers_count" icon="🔄" color="info"></app-report-kpi-card>
+          <app-report-kpi-card title="بانتظار الموافقة" [value]="data.waiting_approval_count" icon="⏳" color="warning"></app-report-kpi-card>
+          <app-report-kpi-card title="بانتظار الشحن" [value]="data.pending_shipment_count" icon="🚚" color="warning"></app-report-kpi-card>
+          <app-report-kpi-card title="بانتظار الاستلام" [value]="data.pending_receiving_count" icon="📦" color="brand"></app-report-kpi-card>
+          <app-report-kpi-card title="مغلق" [value]="data.by_status['closed'] ?? 0" icon="✅" color="success"></app-report-kpi-card>
+          <app-report-kpi-card title="مرفوض" [value]="data.by_status['rejected'] ?? 0" icon="❌" color="error"></app-report-kpi-card>
+          <app-report-kpi-card title="طلبات متأخرة" [value]="data.delayed.total" icon="🚨" color="error"></app-report-kpi-card>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <app-report-kpi-card title="إجمالي طلبات النقل (الفترة)" [value]="data.total_transfers" icon="🔄" color="brand"></app-report-kpi-card>
+        <app-report-kpi-card title="جرد قيد التنفيذ" [value]="data.pending_inventory_counts" icon="📋" color="neutral"></app-report-kpi-card>
+        <app-report-kpi-card title="الأكثر نقلاً" [value]="data.most_transferred_product?.name ?? '—'" [subtitle]="data.most_transferred_product ? (data.most_transferred_product.total_qty + ' وحدة') : ''" icon="👑" color="brand" [mono]="false"></app-report-kpi-card>
+        <app-report-kpi-card title="قيمة الهالك" [value]="data.waste_summary.total_value | number:'1.0-0'" suffix="ج.م" icon="🗑️" color="error"></app-report-kpi-card>
+      </div>
+
+      <!-- Heat Map — highlights derived from the branch performance table below -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الفروع الأكثر تأثيراً</h2>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <app-report-kpi-card title="الأكثر طلباً" [value]="mostRequestedBranch?.shop_name ?? '—'" [subtitle]="mostRequestedBranch ? (mostRequestedBranch.value + ' طلب') : ''" icon="📨" color="info" [mono]="false"></app-report-kpi-card>
+          <app-report-kpi-card title="الأكثر إرسالاً" [value]="mostSendingBranchRow?.shop_name ?? '—'" [subtitle]="mostSendingBranchRow ? (mostSendingBranchRow.value + ' عملية') : ''" icon="📤" color="info" [mono]="false"></app-report-kpi-card>
+          <app-report-kpi-card title="الأعلى هالكاً" [value]="highestWasteBranch?.shop_name ?? '—'" [subtitle]="highestWasteBranch ? (highestWasteBranch.value + ' ج.م') : ''" icon="🗑️" color="error" [mono]="false"></app-report-kpi-card>
+          <app-report-kpi-card title="الأقل دقة جرد" [value]="lowestAccuracyBranch?.shop_name ?? '—'" [subtitle]="lowestAccuracyBranch ? (lowestAccuracyBranch.value + '%') : ''" icon="🎯" color="warning" [mono]="false"></app-report-kpi-card>
+          <app-report-kpi-card title="الأعلى تأخيراً" [value]="highestDelayBranch?.shop_name ?? '—'" [subtitle]="highestDelayBranch ? (highestDelayBranch.value + ' طلب') : ''" icon="🚨" color="error" [mono]="false"></app-report-kpi-card>
+        </div>
+      </div>
+
+      <!-- Branch Performance -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">أداء الفروع</h2>
+        <div class="db-tbl-card">
+          <div class="db-tbl-wrap">
+            <table class="db-tbl">
+              <thead><tr><th>الفرع</th><th>وارد</th><th>صادر</th><th>تكلفة الهالك</th><th>دقة الجرد</th><th>متأخر</th><th>طلبات بانتظار</th></tr></thead>
+              <tbody>
+                @for (b of data.branch_performance; track b.shop_id) {
+                  <tr>
+                    <td class="font-medium" style="color:#9A7B1A">{{ b.shop_name }}</td>
+                    <td class="font-mono" style="color:#6B7280">{{ b.incoming }}</td>
+                    <td class="font-mono" style="color:#6B7280">{{ b.outgoing }}</td>
+                    <td class="font-mono" style="color:#DC2626">{{ b.waste_cost | number:'1.0-2' }} ج.م</td>
+                    <td class="font-mono" style="color:#6B7280">{{ b.inventory_accuracy != null ? (b.inventory_accuracy + '%') : '—' }}</td>
+                    <td class="font-mono" [style.color]="b.delayed_transfers > 0 ? '#DC2626' : '#6B7280'">{{ b.delayed_transfers }}</td>
+                    <td class="font-mono" style="color:#6B7280">{{ b.pending_requests }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Warehouse (Phase 5.5) — admin acts as the Main Warehouse's manager -->
+      @if (data.warehouse) {
+        <div>
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">المستودع الرئيسي</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <app-report-kpi-card title="طلبات بانتظار الموافقة" [value]="data.warehouse.pending_requests" icon="⏳" color="warning"></app-report-kpi-card>
+            <app-report-kpi-card title="طلبات مفتوحة" [value]="data.warehouse.open_requests" icon="🔄" color="info"></app-report-kpi-card>
+            <app-report-kpi-card title="شحنات اليوم" [value]="data.warehouse.shipments_today" icon="🚚" color="brand"></app-report-kpi-card>
+            <app-report-kpi-card title="طلبات متأخرة" [value]="data.warehouse.delays" icon="🚨" color="error"></app-report-kpi-card>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="db-tbl-card">
+              <div class="db-tbl-wrap">
+                <table class="db-tbl">
+                  <thead><tr><th>الأكثر طلباً من المستودع</th><th>الكمية</th><th>عدد الطلبات</th></tr></thead>
+                  <tbody>
+                    @for (p of data.warehouse.top_requested_products; track p.id) {
+                      <tr><td class="font-medium" style="color:#9A7B1A">{{ p.name }}</td><td class="font-mono">{{ p.total_qty }}</td><td class="font-mono">{{ p.request_count }}</td></tr>
+                    }
+                  </tbody>
+                </table>
+                @if (!data.warehouse.top_requested_products.length) { <app-report-empty-state message="لا توجد طلبات من المستودع في هذه الفترة"></app-report-empty-state> }
+              </div>
+            </div>
+            <div class="db-tbl-card">
+              <div class="db-tbl-wrap">
+                <table class="db-tbl">
+                  <thead><tr><th>الفروع الأكثر طلباً من المستودع</th><th>عدد الطلبات</th></tr></thead>
+                  <tbody>
+                    @for (b of data.warehouse.top_requesting_branches; track b.id) {
+                      <tr><td class="font-medium" style="color:#9A7B1A">{{ b.name }}</td><td class="font-mono">{{ b.request_count }}</td></tr>
+                    }
+                  </tbody>
+                </table>
+                @if (!data.warehouse.top_requesting_branches.length) { <app-report-empty-state message="لا توجد طلبات من المستودع في هذه الفترة"></app-report-empty-state> }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Charts -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <app-report-bar-chart title="قيمة المخزون حسب الفرع" [categories]="branchValueCategories" [series]="branchValueSeries" [colors]="['#465fff']"></app-report-bar-chart>
+        <app-report-bar-chart title="التحويلات حسب الفرع (وارد/صادر)" [categories]="transfersPerBranchCategories" [series]="transfersPerBranchSeries" [colors]="['#10b981', '#465fff']"></app-report-bar-chart>
+        <app-report-line-chart title="التحويلات يومياً" [categories]="transfersPerDayCategories" [series]="transfersPerDaySeries" [colors]="['#465fff']"></app-report-line-chart>
+        <app-report-line-chart title="اتجاه الهالك" [categories]="wasteTrendCategories" [series]="wasteTrendSeries" [colors]="['#ef4444']"></app-report-line-chart>
+        <app-report-line-chart title="اتجاه طلبات التسوية" [categories]="adjustmentTrendCategories" [series]="adjustmentTrendSeries" [colors]="['#f59e0b']"></app-report-line-chart>
+        <app-report-line-chart title="دقة الجرد" [categories]="accuracyTrendCategories" [series]="accuracyTrendSeries" [colors]="['#10b981']"></app-report-line-chart>
+      </div>
+
+      <!-- Status breakdown -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">توزيع طلبات النقل حسب الحالة</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          @for (s of statusEntries; track s.status) {
+            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+              <p class="text-xs text-gray-400 mb-1">{{ statusLabel(s.status) }}</p>
+              <p class="text-xl font-bold font-mono text-gray-900 dark:text-white">{{ s.count }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Delayed transfers -->
+      @if (data.delayed.total > 0) {
+        <div>
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الطلبات المتأخرة</h2>
+          <div class="db-tbl-card">
+            <div class="db-tbl-wrap">
+              <table class="db-tbl">
+                <thead><tr><th>رقم الطلب</th><th>من</th><th>إلى</th><th>الحالة</th></tr></thead>
+                <tbody>
+                  @for (t of data.delayed.submitted; track t.id) {
+                    <tr [routerLink]="['/dashboard/branch-operations/transfers', t.id]" style="cursor:pointer">
+                      <td class="font-mono font-medium" style="color:#9A7B1A">{{ t.request_number }}</td>
+                      <td style="color:#6B7280">{{ t.source_shop?.name }}</td>
+                      <td style="color:#6B7280">{{ t.destination_shop?.name }}</td>
+                      <td style="color:#DC2626">{{ statusLabel(t.status) }} — متأخر</td>
+                    </tr>
+                  }
+                  @for (t of data.delayed.shipped; track t.id) {
+                    <tr [routerLink]="['/dashboard/branch-operations/transfers', t.id]" style="cursor:pointer">
+                      <td class="font-mono font-medium" style="color:#9A7B1A">{{ t.request_number }}</td>
+                      <td style="color:#6B7280">{{ t.source_shop?.name }}</td>
+                      <td style="color:#6B7280">{{ t.destination_shop?.name }}</td>
+                      <td style="color:#DC2626">{{ statusLabel(t.status) }} — متأخر</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Waste summary -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">ملخص الهالك حسب السبب</h2>
+        <div class="db-tbl-card">
+          <div class="db-tbl-wrap">
+            <table class="db-tbl">
+              <thead><tr><th>السبب</th><th>عدد السجلات</th><th>الكمية</th><th>القيمة التقديرية</th></tr></thead>
+              <tbody>
+                @for (w of data.waste_summary.by_reason; track w.reason) {
+                  <tr>
+                    <td class="font-medium" style="color:#9A7B1A">{{ reasonLabel(w.reason) }}</td>
+                    <td style="color:#6B7280">{{ w.cnt }}</td>
+                    <td class="font-mono" style="color:#6B7280">{{ w.qty }}</td>
+                    <td class="font-mono" style="color:#DC2626">{{ w.value | number:'1.0-2' }} ج.م</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            @if (!data.waste_summary.by_reason.length) { <app-report-empty-state message="لا توجد سجلات هالك في هذه الفترة" icon="✅"></app-report-empty-state> }
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

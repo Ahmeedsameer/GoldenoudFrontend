@@ -107,36 +107,38 @@
       <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">الأصناف</h3>
     </div>
 
-    @if (invoice.items && invoice.items.length > 0) {
+    @if (displayLines.length > 0) {
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-gray-50 dark:bg-white/[0.03]">
             <tr>
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">المنتج</th>
-              <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">SKU</th>
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الكمية</th>
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">سعر الوحدة</th>
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الإجمالي</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            @for (item of invoice.items; track item.id) {
+            @for (line of displayLines; track $index) {
               <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                 <td class="px-5 py-3.5 font-medium text-gray-800 dark:text-white/90">
-                  {{ item.product?.name || '—' }}
-                </td>
-                <td class="px-5 py-3.5 font-mono text-xs text-gray-500 dark:text-gray-400">
-                  {{ item.product?.sku || '—' }}
+                  {{ line.name }}
+                  @if (line.composed) {
+                    <div class="text-xs font-normal text-gray-400 mt-0.5">
+                      @if (line.bottleName) { {{ line.bottleName }} }
+                      @if (line.oilGrams != null) { · وزن الزيت: {{ line.oilGrams }}{{ line.oilUnit }} }
+                    </div>
+                  }
                 </td>
                 <td class="px-5 py-3.5 font-mono text-gray-600 dark:text-gray-300">
-                  {{ item.quantity }}
-                  <span class="text-xs text-gray-400">{{ item.product?.scalar }}</span>
+                  {{ line.quantity }}
+                  <span class="text-xs text-gray-400">{{ line.unit }}</span>
                 </td>
                 <td class="px-5 py-3.5 font-mono text-gray-600 dark:text-gray-300">
-                  {{ item.price | number:'1.2-2' }}
+                  {{ line.price | number:'1.2-2' }}
                 </td>
                 <td class="px-5 py-3.5 font-mono font-semibold text-gray-800 dark:text-white/90">
-                  {{ lineTotal(item.quantity, item.price) | number:'1.2-2' }}
+                  {{ line.lineTotal | number:'1.2-2' }}
                 </td>
               </tr>
             }

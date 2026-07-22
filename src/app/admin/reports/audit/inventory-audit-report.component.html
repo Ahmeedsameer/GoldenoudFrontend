@@ -1,0 +1,73 @@
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">تقرير التدقيق على المخزون</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">كل عملية أثّرت على المخزون: من قام بها، وما الفرق بين الكمية القديمة والجديدة</p>
+    </div>
+    <app-report-toolbar exportPath="/branch-operations/reports/inventory-audit/export" [params]="exportParams" fileName="تقرير-التدقيق" [showRefresh]="true" (refresh)="load()"></app-report-toolbar>
+  </div>
+
+  <!-- Filters -->
+  <div class="mb-5 flex flex-wrap items-center gap-2">
+    <select [(ngModel)]="productId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل المنتجات</option>
+      @for (p of products; track p.id) { <option [ngValue]="p.id">{{ p.name }} ({{ p.sku }})</option> }
+    </select>
+    <select [(ngModel)]="supplierId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل الموردين</option>
+      @for (s of suppliers; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+    </select>
+    <select [(ngModel)]="shopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل الفروع</option>
+      @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+    </select>
+    <app-date-picker id="audit-from" [value]="from" (valueChange)="from = $event; applyFilters()"></app-date-picker>
+    <app-date-picker id="audit-to" [value]="to" (valueChange)="to = $event; applyFilters()"></app-date-picker>
+    @if (from || to) {
+      <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء التاريخ</button>
+    }
+  </div>
+
+  @if (errorMsg) { <div class="mb-5"><app-alert variant="error" [message]="errorMsg"></app-alert></div> }
+
+  @if (loading) {
+    <app-report-loading-skeleton [kpiCount]="5" [rowCount]="10"></app-report-loading-skeleton>
+  } @else if (report) {
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <app-report-kpi-card title="إجمالي العمليات" [value]="report.kpis.total_operations" icon="📋" color="brand"></app-report-kpi-card>
+      <app-report-kpi-card title="التسويات" [value]="report.kpis.adjustments" icon="⚖️" color="warning"></app-report-kpi-card>
+      <app-report-kpi-card title="أحداث الهالك" [value]="report.kpis.waste_events" icon="🗑️" color="error"></app-report-kpi-card>
+      <app-report-kpi-card title="أحداث النقل" [value]="report.kpis.transfer_events" icon="🔁" color="info"></app-report-kpi-card>
+      <app-report-kpi-card title="جلسات الجرد" [value]="report.kpis.count_sessions" icon="📦" color="neutral"></app-report-kpi-card>
+    </div>
+
+    <div class="db-tbl-card">
+      <div class="db-tbl-wrap">
+        <table class="db-tbl">
+          <thead>
+            <tr><th>التاريخ</th><th>المستخدم</th><th>الفرع</th><th>المنتج</th><th>العملية</th><th>الكمية القديمة</th><th>الكمية الجديدة</th><th>الفرق</th><th>السبب</th><th>المرجع</th></tr>
+          </thead>
+          <tbody>
+            @for (r of report.rows; track $index) {
+              <tr>
+                <td style="color:#9CA3AF">{{ r.date }}</td>
+                <td style="color:#6B7280">{{ r.user || '—' }}</td>
+                <td style="color:#6B7280">{{ r.shop_name }}</td>
+                <td style="color:#1f2937">{{ r.product_name }} <span class="text-xs text-gray-400">({{ r.sku }})</span></td>
+                <td style="color:#6B7280">{{ r.operation }}</td>
+                <td class="font-mono">{{ r.old_quantity }}</td>
+                <td class="font-mono">{{ r.new_quantity }}</td>
+                <td class="font-mono font-semibold" [style.color]="r.difference >= 0 ? '#059669' : '#DC2626'">{{ r.difference > 0 ? '+' : '' }}{{ r.difference }}</td>
+                <td style="color:#6B7280">{{ r.reason || '—' }}</td>
+                <td class="font-mono" style="color:#9A7B1A">{{ r.reference_number }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!report.rows.length) { <app-report-empty-state message="لا توجد عمليات مسجّلة في هذه الفترة"></app-report-empty-state> }
+      </div>
+    </div>
+  }
+
+</div>

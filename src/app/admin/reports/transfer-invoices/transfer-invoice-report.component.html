@@ -1,0 +1,104 @@
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">تقرير فواتير النقل الداخلية</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">كل فواتير النقل الداخلية مع فلاتر كاملة — لا تظهر أبداً في تقارير المبيعات أو الإيرادات</p>
+    </div>
+    <app-report-toolbar exportPath="/branch-operations/reports/transfer-invoices/export" [params]="exportParams" fileName="تقرير-فواتير-النقل-الداخلية" [showRefresh]="true" (refresh)="load()"></app-report-toolbar>
+  </div>
+
+  <!-- Filters -->
+  <div class="mb-5 flex flex-wrap items-center gap-2">
+    <input type="text" [(ngModel)]="search" (change)="applyFilters()" placeholder="بحث برقم الفاتورة أو الطلب"
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 min-w-[200px]"/>
+
+    <select [(ngModel)]="sourceShopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل مصادر النقل</option>
+      @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+    </select>
+
+    <select [(ngModel)]="destinationShopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل وجهات النقل</option>
+      @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+    </select>
+
+    <select [(ngModel)]="transferType" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option value="">كل الأنواع</option>
+      <option value="branch_branch">فرع إلى فرع</option>
+      <option value="warehouse_branch">المستودع إلى فرع</option>
+      <option value="emergency">نقل طارئ</option>
+    </select>
+
+    <select [(ngModel)]="status" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option value="">كل الحالات</option>
+      @for (s of statusOptions; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
+    </select>
+
+    <select [(ngModel)]="creatorId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل من أنشأ</option>
+      @for (u of users; track u.id) { <option [ngValue]="u.id">{{ u.name }}</option> }
+    </select>
+
+    <select [(ngModel)]="approverId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل من اعتمد</option>
+      @for (u of users; track u.id) { <option [ngValue]="u.id">{{ u.name }}</option> }
+    </select>
+
+    <select [(ngModel)]="receiverId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <option [ngValue]="null">كل من استلم</option>
+      @for (u of users; track u.id) { <option [ngValue]="u.id">{{ u.name }}</option> }
+    </select>
+
+    <app-date-picker id="inv-rep-from" [value]="from" (valueChange)="from = $event; applyFilters()"></app-date-picker>
+    <app-date-picker id="inv-rep-to" [value]="to" (valueChange)="to = $event; applyFilters()"></app-date-picker>
+    @if (from || to) {
+      <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء التاريخ</button>
+    }
+  </div>
+
+  @if (errorMsg) { <div class="mb-5"><app-alert variant="error" [message]="errorMsg"></app-alert></div> }
+
+  @if (!loading) {
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+      <app-report-kpi-card title="عدد الفواتير" [value]="rows.length" icon="🧾" color="brand"></app-report-kpi-card>
+      <app-report-kpi-card title="إجمالي القيمة المرجعية" [value]="totalValue | number:'1.0-2'" suffix="ج.م" icon="💰" color="success"></app-report-kpi-card>
+    </div>
+  }
+
+  @if (loading) {
+    <app-report-loading-skeleton [kpiCount]="0" [rowCount]="8"></app-report-loading-skeleton>
+  } @else {
+    <div class="db-tbl-card">
+      <div class="db-tbl-wrap">
+        <table class="db-tbl">
+          <thead>
+            <tr>
+              <th>رقم الفاتورة</th><th>رقم الطلب</th><th>التاريخ والوقت</th><th>المصدر</th><th>الوجهة</th>
+              <th>نوع النقل</th><th>الحالة</th><th>أنشأ بواسطة</th><th>اعتمد بواسطة</th><th>استلم بواسطة</th><th>القيمة المرجعية</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of rows; track r.invoice_number) {
+              <tr>
+                <td class="font-mono" style="color:#9A7B1A">{{ r.invoice_number }}</td>
+                <td class="font-mono" style="color:#6B7280">{{ r.request_number }}</td>
+                <td style="color:#9CA3AF">{{ r.generated_at }}</td>
+                <td style="color:#6B7280">{{ r.source_name }}</td>
+                <td style="color:#6B7280">{{ r.destination_name }}</td>
+                <td style="color:#6B7280">{{ r.transfer_type_label }}</td>
+                <td style="color:#6B7280">{{ statusLabel(r.status) }}</td>
+                <td style="color:#6B7280">{{ r.creator_name }}</td>
+                <td style="color:#6B7280">{{ r.approver_name }}</td>
+                <td style="color:#6B7280">{{ r.receiver_name }}</td>
+                <td class="font-mono font-semibold" style="color:#1f2937">{{ r.reference_value | number:'1.0-2' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!rows.length) { <app-report-empty-state message="لا توجد فواتير نقل داخلية مطابقة"></app-report-empty-state> }
+      </div>
+    </div>
+  }
+
+</div>

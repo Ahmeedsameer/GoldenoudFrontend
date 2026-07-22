@@ -102,10 +102,8 @@
         }
       </select>
 
-      <input type="date" (change)="setDateFrom($any($event.target).value)"
-        class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
-      <input type="date" (change)="setDateTo($any($event.target).value)"
-        class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+      <app-date-picker id="admin-safe-date-from" [value]="list.filters['date_from']" (valueChange)="setDateFrom($event)"></app-date-picker>
+      <app-date-picker id="admin-safe-date-to" [value]="list.filters['date_to']" (valueChange)="setDateTo($event)"></app-date-picker>
     </div>
   </div>
 

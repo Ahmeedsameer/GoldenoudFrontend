@@ -45,6 +45,13 @@ export class StockService {
     return this.http.delete<any>(`${this.suppliersUrl}/destroy/${id}`);
   }
 
+  // ── Supplier intelligence (per product type, for the Supply screen) ────
+  getSupplierIntelligence(productType: 'RAW_MATERIAL' | 'PACKAGING' | 'READY_PRODUCT') {
+    return this.http
+      .get<any>(`${API_BASE}/stock/supplier-intelligence`, { params: { product_type: productType } })
+      .pipe(map((res) => res.data));
+  }
+
   // ── Supplies ──────────────────────────────────────────
   getSupplies(params: any) {
     return this.http.get<any>(this.suppliesUrl, { params }).pipe(retry(2));

@@ -29,6 +29,20 @@
     </div>
   </div>
 
+  <!-- Type filter tabs — same 4-category classification used across the ERP -->
+  <div class="flex flex-wrap items-center gap-2 px-5 py-3 border-b border-gray-100 dark:border-white/[0.06]">
+    @for (t of filterTypes; track t.value) {
+      <button type="button" (click)="setTypeFilter(t.value)"
+        class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+        [class]="activeTypeFilter === t.value
+          ? 'bg-brand-500 text-white'
+          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/[0.05] dark:text-gray-300 dark:hover:bg-white/[0.08]'">
+        <span>{{ t.icon }}</span>
+        <span>{{ t.label }}</span>
+      </button>
+    }
+  </div>
+
   <!-- Table -->
   <div class="overflow-x-auto">
     <div class="max-w-full">
@@ -46,7 +60,8 @@
         </thead>
         <tbody>
           @for (product of list.result.data; track product.id) {
-            <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
+              [routerLink]="['view', product.id]">
 
               <!-- Image -->
               <td class="py-3 px-2">
@@ -99,7 +114,7 @@
               </td>
 
               <!-- Actions -->
-              <td class="px-4 py-3">
+              <td class="px-4 py-3" (click)="$event.stopPropagation()">
                 <div class="relative inline-block">
                   <app-table-dropdown>
                     <div dropdown-button>
@@ -116,10 +131,16 @@
                         class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300">
                         تعديل
                       </button>
-                      <button (click)="openRecipe(product)"
-                        class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-brand-600 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
-                        التركيبة (مكوّنات)
-                      </button>
+                      @if (product.product_type !== 'COMPOUND') {
+                        <!-- Compound Products (perfumes) never get a predefined
+                             recipe/components — oil + bottle are chosen fresh by
+                             the seller on every sale via the Sales Catalog's
+                             Product Builder, never stored on the product itself. -->
+                        <button (click)="openRecipe(product)"
+                          class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-brand-600 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
+                          التركيبة (مكوّنات)
+                        </button>
+                      }
                       <button (click)="openDelete(product)"
                         class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-error-500 hover:bg-error-50 hover:text-error-700 dark:hover:bg-error-500/10">
                         حذف
@@ -142,6 +163,38 @@
 
 
 <!-- ════════════════════════════════════════════════════════
+     PRODUCT TYPE SELECTOR (Step 1 — "what do you want to create?")
+     ════════════════════════════════════════════════════════ -->
+<app-modal [isOpen]="showTypeSelector" (close)="showTypeSelector = false" className="max-w-2xl m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">ما نوع المنتج الذي تريد إنشاءه؟</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">اختر النوع لتحديد الحقول المناسبة له</p>
+      </div>
+      <button type="button" (click)="showTypeSelector = false"
+        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      @for (t of creationTypes; track t.value) {
+        <button type="button" (click)="chooseCreationType(t.value)"
+          class="text-right rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-5 hover:border-brand-400 hover:bg-brand-50/40 dark:hover:bg-brand-500/5 transition-colors">
+          <span class="text-3xl block mb-2">{{ t.icon }}</span>
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-1">{{ t.title }}</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{{ t.desc }}</p>
+        </button>
+      }
+    </div>
+  </div>
+</app-modal>
+
+
+<!-- ════════════════════════════════════════════════════════
      FORM MODAL (Create / Edit)
      ════════════════════════════════════════════════════════ -->
 <app-modal [isOpen]="showFormModal" (close)="showFormModal = false" className="max-w-2xl m-4 w-full">
@@ -153,8 +206,12 @@
         <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
           {{ isEditing ? 'تعديل المنتج' : 'إضافة منتج جديد' }}
         </h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          {{ isEditing ? 'قم بتعديل بيانات المنتج' : 'أدخل بيانات المنتج الجديد' }}
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1.5">
+          @if (selectedCreationType) {
+            <span class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+              {{ creationTypeLabel(selectedCreationType) }}
+            </span>
+          }
         </p>
       </div>
       <button type="button" (click)="showFormModal = false"
@@ -191,27 +248,7 @@
           }
         </div>
 
-        <!-- Scalar -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            وحدة البيع <span class="text-error-500">*</span>
-          </label>
-          <select formControlName="scalar"
-            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800">
-            @for (opt of scalarOptions; track opt.value) {
-              <option [value]="opt.value">{{ opt.label }}</option>
-            }
-          </select>
-        </div>
-
-        <!-- Barcode -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الباركود</label>
-          <input type="text" formControlName="barcode" placeholder="الباركود"
-            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-        </div>
-
-        <!-- Category -->
+        <!-- Category (always shown, all 4 types) -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الفئة</label>
           <select formControlName="category_id"
@@ -223,81 +260,122 @@
           </select>
         </div>
 
-        <!-- Selling price: only for non-oil. Oil price comes from the category (per gram). -->
-        @if (!selectedCategoryIsOil) {
+        @if (!isCompound) {
+          <!-- Scalar / unit — not shown for Compound Products (no inventory unit) -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ priceFieldLabel }}</label>
-            <input type="number" formControlName="selling_price" min="0" step="0.01" placeholder="0.00"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-            <p class="text-[11px] text-gray-400 mt-1">الحد الأدنى محدَّد على مستوى الفئة؛ البيع بأقل منه ينبّه الإدارة.</p>
-          </div>
-        } @else {
-          <!-- Oil products price per gram at the product level. -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">سعر الجرام (ج.م) <span class="text-error-500">*</span></label>
-            <input type="number" formControlName="price_per_gram" min="0" step="0.01" placeholder="0.00"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-            <p class="text-[11px] text-gray-400 mt-1">يُحسَب سعر البيع تلقائياً: الكمية (جرام) × سعر الجرام. الحد الأدنى محدَّد على مستوى الفئة.</p>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              الوحدة <span class="text-error-500">*</span>
+            </label>
+            <select formControlName="scalar"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800">
+              @for (opt of scalarOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
           </div>
         }
 
-        <!-- Purchase cost + live profit -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تكلفة الشراء (ج.م)</label>
-          <input type="number" formControlName="purchase_cost" min="0" step="0.01" placeholder="0.00"
-            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-          @if (formProfit !== null) {
-            <p class="text-[11px] mt-1 font-medium" [class]="formProfit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
-              الربح لكل وحدة: {{ formProfit | number:'1.2-2' }} ج.م
-            </p>
+        @if (isPackaging) {
+          <!-- Bottle capacity (ml) — Packaging Material only -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              سعة الزجاجة (مل) <span class="text-error-500">*</span>
+            </label>
+            <input type="number" formControlName="capacity_ml" min="0" step="0.01" placeholder="مثال: 30"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            <p class="text-[11px] text-gray-400 mt-1">سعر الزجاجة يشمل البخاخ والغطاء — لا حاجة لمنتجات منفصلة لهما.</p>
+          </div>
+        }
+
+        @if (!isCompound) {
+          <!-- Barcode — not shown for Compound Products -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الباركود</label>
+            <input type="text" formControlName="barcode" placeholder="الباركود"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+          </div>
+        }
+
+        @if (isReadyProduct || isRawMaterial) {
+          <!-- Selling price: only for non-oil Ready/Raw items. Oil prices per gram. -->
+          @if (!selectedCategoryIsOil) {
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ priceFieldLabel }}{{ isRawMaterial ? ' (اختياري)' : '' }}</label>
+              <input type="number" formControlName="selling_price" min="0" step="0.01" placeholder="0.00"
+                class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+              <p class="text-[11px] text-gray-400 mt-1">الحد الأدنى محدَّد على مستوى الفئة؛ البيع بأقل منه ينبّه الإدارة.</p>
+            </div>
+          } @else {
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">سعر الجرام (ج.م) <span class="text-error-500">*</span></label>
+              <input type="number" formControlName="price_per_gram" min="0" step="0.01" placeholder="0.00"
+                class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+              <p class="text-[11px] text-gray-400 mt-1">يُحسَب سعر البيع تلقائياً: الكمية (جرام) × سعر الجرام. الحد الأدنى محدَّد على مستوى الفئة.</p>
+            </div>
           }
-        </div>
+        }
 
-        <!-- Warning threshold -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">حد التحذير (مخزون منخفض)</label>
-          <input type="number" formControlName="warning_quantity" min="0" step="0.001" placeholder="مثال: 200"
-            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-          <p class="text-[11px] text-gray-400 mt-1">يُورَّث من الفئة تلقائياً إن تُرك فارغاً.</p>
-        </div>
+        @if (!isCompound) {
+          <!-- Purchase cost + live profit -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تكلفة الشراء (ج.م)</label>
+            <input type="number" formControlName="purchase_cost" min="0" step="0.01" placeholder="0.00"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            @if (formProfit !== null) {
+              <p class="text-[11px] mt-1 font-medium" [class]="formProfit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                الربح لكل وحدة: {{ formProfit | number:'1.2-2' }} ج.م
+              </p>
+            }
+          </div>
 
-        <!-- Critical threshold -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحد الحرِج</label>
-          <input type="number" formControlName="critical_quantity" min="0" step="0.001" placeholder="مثال: 50"
-            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-        </div>
+          <!-- Warning threshold -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">حد التحذير (مخزون منخفض)</label>
+            <input type="number" formControlName="warning_quantity" min="0" step="0.001" placeholder="مثال: 200"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            <p class="text-[11px] text-gray-400 mt-1">يُورَّث من الفئة تلقائياً إن تُرك فارغاً.</p>
+          </div>
 
-        <!-- is_active -->
-        <div class="flex items-center gap-3">
-          <label class="relative inline-flex items-center cursor-pointer mt-5">
-            <input type="checkbox" formControlName="is_active" class="sr-only peer" />
-            <div class="w-10 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-brand-500/20 rounded-full peer dark:bg-gray-700 peer-checked:bg-brand-500 transition-colors"></div>
-            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
-          </label>
-          <span class="text-sm text-gray-700 dark:text-gray-300 mt-5">منتج نشط</span>
-        </div>
+          <!-- Critical threshold -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحد الحرِج</label>
+            <input type="number" formControlName="critical_quantity" min="0" step="0.001" placeholder="مثال: 50"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+          </div>
 
-        <!-- Description (full width) -->
+          <!-- is_active -->
+          <div class="flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer mt-5">
+              <input type="checkbox" formControlName="is_active" class="sr-only peer" />
+              <div class="w-10 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-brand-500/20 rounded-full peer dark:bg-gray-700 peer-checked:bg-brand-500 transition-colors"></div>
+              <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
+            </label>
+            <span class="text-sm text-gray-700 dark:text-gray-300 mt-5">منتج نشط</span>
+          </div>
+        }
+
+        <!-- Description / Notes (full width, all types) -->
         <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الوصف</label>
-          <textarea formControlName="description" rows="3" placeholder="وصف المنتج (اختياري)"
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ isCompound ? 'الوصف' : 'ملاحظات' }}</label>
+          <textarea formControlName="description" rows="3" placeholder="اختياري"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800 resize-none"></textarea>
         </div>
 
-        <!-- Image upload (full width) -->
-        <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الصورة</label>
-          @if (currentImageUrl) {
-            <div class="mb-2 flex items-center gap-3">
-              <img [src]="currentImageUrl" alt="الصورة الحالية"
-                class="w-16 h-16 rounded-lg object-cover border border-gray-200 dark:border-white/[0.05]" />
-              <span class="text-xs text-gray-500 dark:text-gray-400">الصورة الحالية — اختر صورة جديدة للاستبدال</span>
-            </div>
-          }
-          <input type="file" accept="image/*" (change)="onFileSelected($event)"
-            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100 dark:file:bg-brand-500/10 dark:file:text-brand-400 dark:text-gray-400" />
-        </div>
+        @if (isCompound || isReadyProduct) {
+          <!-- Image upload (full width) — Compound + Ready Products only -->
+          <div class="sm:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الصورة</label>
+            @if (currentImageUrl) {
+              <div class="mb-2 flex items-center gap-3">
+                <img [src]="currentImageUrl" alt="الصورة الحالية"
+                  class="w-16 h-16 rounded-lg object-cover border border-gray-200 dark:border-white/[0.05]" />
+                <span class="text-xs text-gray-500 dark:text-gray-400">الصورة الحالية — اختر صورة جديدة للاستبدال</span>
+              </div>
+            }
+            <input type="file" accept="image/*" (change)="onFileSelected($event)"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100 dark:file:bg-brand-500/10 dark:file:text-brand-400 dark:text-gray-400" />
+          </div>
+        }
 
       </div>
 
@@ -419,25 +497,41 @@
     } @else {
       <div class="space-y-2">
         @for (row of recipeRows; track row.component_product_id; let i = $index) {
-          <div class="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700">
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ row.name }}</p>
-              <p class="text-xs font-mono text-gray-400">{{ row.sku || '—' }}</p>
+          <div class="rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700">
+            <div class="flex items-center gap-3">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ row.name }}</p>
+                <p class="text-xs font-mono text-gray-400">{{ row.sku || '—' }}</p>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <label class="text-xs text-gray-500 dark:text-gray-400">{{ row.is_variable_quantity ? 'كمية مقترحة' : 'الكمية' }}</label>
+                <input type="number" min="0.001" step="0.001" [(ngModel)]="row.quantity"
+                  class="h-9 w-24 rounded-lg border border-gray-300 px-2 text-sm text-center bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+              </div>
+              <button type="button" (click)="removeRecipeRow(i)"
+                class="text-error-500 hover:text-error-700 shrink-0">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
             </div>
-            <div class="flex items-center gap-1.5">
-              <label class="text-xs text-gray-500 dark:text-gray-400">الكمية</label>
-              <input type="number" min="0.001" step="0.001" [(ngModel)]="row.quantity"
-                class="h-9 w-24 rounded-lg border border-gray-300 px-2 text-sm text-center bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            <div class="flex items-center gap-4 mt-2 pt-2 border-t border-dashed border-gray-100 dark:border-white/[0.06]">
+              <label class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="row.is_variable_quantity" class="rounded border-gray-300 dark:border-gray-600" />
+                البائع يُدخل الكمية عند البيع (مثل جرامات الزيت)
+              </label>
+              <div class="flex items-center gap-1.5">
+                <label class="text-xs text-gray-500 dark:text-gray-400">مجموعة اختيار</label>
+                <input type="text" [(ngModel)]="row.component_group" placeholder="مثال: bottle"
+                  class="h-7 w-28 rounded border border-gray-300 px-2 text-xs bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800" />
+              </div>
             </div>
-            <button type="button" (click)="removeRecipeRow(i)"
-              class="text-error-500 hover:text-error-700 shrink-0">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
           </div>
         }
       </div>
+      <p class="text-[11px] text-gray-400 mt-2">
+        الصفوف التي تشترك في نفس "مجموعة الاختيار" (مثل bottle) تظهر كخيارات بديلة يختار البائع واحداً منها عند البيع (أحجام الزجاجات مثلاً).
+      </p>
     }
 
     <!-- Footer -->

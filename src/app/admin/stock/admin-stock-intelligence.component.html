@@ -21,7 +21,6 @@
         (change)="setLocation($any($event.target).value)"
         class="appearance-none pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[180px]">
         <option value="">كل المواقع</option>
-        <option value="0">المستودع الرئيسي</option>
         @for (s of shops; track s.id) {
           <option [value]="s.id">{{ s.name }}</option>
         }
@@ -137,7 +136,7 @@
          LOW STOCK ALERTS
     ══════════════════════════════════════════════════════════════ -->
     @if (lowStock.length > 0) {
-      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-amber-200 dark:border-amber-800/50 p-5">
+      <div id="low-stock" class="bg-white dark:bg-gray-900 rounded-2xl border border-amber-200 dark:border-amber-800/50 p-5">
         <div class="flex items-center gap-2 mb-4">
           <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
           <h2 class="text-sm font-semibold text-amber-700 dark:text-amber-400">تنبيهات النقص — {{ lowStock.length }} موضع تحت الحد ({{ overview.threshold }} وحدة)</h2>
@@ -278,9 +277,9 @@
           class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[160px]">
         <div class="flex items-center gap-2">
           <span class="text-xs text-gray-500">من</span>
-          <input type="date" [(ngModel)]="supFrom" class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <app-date-picker id="sup-from" [value]="supFrom" (valueChange)="supFrom = $event"></app-date-picker>
           <span class="text-xs text-gray-500">إلى</span>
-          <input type="date" [(ngModel)]="supTo" class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <app-date-picker id="sup-to" [value]="supTo" (valueChange)="supTo = $event"></app-date-picker>
         </div>
         <button (click)="applySupplies()" class="px-4 py-2 text-sm font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700">بحث</button>
         <button (click)="resetSupplies()" class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">إعادة</button>

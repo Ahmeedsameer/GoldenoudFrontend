@@ -1,0 +1,113 @@
+<app-loading [loading]="loading && !report"></app-loading>
+
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">دفتر حساب المخزون</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">السجل الزمني الكامل لكل حركة على صنف واحد</p>
+    </div>
+    @if (productId) {
+      <app-report-toolbar exportPath="/branch-operations/reports/stock-movement/export" [params]="exportParams" fileName="دفتر-حساب-المخزون" [showRefresh]="false"></app-report-toolbar>
+    }
+  </div>
+
+  <!-- Product picker + filters -->
+  <div class="mb-5 flex flex-wrap items-center gap-2">
+    <select [(ngModel)]="productId" (change)="setProduct(productId)" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 min-w-[220px]">
+      <option [ngValue]="null">اختر منتجاً</option>
+      @for (p of products; track p.id) { <option [ngValue]="p.id">{{ p.name }} ({{ p.sku }})</option> }
+    </select>
+    @if (productId) {
+      <app-date-picker id="ledger-from" [value]="from" (valueChange)="from = $event; applyFilters()"></app-date-picker>
+      <app-date-picker id="ledger-to" [value]="to" (valueChange)="to = $event; applyFilters()"></app-date-picker>
+      <select [(ngModel)]="shopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+        <option [ngValue]="null">كل الفروع</option>
+        @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+      </select>
+      @if (from || to) {
+        <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء التاريخ</button>
+      }
+    }
+  </div>
+
+  @if (errorMsg) { <div class="mb-5"><app-alert variant="error" [message]="errorMsg"></app-alert></div> }
+
+  @if (!productId) {
+    <app-report-empty-state message="اختر منتجاً لعرض دفتر حسابه" icon="📒"></app-report-empty-state>
+  } @else if (loading) {
+    <app-report-loading-skeleton [kpiCount]="7" [rowCount]="8"></app-report-loading-skeleton>
+  } @else if (report && product) {
+    <div class="space-y-6">
+
+      <!-- Product header -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+          <div><p class="text-xs text-gray-400 mb-0.5">المنتج</p><p class="font-semibold text-gray-800 dark:text-white/90">{{ product.general.name }}</p></div>
+          <div><p class="text-xs text-gray-400 mb-0.5">الكود</p><p class="font-mono text-gray-700 dark:text-gray-300">{{ product.general.sku || '—' }}</p></div>
+          <div><p class="text-xs text-gray-400 mb-0.5">الباركود</p><p class="font-mono text-gray-700 dark:text-gray-300">{{ product.general.barcode || '—' }}</p></div>
+          <div><p class="text-xs text-gray-400 mb-0.5">الفئة</p><p class="text-gray-700 dark:text-gray-300">{{ product.general.category || '—' }}</p></div>
+          <div><p class="text-xs text-gray-400 mb-0.5">النوع</p><p class="text-gray-700 dark:text-gray-300">{{ product.general.product_type }}</p></div>
+        </div>
+        @if (product.inventory) {
+          <div class="grid grid-cols-2 md:grid-cols-2 gap-4 text-sm mt-3 pt-3 border-t border-gray-100 dark:border-white/[0.05]">
+            <div><p class="text-xs text-gray-400 mb-0.5">الرصيد الحالي (النظام)</p><p class="font-bold font-mono text-gray-900 dark:text-white">{{ product.inventory.current_stock }}</p></div>
+            <div><p class="text-xs text-gray-400 mb-0.5">القيمة الحالية</p><p class="font-bold font-mono text-gray-900 dark:text-white">{{ product.inventory.inventory_value | number:'1.0-2' }} ج.م</p></div>
+          </div>
+        }
+      </div>
+
+      @if (!report.scoped_to_product) {
+        <div class="rounded-xl border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-2 text-xs text-blue-700 dark:text-blue-300">
+          هذه الصفحة مخصصة لصنف واحد فقط — لعرض حركة المخزون عبر كل المنتجات استخدم تقرير حركة المخزون.
+        </div>
+      }
+
+      <!-- KPIs -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <app-report-kpi-card title="إجمالي المشتريات" [value]="totalPurchased" icon="🛒" color="success"></app-report-kpi-card>
+        <app-report-kpi-card title="إجمالي المبيعات" [value]="totalSold" icon="💰" color="error"></app-report-kpi-card>
+        <app-report-kpi-card title="نقل وارد" [value]="totalTransferredIn" icon="📥" color="info"></app-report-kpi-card>
+        <app-report-kpi-card title="نقل صادر" [value]="totalTransferredOut" icon="📤" color="neutral"></app-report-kpi-card>
+        <app-report-kpi-card title="إجمالي الهالك" [value]="totalWaste" icon="🗑️" color="error"></app-report-kpi-card>
+        <app-report-kpi-card title="صافي التسويات" [value]="totalAdjustments" icon="⚖️" color="warning"></app-report-kpi-card>
+        <app-report-kpi-card title="الرصيد الافتتاحي" [value]="report.opening_balance" icon="🔽" color="neutral"></app-report-kpi-card>
+        <app-report-kpi-card title="الرصيد الحالي (دفتر الحساب)" [value]="report.closing_balance" icon="📦" color="brand"></app-report-kpi-card>
+      </div>
+
+      <!-- Charts -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <app-report-line-chart title="الرصيد عبر الزمن" [categories]="balanceCategories" [series]="balanceSeries" [colors]="['#465fff']"></app-report-line-chart>
+        <app-report-bar-chart title="الحركة اليومية" [categories]="dailyCategories" [series]="dailySeries" [colors]="['#10b981', '#ef4444']"></app-report-bar-chart>
+      </div>
+
+      <!-- Ledger table -->
+      <div class="db-tbl-card">
+        <div class="db-tbl-wrap">
+          <table class="db-tbl">
+            <thead>
+              <tr><th>التاريخ والوقت</th><th>نوع الحركة</th><th>المرجع</th><th>الفرع</th><th>وارد</th><th>صادر</th><th>الرصيد الجاري</th><th>بواسطة</th></tr>
+            </thead>
+            <tbody>
+              @for (r of report.rows; track $index) {
+                <tr>
+                  <td style="color:#9CA3AF">{{ r.date }}</td>
+                  <td style="color:#6B7280">{{ r.type_label }}</td>
+                  <td class="font-mono" style="color:#9A7B1A">{{ r.reference_number }}</td>
+                  <td style="color:#6B7280">{{ r.shop_name }}</td>
+                  <td class="font-mono" style="color:#059669">{{ r.quantity_in || '—' }}</td>
+                  <td class="font-mono" style="color:#DC2626">{{ r.quantity_out || '—' }}</td>
+                  <td class="font-mono font-semibold" style="color:#1f2937">{{ r.running_balance }}</td>
+                  <td style="color:#6B7280">{{ r.employee || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (!report.rows.length) { <app-report-empty-state message="لا توجد حركات مسجّلة لهذا الصنف"></app-report-empty-state> }
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

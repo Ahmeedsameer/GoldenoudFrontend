@@ -1,0 +1,113 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="mb-5 flex flex-wrap items-start justify-between gap-4" dir="rtl">
+  <div>
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">مقارنة الفروع</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+      @if (data) { الفترة: {{ data.period.from }} — {{ data.period.to }} }
+    </p>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2">
+    <app-report-toolbar exportPath="/admin/reports/branch-comparison/export" [params]="exportParams" fileName="مقارنة-الفروع" [showRefresh]="false"></app-report-toolbar>
+
+    <div class="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-white/[0.05]">
+      @for (p of periods; track p.key) {
+        <button type="button" (click)="setPeriod(p.key)" [disabled]="customRangeActive"
+          class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
+          [class]="period === p.key && !customRangeActive
+            ? 'bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+
+    <button type="button" (click)="showCustomPicker = !showCustomPicker"
+      class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors"
+      [class]="customRangeActive
+        ? 'bg-brand-50 dark:bg-brand-500/10 border-brand-300 dark:border-brand-500/40 text-brand-700 dark:text-brand-300'
+        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50'">
+      @if (customRangeActive) { {{ from }} — {{ to }} }
+      @else { تخصيص الفترة }
+    </button>
+
+    @if (customRangeActive) {
+      <button type="button" (click)="clearRange()"
+        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors">
+        إلغاء
+      </button>
+    }
+  </div>
+</div>
+
+@if (showCustomPicker && !customRangeActive) {
+  <div class="mb-5 flex flex-wrap items-end gap-3 p-4 rounded-2xl border border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10" dir="rtl">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">من تاريخ</label>
+      <app-date-picker id="bc-from" [value]="from" (valueChange)="from = $event"></app-date-picker>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">إلى تاريخ</label>
+      <app-date-picker id="bc-to" [value]="to" (valueChange)="to = $event"></app-date-picker>
+    </div>
+    <button type="button" (click)="applyRange()" [disabled]="!from || !to"
+      class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-40">
+      تطبيق
+    </button>
+    <button type="button" (click)="showCustomPicker = false"
+      class="px-4 py-1.5 rounded-lg text-sm text-gray-500 hover:text-gray-700 transition-colors">
+      إلغاء
+    </button>
+  </div>
+}
+
+@if (errorMsg) {
+  <div class="mb-5"><app-alert variant="error" [message]="errorMsg"></app-alert></div>
+}
+
+@if (data) {
+  <div dir="rtl" class="space-y-6">
+
+    @if (revenueSeries.length && data.branches.length) {
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الإيرادات والربح التقديري لكل فرع</h2>
+        <apx-chart [series]="revenueSeries" [chart]="revenueOptions.chart" [colors]="revenueOptions.colors"
+          [plotOptions]="revenueOptions.plotOptions" [dataLabels]="revenueOptions.dataLabels"
+          [xaxis]="revenueOptions.xaxis" [yaxis]="revenueOptions.yaxis" [grid]="revenueOptions.grid" [legend]="revenueOptions.legend" />
+      </div>
+    }
+
+    <div class="db-tbl-card">
+      <div class="db-tbl-wrap">
+        <table class="db-tbl">
+          <thead>
+            <tr>
+              <th>الفرع</th><th>عدد الفواتير</th><th>الإيرادات</th><th>التكلفة التقديرية</th>
+              <th>الربح التقديري</th><th>هامش الربح</th><th>أفضل بائع</th><th>الزيت الأكثر استخداماً</th><th>الزجاجة الأكثر استخداماً</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (b of data.branches; track b.shop_id) {
+              <tr>
+                <td class="font-medium" style="color:#9A7B1A">{{ b.shop_name }}</td>
+                <td style="color:#6B7280">{{ b.invoice_count }}</td>
+                <td class="font-mono" style="color:#6B7280">{{ b.total_revenue | number:'1.0-2' }}</td>
+                <td class="font-mono" style="color:#6B7280">{{ b.estimated_cost | number:'1.0-2' }}</td>
+                <td class="font-mono" [style.color]="b.estimated_profit >= 0 ? '#059669' : '#DC2626'">{{ b.estimated_profit | number:'1.0-2' }}</td>
+                <td style="color:#6B7280">{{ b.profit_margin_percent != null ? (b.profit_margin_percent + '%') : '—' }}</td>
+                <td style="color:#6B7280">{{ b.top_seller ? (b.top_seller.name + ' (' + (b.top_seller.revenue | number:'1.0-0') + ')') : '—' }}</td>
+                <td style="color:#6B7280">{{ b.top_oil ? (b.top_oil.name + ' (' + (b.top_oil.qty | number:'1.0-1') + ')') : '—' }}</td>
+                <td style="color:#6B7280">{{ b.top_bottle ? (b.top_bottle.name + ' (' + b.top_bottle.qty + ')') : '—' }}</td>
+              </tr>
+            }
+            @if (!data.branches.length) {
+              <tr><td colspan="9" class="text-center text-sm text-gray-400 py-6">لا توجد بيانات</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+}

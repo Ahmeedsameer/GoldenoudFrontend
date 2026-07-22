@@ -16,7 +16,13 @@
   @for (t of statusTabs; track t.key) {
     <button type="button" (click)="setStatus(t.key)"
       [class]="status === t.key ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
-      class="px-4 py-2 text-sm font-medium transition-colors">{{ t.label }}</button>
+      class="px-4 py-2 text-sm font-medium transition-colors inline-flex items-center gap-1.5">
+      {{ t.label }}
+      @if (t.key === 'pending' && pendingCount > 0) {
+        <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-bold"
+          [class]="status === t.key ? 'bg-white/25 text-white' : 'bg-error-500 text-white'">{{ pendingCount }}</span>
+      }
+    </button>
   }
 </div>
 

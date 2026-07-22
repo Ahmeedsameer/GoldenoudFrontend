@@ -38,8 +38,8 @@ export class ProductService {
         return this.httpClient.get<any>(`${ProductService.apiUrl}/${productId}/components`);
     }
 
-    // components: [{ component_product_id, quantity }]
-    saveComponents(productId: number, components: { component_product_id: number; quantity: number }[]) {
+    // components: [{ component_product_id, quantity, is_variable_quantity?, component_group? }]
+    saveComponents(productId: number, components: { component_product_id: number; quantity: number; is_variable_quantity?: boolean; component_group?: string | null }[]) {
         return this.httpClient.put<any>(`${ProductService.apiUrl}/${productId}/components`, { components });
     }
 }

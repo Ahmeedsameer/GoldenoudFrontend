@@ -1,0 +1,167 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="crud-page-head">
+  <div>
+    <a routerLink="/dashboard/pricing" class="text-xs font-medium mb-1 inline-block" style="color: #9A7B1A;">‹ الرجوع لإدارة الأسعار</a>
+    <h1 class="page-title">{{ detail?.name }}</h1>
+    <p class="page-subtitle">
+      {{ detail?.product_type === 'COMPOUND' ? 'عطر مركّب' : 'منتج جاهز' }}
+      @if (detail?.sku) { — {{ detail?.sku }} }
+    </p>
+  </div>
+</div>
+
+@if (detail) {
+
+  <!-- Summary cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+
+    @if (detail.product_type === 'READY_PRODUCT') {
+      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+        <p class="text-xs text-gray-400 mb-1">آخر سعر شراء</p>
+        <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+          {{ detail.latest_purchase_price != null ? (detail.latest_purchase_price | number:'1.2-2') + ' ج.م' : '—' }}
+        </p>
+      </div>
+      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+        <p class="text-xs text-gray-400 mb-1">متوسط سعر الشراء</p>
+        <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+          {{ detail.average_purchase_price != null ? (detail.average_purchase_price | number:'1.2-2') + ' ج.م' : '—' }}
+        </p>
+      </div>
+      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+        <p class="text-xs text-gray-400 mb-1">التكلفة الحالية (المعتمدة)</p>
+        <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+          {{ detail.current_cost != null ? (detail.current_cost | number:'1.2-2') + ' ج.م' : '—' }}
+        </p>
+      </div>
+    } @else {
+      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4 md:col-span-3">
+        <p class="text-xs text-gray-400">
+          العطور المركّبة ليس لها تكلفة ثابتة — البائع يختار أي زيت وأي زجاجة عند كل عملية بيع، فالتكلفة الحقيقية
+          تُحسب وقت البيع فقط. هذه الصفحة تتحكم في <b>سعر البيع الافتراضي</b> الذي يظهر للبائع كنقطة بداية، وهو قابل للتعديل لكل فاتورة.
+        </p>
+      </div>
+    }
+
+    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <p class="text-xs text-gray-400 mb-1">{{ detail.product_type === 'COMPOUND' ? 'سعر البيع الافتراضي' : 'سعر البيع الحالي' }}</p>
+      <p class="text-lg font-bold font-mono" style="color: #9A7B1A;">
+        {{ detail.selling_price != null ? (detail.selling_price | number:'1.2-2') + ' ج.م' : '—' }}
+      </p>
+    </div>
+
+    @if (detail.product_type === 'READY_PRODUCT') {
+      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+        <p class="text-xs text-gray-400 mb-1">الربح المتوقع</p>
+        <p class="text-lg font-bold font-mono" style="color: #16794F;">
+          {{ detail.estimated_profit != null ? (detail.estimated_profit | number:'1.2-2') + ' ج.م' : '—' }}
+        </p>
+      </div>
+      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+        <p class="text-xs text-gray-400 mb-1">نسبة الربح</p>
+        <p class="text-lg font-bold font-mono" style="color: #16794F;">
+          {{ detail.profit_percent != null ? (detail.profit_percent | number:'1.1-1') + '%' : '—' }}
+        </p>
+      </div>
+    }
+
+  </div>
+
+  <!-- Selling price editor (admin only) -->
+  @if (isAdmin) {
+    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-5 mb-6">
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">
+        {{ detail.product_type === 'COMPOUND' ? 'تعديل سعر البيع الافتراضي' : 'تعديل سعر البيع' }}
+      </h3>
+
+      @if (!editing) {
+        <button type="button" (click)="startEdit()" class="lux-btn lux-btn-primary lux-btn-sm">تعديل السعر</button>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">السعر الجديد</label>
+            <input type="number" min="0.01" step="0.01" [(ngModel)]="newPrice"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm font-mono dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">السبب (اختياري)</label>
+            <input type="text" [(ngModel)]="reason" placeholder="مثال: زيادة تكلفة المواد الخام"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+          </div>
+        </div>
+        @if (saveError) {
+          <p class="text-xs text-error-500 mb-2">{{ saveError }}</p>
+        }
+        <div class="flex gap-2">
+          <button type="button" (click)="save()" [disabled]="saving || !newPrice || newPrice <= 0"
+            class="lux-btn lux-btn-primary lux-btn-sm">
+            @if (saving) { جارٍ الحفظ… } @else { حفظ }
+          </button>
+          <button type="button" (click)="cancelEdit()"
+            class="px-4 h-9 rounded-lg border border-gray-300 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">
+            إلغاء
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Price history (admin only) -->
+  @if (isAdmin) {
+    <div class="db-tbl-card">
+      <div style="padding: 1rem 1.25rem 0.5rem;">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">سجل الأسعار</h3>
+      </div>
+      <div class="db-tbl-wrap">
+        <table class="db-tbl">
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>النوع</th>
+              <th>التكلفة</th>
+              <th>سعر البيع</th>
+              <th>بواسطة</th>
+              <th class="hidden md:table-cell">السبب</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (h of history; track h.id) {
+              <tr>
+                <td style="color: #6B7280;">{{ h.created_at | date:'d MMM yyyy, h:mm a' }}</td>
+                <td style="color: #6B7280;">{{ historyLabel(h.type) }}</td>
+                <td class="font-mono" style="color: #6B7280;">
+                  @if (h.old_cost != null || h.new_cost != null) {
+                    {{ h.old_cost != null ? (h.old_cost | number:'1.2-2') : '—' }} ← {{ h.new_cost != null ? (h.new_cost | number:'1.2-2') : '—' }}
+                  } @else { — }
+                </td>
+                <td class="font-mono" style="color: #6B7280;">
+                  @if (h.old_selling_price != null || h.new_selling_price != null) {
+                    {{ h.old_selling_price != null ? (h.old_selling_price | number:'1.2-2') : '—' }} ← {{ h.new_selling_price != null ? (h.new_selling_price | number:'1.2-2') : '—' }}
+                  } @else { — }
+                </td>
+                <td style="color: #6B7280;">{{ h.updated_by?.name || '—' }}</td>
+                <td class="hidden md:table-cell" style="color: #9CA3AF;">{{ h.reason || '—' }}</td>
+              </tr>
+            }
+            @if (!historyLoading && history.length === 0) {
+              <tr>
+                <td colspan="6" style="padding: 2.5rem 1rem; text-align: center; color: #9CA3AF;">لا يوجد سجل تسعير بعد</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (historyLastPage > 1) {
+        <div class="flex items-center justify-center gap-2 py-3">
+          <button type="button" (click)="loadHistory(historyPage - 1)" [disabled]="historyPage <= 1"
+            class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">السابق</button>
+          <span class="text-xs text-gray-500">{{ historyPage }} / {{ historyLastPage }}</span>
+          <button type="button" (click)="loadHistory(historyPage + 1)" [disabled]="historyPage >= historyLastPage"
+            class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">التالي</button>
+        </div>
+      }
+    </div>
+  }
+
+}

@@ -13,10 +13,15 @@ import { AlertComponent } from '../../shared/components/ui/alert/alert.component
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
-import { ProductLookupPanelComponent } from './product-lookup-panel/product-lookup-panel.component';
+import { CatalogSellDialogComponent, ComposedLine } from './catalog-sell-dialog/catalog-sell-dialog.component';
 
 export interface SellerCurrency { id: number; code: string; name: string; symbol: string; rate: number; }
 export interface SellerSafe    { id: number; safe_type: { name: string; kind: string }; }
+export interface CatalogProduct {
+  id: number; name: string; sku: string | null; image?: string | null;
+  product_type: 'COMPOUND' | 'READY_PRODUCT' | string | null;
+  configured_unit_price: number | null; shop_stock: number | null; unit: string;
+}
 
 @Component({
   selector: 'app-cashier',
@@ -29,9 +34,9 @@ export interface SellerSafe    { id: number; safe_type: { name: string; kind: st
     LoadingComponent,
     AlertComponent,
     ModalComponent,
-    ProductLookupPanelComponent,
     FormsModule,
     InvoiceReceiptComponent,
+    CatalogSellDialogComponent,
   ],
   templateUrl: './cashier.component.html',
   styleUrl: './cashier.component.css',
@@ -60,41 +65,6 @@ export class CashierComponent implements OnInit, OnDestroy {
   showReceiptModal = false;
   lastInvoice: any = null;
 
-  // ── Quick product lookup panel ──────────────────────────
-  /** Whether the lookup panel is expanded (persisted per layout key). */
-  showLookupPanel = true;
-  toggleLookupPanel() { this.showLookupPanel = !this.showLookupPanel; }
-
-  /**
-   * Called when the seller clicks a product card in the lookup panel.
-   * - If the same goods batch is already on the invoice → increment its quantity.
-   * - If the last invoice row has no product yet → populate it.
-   * - Otherwise → add a new row and populate it.
-   */
-  addProductFromLookup(goods: GoodsSearchResult) {
-    // 1. Already in invoice? → bump quantity
-    const existingIdx = this.selectedGoods.findIndex(g => g?.id === goods.id);
-    if (existingIdx !== -1) {
-      const current = +(this.items.at(existingIdx).get('quantity')?.value) || 0;
-      this.items.at(existingIdx).get('quantity')?.setValue(+(current + 1).toFixed(3));
-      return;
-    }
-
-    // 2. Last row is still empty → reuse it
-    const lastIdx = this.items.length - 1;
-    if (this.selectedGoods[lastIdx] == null) {
-      this.selectProduct(lastIdx, goods);
-      this.items.at(lastIdx).get('quantity')?.setValue(1);
-      return;
-    }
-
-    // 3. All rows occupied → add a fresh row
-    this.addItem();
-    const newIdx = this.items.length - 1;
-    this.selectProduct(newIdx, goods);
-    this.items.at(newIdx).get('quantity')?.setValue(1);
-  }
-
   // ── Currencies & Safes ──────────────────────────────────
   currencies: SellerCurrency[] = [];
   shopSafes:  SellerSafe[]     = [];
@@ -122,7 +92,6 @@ export class CashierComponent implements OnInit, OnDestroy {
   form: FormGroup = this.fb.group({
     phone:        [''],
     name:         [''],
-    date:         [this.getToday(), Validators.required],
     price_type:   ['retail', Validators.required],
     safe_id:      [null],
     total_amount: [null, [Validators.required, Validators.min(0.01)]],
@@ -140,75 +109,9 @@ export class CashierComponent implements OnInit, OnDestroy {
   // ── Payments FormArray (for physical safe) ──────────────
   payments: FormArray = this.fb.array([]);
 
-  // ── Compose (BOM) modal ──────────────────────────────────
-  showComposeModal = false;
-  composeRows: { product_id: number | null; name: string; sku: string | null; unit: string; quantity: number | null; price: number | null; stock: number }[] = [];
-  composeAddQuery = '';
-  composeAddResults: GoodsSearchResult[] = [];
-  showComposeAddDropdown = false;
-  private composeAddSearch$ = new Subject<string>();
-  composeRecipeQuery = '';
-  composeRecipeResults: { id: number; name: string; sku?: string }[] = [];
-  showComposeRecipeDropdown = false;
-  private composeRecipeSearch$ = new Subject<string>();
-
-  openCompose() { this.showComposeModal = true; }
-  closeCompose() { this.showComposeModal = false; }
-
-  onComposeAddInput(v: string) { this.composeAddQuery = v; this.composeAddSearch$.next(v); }
-  onComposeRecipeInput(v: string) { this.composeRecipeQuery = v; this.composeRecipeSearch$.next(v); }
-
-  /** Add a component row from a product search result (ad-hoc). */
-  addComponent(goods: GoodsSearchResult) {
-    this.composeRows.push({
-      product_id: goods.supply_item.product.id,
-      name:       goods.supply_item.product.name,
-      sku:        goods.supply_item.product.sku ?? null,
-      unit:       goods.unit ?? goods.supply_item.product.scalar ?? '',
-      quantity:   1,
-      price:      goods.configured_unit_price ?? null,
-      stock:      goods.product_shop_stock ?? 0,
-    });
-    this.composeAddQuery = ''; this.composeAddResults = []; this.showComposeAddDropdown = false;
-  }
-
-  /** Load a product's saved recipe (BOM) into the component rows. */
-  loadRecipe(product: { id: number; name: string }) {
-    const pid = product.id;
-    this.composeRecipeQuery = product.name;
-    this.showComposeRecipeDropdown = false; this.composeRecipeResults = [];
-    this.salesService.getProductComponents(pid).subscribe({
-      next: (comps) => {
-        if (!comps.length) {
-          this.alert = { show: true, type: 'error', message: 'هذا المنتج ليس له وصفة مكوّنات محفوظة.' };
-          return;
-        }
-        for (const c of comps) {
-          this.composeRows.push({
-            product_id: c.component_product_id, name: c.name, sku: c.sku, unit: c.unit,
-            quantity: c.quantity, price: c.configured_unit_price ?? null, stock: c.shop_stock ?? 0,
-          });
-        }
-      },
-    });
-  }
-
-  removeComposeRow(i: number) { this.composeRows.splice(i, 1); }
-
-  get composeTotal(): number {
-    return this.composeRows.reduce((s, r) => s + (+(r.quantity ?? 0)) * (+(r.price ?? 0)), 0);
-  }
-
-  /** Add all composed component rows to the invoice as editable lines. */
-  applyCompose() {
-    const rows = this.composeRows.filter(r => r.product_id && +(r.quantity ?? 0) > 0);
-    for (const r of rows) {
-      this.addComposedLine(r);
-    }
-    this.composeRows = [];
-    this.closeCompose();
-  }
-
+  /** Shared by every path that drops a resolved line onto the invoice —
+   *  the catalog's direct-add (Ready Product) and the Product Builder's
+   *  oil+bottle pair (Compound Product). */
   private addComposedLine(r: any) {
     // Synthetic goods object so the invoice line carries stock / unit / price.
     const goods: any = {
@@ -228,8 +131,84 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.items.at(idx).get('product_id')?.setValue(r.product_id);
     this.items.at(idx).get('quantity')?.setValue(r.quantity);
     this.items.at(idx).get('price')?.setValue(r.price);
+    this.items.at(idx).get('parent_product_id')?.setValue(r.parent_product_id ?? null);
+    this.items.at(idx).get('role')?.setValue(r.role ?? null);
     this.selectedGoods[idx] = goods;
     this.syncComputedTotal();
+  }
+
+  // ── Sales Catalog — always visible, no button-gating ─────────────────────
+  // "When I open the Sales screen, I see the Catalog" — this is the default,
+  // primary view, not a secondary action hidden behind a button/modal.
+  catalogItems: CatalogProduct[] = [];
+  catalogLoading = false;
+
+  private loadCatalog() {
+    this.catalogLoading = true;
+    this.salesService.searchCatalogProducts('').subscribe({
+      next: (rows) => { this.catalogItems = rows; this.catalogLoading = false; },
+      error: () => { this.catalogLoading = false; },
+    });
+  }
+
+  /** Set only while the Product Builder is open for a Compound Product. */
+  builderProduct: { id: number; name: string } | null = null;
+
+  /** Ready Products with zero stock in the active branch — Compound Products
+   *  have no fixed stock of their own (their oil+bottle availability is
+   *  checked live in the Product Builder), so this never applies to them. */
+  isOutOfStock(p: CatalogProduct): boolean {
+    return p.product_type !== 'COMPOUND' && (p.shop_stock ?? 0) <= 0;
+  }
+
+  /** A Ready Product that has been purchased/supplied but never given a
+   *  selling price in Pricing Management — must not be sellable until an
+   *  admin completes pricing. Compound Products are exempt: their price is
+   *  entered fresh in the Product Builder every sale. */
+  isMissingPrice(p: CatalogProduct): boolean {
+    return p.product_type !== 'COMPOUND' && p.configured_unit_price == null;
+  }
+
+  /**
+   * Clicking a catalog card. Ready Product → added directly to the invoice
+   * immediately, exactly as today (blocked if the branch has none in stock,
+   * or if no selling price has been configured yet). Compound Product → the
+   * Product Builder opens immediately, with zero intermediate screens —
+   * every single time, even for the same perfume sold a minute ago, since a
+   * Compound Product is only ever a catalog name with no stored composition.
+   */
+  onCatalogCardClick(p: CatalogProduct) {
+    if (p.product_type === 'COMPOUND') {
+      this.builderProduct = { id: p.id, name: p.name };
+      return;
+    }
+    if (this.isOutOfStock(p)) {
+      this.alert = { show: true, type: 'error', message: `${p.name} نفد من المخزون في هذا الفرع — يحتاج توريد.` };
+      return;
+    }
+    if (this.isMissingPrice(p)) {
+      this.alert = { show: true, type: 'error', message: `${p.name} ليس له سعر بيع محدد — أكمل إدارة الأسعار أولاً.` };
+      return;
+    }
+    this.addComposedLine({
+      product_id: p.id, name: p.name, sku: p.sku, unit: p.unit,
+      quantity: 1, price: p.configured_unit_price ?? 0, stock: p.shop_stock ?? 0,
+      parent_product_id: null, role: null,
+    });
+  }
+
+  closeBuilder() { this.builderProduct = null; }
+
+  /** Emitted by <app-catalog-sell-dialog> once the seller confirms oil+bottle. */
+  onCatalogCompositionAdded(lines: ComposedLine[]) {
+    for (const line of lines) {
+      this.addComposedLine({
+        product_id: line.product_id, name: line.name, sku: line.sku, unit: line.unit,
+        quantity: line.quantity, price: line.price, stock: line.stock,
+        parent_product_id: line.parent_product_id, role: line.role,
+      });
+    }
+    this.builderProduct = null;
   }
 
   // ── Totals & balance ────────────────────────────────────
@@ -342,6 +321,8 @@ export class CashierComponent implements OnInit, OnDestroy {
   // ── Lifecycle ───────────────────────────────────────────
 
   ngOnInit(): void {
+    this.loadCatalog();
+
     this.initLoading = true;
     forkJoin({
       currencies: this.salesService.getSellerCurrencies(),
@@ -381,19 +362,6 @@ export class CashierComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.syncComputedTotal());
 
-    // Compose modal — add-component + load-recipe searches.
-    this.composeAddSearch$.pipe(
-      debounceTime(350), distinctUntilChanged(),
-      switchMap((q) => q.trim().length === 0 ? of([]) : this.salesService.searchGoods(q)),
-      takeUntil(this.destroy$),
-    ).subscribe((results) => { this.composeAddResults = results; this.showComposeAddDropdown = results.length > 0; });
-
-    this.composeRecipeSearch$.pipe(
-      debounceTime(350), distinctUntilChanged(),
-      switchMap((q) => q.trim().length === 0 ? of([]) : this.salesService.searchComposableProducts(q)),
-      takeUntil(this.destroy$),
-    ).subscribe((results) => { this.composeRecipeResults = results; this.showComposeRecipeDropdown = results.length > 0; });
-
     this.addItem();
   }
 
@@ -404,8 +372,9 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.stopPolling();
   }
 
-  private getToday(): string {
-    return new Date().toISOString().split('T')[0];
+  /** Read-only display of the invoice date — the server always stamps the real creation date. */
+  get todayDisplay(): string {
+    return new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
   // ── Customer ────────────────────────────────────────────
@@ -440,6 +409,10 @@ export class CashierComponent implements OnInit, OnDestroy {
       quantity:   [null, [Validators.required, Validators.min(0.001)]],
       // Editable unit price — prefilled from the configured price, overridable.
       price:      [null, [Validators.min(0)]],
+      // Compose-dialog tagging only (receipt/invoice grouping) — null for every
+      // normal/manually-added row.
+      parent_product_id: [null],
+      role:       [null],
     });
     this.items.push(group);
     this.productQueries.push('');
@@ -703,7 +676,6 @@ export class CashierComponent implements OnInit, OnDestroy {
 
     if (this.form.invalid) {
       const missing: string[] = [];
-      if (this.form.get('date')?.invalid)         missing.push('التاريخ');
       if (this.form.get('total_amount')?.invalid)  missing.push('إجمالي الفاتورة');
       this.alert = { show: true, type: 'error', message: `يرجى ملء الحقول المطلوبة: ${missing.join('، ')}.` };
       return;
@@ -757,7 +729,6 @@ export class CashierComponent implements OnInit, OnDestroy {
     const payload: any = {
       phone:        fv.phone      || '',
       name:         fv.name       || '',
-      date:         fv.date,
       price_type:   fv.price_type,
       safe_id:      fv.safe_id ? +fv.safe_id : null,
       // New engine → computed total; Global Total → the entered amount.
@@ -776,6 +747,8 @@ export class CashierComponent implements OnInit, OnDestroy {
         quantity:   item.quantity,
         // Send the editable unit price so the backend uses it (no distribution).
         price:      (item.price === null || item.price === '') ? null : +item.price,
+        parent_product_id: item.parent_product_id || null,
+        role:       item.role || null,
       })),
     };
     if (this.overrideToken) {
@@ -807,7 +780,7 @@ export class CashierComponent implements OnInit, OnDestroy {
   private resetForm() {
     this.cancelOverrideRequest();
     this.customerQuery = '';
-    this.form.reset({ phone: '', name: '', date: this.getToday(), price_type: 'retail', safe_id: null, total_amount: null });
+    this.form.reset({ phone: '', name: '', price_type: 'retail', safe_id: null, total_amount: null });
     while (this.items.length) { this.items.removeAt(0); }
     while (this.payments.length) { this.payments.removeAt(0); }
     this.productSearchSubjects.forEach((s) => s.complete());

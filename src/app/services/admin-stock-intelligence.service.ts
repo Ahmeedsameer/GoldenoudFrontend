@@ -85,9 +85,31 @@ export interface SupplyPage {
   per_page:     number;
 }
 
+// ── Inventory Dashboard ──────────────────────────────────────────────────────
+
+export interface InventoryDashboard {
+  raw_material_count:    number;
+  packaging_count:       number;
+  ready_product_count:   number;
+  compound_count:        number;
+  total_inventory_value: number;
+  low_stock_count:       number;
+  out_of_stock_count:    number;
+  expiring_soon_count:   number | null;
+  threshold:             number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminStockIntelligenceService {
   private http = inject(HttpClient);
+
+  getDashboard(threshold?: number) {
+    const p: Record<string, string | number> = {};
+    if (threshold) p['threshold'] = threshold;
+    return this.http
+      .get<any>(`${BASE}/dashboard`, { params: p })
+      .pipe(map(r => r.data as InventoryDashboard));
+  }
 
   getOverview(threshold: number, shopId?: number | null) {
     const p: Record<string, string | number> = { threshold };

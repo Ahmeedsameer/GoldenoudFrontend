@@ -35,16 +35,8 @@
         <div class="w-36">
           <app-select [options]="paymentOptions" (valueChange)="setPaymentFilter($event)"></app-select>
         </div>
-        <input
-          type="date"
-          (change)="setDateFrom($event.target.value)"
-          class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:bg-white/[0.03] dark:text-white/90 dark:border-gray-700"
-        />
-        <input
-          type="date"
-          (change)="setDateTo($event.target.value)"
-          class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:bg-white/[0.03] dark:text-white/90 dark:border-gray-700"
-        />
+        <app-date-picker id="supplies-date-from" [value]="list.filters['date_from']" (valueChange)="setDateFrom($event)"></app-date-picker>
+        <app-date-picker id="supplies-date-to" [value]="list.filters['date_to']" (valueChange)="setDateTo($event)"></app-date-picker>
       </div>
       <app-button routerLink="/dashboard/stock/supplies/create" size="sm">
         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

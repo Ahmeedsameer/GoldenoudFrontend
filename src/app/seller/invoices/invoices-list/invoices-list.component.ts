@@ -7,6 +7,7 @@ import { Invoice } from '../../../models/sales.model';
 import { ListManager } from '../../../services/list-manager';
 import { PaginationComponent } from '../../../pagination/pagination.component';
 import { LoadingComponent } from '../../../loading/loading.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-invoices-list',
@@ -15,6 +16,7 @@ import { LoadingComponent } from '../../../loading/loading.component';
     FormsModule,
     PaginationComponent,
     LoadingComponent,
+    DatePickerComponent,
   ],
   templateUrl: './invoices-list.component.html',
   styleUrl: './invoices-list.component.css',

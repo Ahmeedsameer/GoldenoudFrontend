@@ -14,6 +14,61 @@
   </div>
 }
 
+<!-- ─── Sales Catalog — always visible, the primary view of this screen ───
+     Clicking a Ready Product adds it directly. Clicking a Compound Product
+     (a perfume) opens the Product Builder immediately — no intermediate
+     step, no button to "reveal" the catalog first. -->
+<div class="mb-5">
+  <app-component-card title="كتالوج المبيعات" desc="اضغط على منتج لإضافته — العطور تفتح صانع المنتج">
+    @if (catalogLoading) {
+      <p class="text-sm text-gray-400 text-center py-4">جارٍ التحميل…</p>
+    } @else if (catalogItems.length === 0) {
+      <p class="text-sm text-gray-400 text-center py-4">لا توجد منتجات في الكتالوج بعد</p>
+    } @else {
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        @for (p of catalogItems; track p.id) {
+          <button type="button" (click)="onCatalogCardClick(p)"
+            class="relative flex flex-col items-center text-center gap-2 rounded-xl border p-3 transition-colors"
+            [class]="isOutOfStock(p) || isMissingPrice(p)
+              ? 'border-gray-200 dark:border-gray-700 opacity-60 hover:border-error-300'
+              : 'border-gray-200 dark:border-gray-700 hover:border-brand-300 hover:bg-brand-50/40 dark:hover:bg-brand-500/5'">
+            @if (isOutOfStock(p)) {
+              <span class="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-error-100 text-error-600 dark:bg-error-500/15 dark:text-error-400">نفد</span>
+            } @else if (isMissingPrice(p)) {
+              <span class="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">بلا سعر</span>
+            }
+            @if (p.image) {
+              <img [src]="p.image" alt="" class="w-12 h-12 rounded-lg object-cover" />
+            } @else {
+              <div class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-white/[0.05] flex items-center justify-center text-gray-300">
+                @if (p.product_type === 'COMPOUND') {
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
+                }
+              </div>
+            }
+            <p class="text-xs font-medium text-gray-800 dark:text-white/90 line-clamp-2">{{ p.name }}</p>
+            @if (p.product_type === 'COMPOUND') {
+              <span class="text-[10px] text-brand-500">عطر</span>
+            } @else if (isOutOfStock(p)) {
+              <span class="text-[10px] font-medium text-error-500">نفد من المخزون — يحتاج توريد</span>
+            } @else if (isMissingPrice(p)) {
+              <span class="text-[10px] font-medium text-amber-600 dark:text-amber-400">بلا سعر — أكمل التسعير</span>
+            } @else if (p.configured_unit_price != null) {
+              <span class="text-[10px] font-mono text-gray-500">{{ p.configured_unit_price | number:'1.0-2' }} ج.م</span>
+            }
+          </button>
+        }
+      </div>
+    }
+  </app-component-card>
+</div>
+
+<app-catalog-sell-dialog
+  [product]="builderProduct"
+  (closed)="closeBuilder()"
+  (added)="onCatalogCompositionAdded($event)">
+</app-catalog-sell-dialog>
+
 <form [formGroup]="form" novalidate>
 
 
@@ -105,15 +160,12 @@
           </select>
         </div>
 
-        <!-- Date -->
+        <!-- Date (system-generated, read-only — never user-editable) -->
         <div>
-          <app-label>التاريخ <span class="text-error-500">*</span></app-label>
-          <input type="date" formControlName="date"
-            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
-            [class.border-error-500]="form.get('date')?.invalid && form.get('date')?.touched" />
-          @if (form.get('date')?.invalid && form.get('date')?.touched) {
-            <p class="mt-1 text-xs text-error-500">التاريخ مطلوب</p>
-          }
+          <app-label>التاريخ</app-label>
+          <div class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-4 flex items-center text-sm text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+            {{ todayDisplay }}
+          </div>
         </div>
 
       </div>
@@ -126,29 +178,12 @@
   <div class="mt-5">
     <app-component-card title="الأصناف">
 
-      <!-- ── Lookup panel toggle ────────────────────────────── -->
-      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-white/[0.05]">
-        <p class="text-xs text-gray-400 dark:text-gray-500">انقر على منتج لإضافته مباشرة إلى الفاتورة</p>
-        <button type="button" (click)="toggleLookupPanel()"
-          class="flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 transition-colors">
-          @if (showLookupPanel) {
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
-            إخفاء لوحة الاختيار
-          } @else {
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            تصفح المنتجات
-          }
-        </button>
-      </div>
-
-      <!-- ── Product lookup panel ───────────────────────────── -->
-      @if (showLookupPanel) {
-        <div class="mb-5">
-          <app-product-lookup-panel
-            (productSelected)="addProductFromLookup($event)">
-          </app-product-lookup-panel>
-        </div>
-      }
+      <!-- Items are added exclusively from "كتالوج المبيعات" above — no
+           separate all-inventory browse panel here, so there is only one
+           place to pick a product from. -->
+      <p class="text-xs text-gray-400 dark:text-gray-500 mb-4 pb-3 border-b border-gray-100 dark:border-white/[0.05]">
+        الأصناف تُضاف من كتالوج المبيعات بالأعلى
+      </p>
 
       <div class="space-y-3 mb-5">
         @for (item of items.controls; track $index; let i = $index) {
@@ -279,11 +314,6 @@
           class="flex items-center gap-2 text-sm text-brand-500 hover:text-brand-600 font-medium transition-colors">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           إضافة صنف
-        </button>
-        <button type="button" (click)="openCompose()"
-          class="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-          تركيب منتج (زيت + زجاجة + إكسسوار)
         </button>
       </div>
 
@@ -553,97 +583,3 @@
   [invoice]="lastInvoice"
   (closed)="showReceiptModal = false">
 </app-invoice-receipt>
-
-<!-- ── Compose product (BOM) modal ──────────────────────────── -->
-@if (showComposeModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" (click)="closeCompose()">
-    <div class="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-h-[85vh] overflow-hidden flex flex-col" (click)="$event.stopPropagation()">
-
-      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.07]">
-        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">تركيب منتج من مكوّناته</h3>
-        <button type="button" (click)="closeCompose()" class="text-gray-400 hover:text-gray-600">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-
-      <div class="px-5 py-4 overflow-y-auto space-y-4">
-
-        <!-- Load a saved recipe -->
-        <div class="relative">
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">تحميل وصفة جاهزة (اختياري)</label>
-          <input type="text" [value]="composeRecipeQuery" (input)="onComposeRecipeInput($any($event.target).value)"
-            (blur)="showComposeRecipeDropdown = false" placeholder="ابحث عن منتج له وصفة محفوظة…"
-            class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
-          @if (showComposeRecipeDropdown) {
-            <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg max-h-40 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
-              @for (g of composeRecipeResults; track g.id) {
-                <li (mousedown)="loadRecipe(g)" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05] text-gray-800 dark:text-white/90">{{ g.name }}</li>
-              }
-            </ul>
-          }
-        </div>
-
-        <!-- Add a component ad-hoc -->
-        <div class="relative">
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">إضافة مكوّن (زيت / زجاجة / إكسسوار)</label>
-          <input type="text" [value]="composeAddQuery" (input)="onComposeAddInput($any($event.target).value)"
-            (blur)="showComposeAddDropdown = false" placeholder="ابحث بالاسم أو الباركود…"
-            class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
-          @if (showComposeAddDropdown) {
-            <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg max-h-40 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
-              @for (g of composeAddResults; track g.id) {
-                <li (mousedown)="addComponent(g)" class="px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05] text-gray-800 dark:text-white/90">
-                  {{ g.supply_item.product.name }}
-                  <span class="text-xs text-gray-400 mr-2">متوفر {{ g.product_shop_stock }} {{ g.unit }}</span>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-
-        <!-- Component rows -->
-        @if (composeRows.length === 0) {
-          <p class="text-sm text-gray-400 text-center py-6">أضف مكوّنات أو حمّل وصفة جاهزة.</p>
-        } @else {
-          <div class="space-y-2">
-            @for (row of composeRows; track $index; let ri = $index) {
-              <div class="flex items-end gap-2 p-3 rounded-lg border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ row.name }}</p>
-                  <p class="text-[11px] text-gray-400">متوفر {{ row.stock }} {{ row.unit }}</p>
-                </div>
-                <div class="w-24">
-                  <label class="block text-[10px] text-gray-400 mb-0.5">الكمية ({{ row.unit }})</label>
-                  <input type="number" min="0.001" step="0.001" [(ngModel)]="row.quantity" [ngModelOptions]="{standalone:true}"
-                    class="h-9 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
-                </div>
-                <div class="w-24">
-                  <label class="block text-[10px] text-gray-400 mb-0.5">سعر الوحدة</label>
-                  <input type="number" min="0" step="0.01" [(ngModel)]="row.price" [ngModelOptions]="{standalone:true}"
-                    class="h-9 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
-                </div>
-                <button type="button" (click)="removeComposeRow(ri)" class="h-9 w-9 flex items-center justify-center rounded-lg text-error-400 hover:bg-error-50">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-              </div>
-            }
-          </div>
-        }
-      </div>
-
-      <!-- Footer -->
-      <div class="flex items-center justify-between gap-3 px-5 py-4 border-t border-gray-100 dark:border-white/[0.07]">
-        <div class="text-sm">
-          <span class="text-gray-400">إجمالي التركيبة:</span>
-          <span class="font-bold font-mono text-gray-800 dark:text-white/90">{{ composeTotal | number:'1.2-2' }} ج.م</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <button type="button" (click)="closeCompose()" class="h-10 px-4 rounded-xl border border-gray-300 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">إلغاء</button>
-          <button type="button" (click)="applyCompose()" [disabled]="composeRows.length === 0"
-            class="h-10 px-5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold disabled:opacity-40 transition-colors">إضافة للفاتورة</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-}

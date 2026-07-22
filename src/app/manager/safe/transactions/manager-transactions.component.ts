@@ -7,10 +7,11 @@ import { SafeTransaction, TransactionType, Currency } from '../../../models/safe
 import { ListManager } from '../../../services/list-manager';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { PaginationComponent } from '../../../pagination/pagination.component';
+import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-manager-transactions',
-  imports: [CommonModule, LoadingComponent, PaginationComponent],
+  imports: [CommonModule, LoadingComponent, PaginationComponent, DatePickerComponent],
   templateUrl: './manager-transactions.component.html',
 })
 export class ManagerTransactionsComponent implements OnInit {

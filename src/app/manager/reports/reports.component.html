@@ -69,13 +69,11 @@
   <div class="mb-5 flex flex-wrap items-end gap-3 p-4 rounded-2xl border border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10">
     <div>
       <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">من تاريخ</label>
-      <input type="date" [(ngModel)]="globalFrom"
-        class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+      <app-date-picker id="mgr-rep-global-from" [value]="globalFrom" (valueChange)="globalFrom = $event"></app-date-picker>
     </div>
     <div>
       <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">إلى تاريخ</label>
-      <input type="date" [(ngModel)]="globalTo"
-        class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+      <app-date-picker id="mgr-rep-global-to" [value]="globalTo" (valueChange)="globalTo = $event"></app-date-picker>
     </div>
     <button type="button" (click)="applyGlobalRange()"
       [disabled]="!globalFrom || !globalTo"
@@ -527,13 +525,11 @@
     <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-4 shadow-sm mb-4 flex flex-wrap items-end gap-3">
       <div>
         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">من تاريخ</label>
-        <input type="date" [(ngModel)]="customFrom"
-          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+        <app-date-picker id="mgr-rep-custom-from" [value]="customFrom" (valueChange)="customFrom = $event"></app-date-picker>
       </div>
       <div>
         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">إلى تاريخ</label>
-        <input type="date" [(ngModel)]="customTo"
-          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+        <app-date-picker id="mgr-rep-custom-to" [value]="customTo" (valueChange)="customTo = $event"></app-date-picker>
       </div>
       <button type="button" (click)="applyCustomDates()"
         [disabled]="!customFrom || !customTo || loading"

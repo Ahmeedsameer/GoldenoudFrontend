@@ -1,0 +1,80 @@
+<div class="p-4 md:p-6 space-y-6" dir="rtl">
+
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">لوحة المخزون</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">نظرة عامة على المخزون عبر كل الفروع</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <app-report-toolbar exportPath="/admin/stock-intelligence/export" [params]="{}" fileName="تقرير-المخزون" (refresh)="load()"></app-report-toolbar>
+      <a routerLink="/dashboard/stock-intelligence" class="text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700">
+        ذكاء المخزون التفصيلي ←
+      </a>
+    </div>
+  </div>
+
+  @if (loading) { <app-loading /> }
+
+  @if (!loading && data) {
+
+    <!-- Products by type -->
+    <div>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">المنتجات حسب النوع</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-2xl mb-1">🛢️</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ data.raw_material_count }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">خامات</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-2xl mb-1">🧴</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ data.packaging_count }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">مستلزمات تعبئة</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-2xl mb-1">📦</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ data.ready_product_count }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">منتجات جاهزة</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 opacity-80">
+          <p class="text-2xl mb-1">🧪</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ data.compound_count }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">عطور مركّبة (بدون مخزون)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI cards -->
+    <div>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">حالة المخزون</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+        <div class="col-span-2 md:col-span-1 bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-4 text-white">
+          <p class="text-xs text-brand-100 mb-1">إجمالي قيمة المخزون</p>
+          <p class="text-2xl font-bold">{{ data.total_inventory_value | number:'1.0-0' }}</p>
+          <p class="text-[11px] text-brand-100 mt-0.5">ج.م</p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-amber-200 dark:border-amber-500/30 p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">مخزون منخفض</p>
+          <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ data.low_stock_count }}</p>
+          <p class="text-[11px] text-gray-400 mt-0.5">حد التنبيه: {{ data.threshold }}</p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-error-200 dark:border-error-500/30 p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">نفد من المخزون</p>
+          <p class="text-2xl font-bold text-error-600 dark:text-error-400">{{ data.out_of_stock_count }}</p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 opacity-60">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">قريب من انتهاء الصلاحية</p>
+          <p class="text-2xl font-bold text-gray-400">—</p>
+          <p class="text-[11px] text-gray-400 mt-0.5">قريباً</p>
+        </div>
+
+      </div>
+    </div>
+
+  }
+
+</div>

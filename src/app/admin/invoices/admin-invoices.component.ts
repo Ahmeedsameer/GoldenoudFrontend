@@ -19,13 +19,25 @@ export class AdminInvoicesComponent implements OnInit {
   actingId: number | null = null;
   alert: { show: boolean; type: 'success' | 'error' | ''; message: string } = { show: false, type: '', message: '' };
 
+  /** Every invoice sitting in this list needs the admin's action — shown as a count badge on the tab itself. */
+  pendingCount = 0;
+
   statusTabs: { key: 'pending' | 'approved' | 'cancelled'; label: string }[] = [
     { key: 'pending',   label: 'قيد المراجعة' },
     { key: 'approved',  label: 'معتمدة' },
     { key: 'cancelled', label: 'مرفوضة' },
   ];
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    this.loadPendingCount();
+  }
+
+  private loadPendingCount(): void {
+    this.service.getInvoices({ status: 'pending', per_page: 1 }).subscribe({
+      next: (res) => { this.pendingCount = res?.data?.total ?? 0; },
+    });
+  }
 
   setStatus(s: 'pending' | 'approved' | 'cancelled') {
     if (this.status === s) return;
@@ -81,6 +93,7 @@ export class AdminInvoicesComponent implements OnInit {
         this.alert = { show: true, type: 'success', message: res?.message || `تم ${verb} الفاتورة` };
         // remove from the current (pending) list
         this.invoices = this.invoices.filter(i => i.id !== inv.id);
+        this.pendingCount = Math.max(0, this.pendingCount - 1);
       },
       error: (err) => {
         this.actingId = null;

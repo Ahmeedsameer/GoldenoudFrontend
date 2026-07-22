@@ -79,15 +79,12 @@
         <app-form-error [control]="headerForm.get('supplier_id')!"></app-form-error>
       </div>
 
-      <!-- Date -->
+      <!-- Date (system-generated, read-only — never user-editable) -->
       <div>
-        <app-label>التاريخ <span class="text-error-500">*</span></app-label>
-        <input
-          type="date"
-          formControlName="date"
-          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
-        />
-        <app-form-error [control]="headerForm.get('date')!"></app-form-error>
+        <app-label>التاريخ</app-label>
+        <div class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-4 flex items-center text-sm text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+          {{ todayDisplay }}
+        </div>
       </div>
 
       <!-- Payment method -->
@@ -116,6 +113,90 @@
           </button>
         </div>
       </div>
+
+      <!-- Category — chosen once, scopes which products can be added and
+           drives the Supplier Intelligence panel below. -->
+      <div>
+        <app-label>فئة المنتجات <span class="text-error-500">*</span></app-label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
+          @for (cat of categories; track cat.value) {
+            <button type="button" (click)="selectCategory(cat)"
+              class="flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-colors"
+              [class]="cat.disabled
+                ? 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed'
+                : (selectedCategory === cat.value
+                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10'
+                  : 'border-gray-300 dark:border-gray-700 hover:border-brand-300')">
+              <span class="text-2xl">{{ cat.icon }}</span>
+              <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ cat.label }}</span>
+              @if (cat.disabled) {
+                <span class="text-[10px] text-gray-400">منتج افتراضي</span>
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Supplier Intelligence — helps pick the right supplier for this category -->
+      @if (selectedCategory) {
+        <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">تحليل الموردين لهذه الفئة</h3>
+
+          @if (intelligenceLoading) {
+            <p class="text-sm text-gray-400 text-center py-4">جارٍ التحميل…</p>
+          } @else if (intelligence && intelligence.purchase_count > 0) {
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div class="rounded-lg bg-gray-50 dark:bg-white/[0.02] p-3">
+                <p class="text-[11px] text-gray-400">متوسط سعر الشراء</p>
+                <p class="text-sm font-bold font-mono text-gray-800 dark:text-white/90">
+                  {{ intelligence.average_purchase_price != null ? (intelligence.average_purchase_price | number:'1.2-2') : '—' }}
+                </p>
+              </div>
+              <div class="rounded-lg bg-gray-50 dark:bg-white/[0.02] p-3">
+                <p class="text-[11px] text-gray-400">آخر سعر شراء</p>
+                <p class="text-sm font-bold font-mono text-gray-800 dark:text-white/90">
+                  {{ intelligence.latest_purchase_price != null ? (intelligence.latest_purchase_price | number:'1.2-2') : '—' }}
+                </p>
+              </div>
+              <div class="rounded-lg bg-gray-50 dark:bg-white/[0.02] p-3">
+                <p class="text-[11px] text-gray-400">المورد الأكثر تعاملاً</p>
+                <p class="text-sm font-bold text-gray-800 dark:text-white/90 truncate">{{ intelligence.most_frequent_supplier?.name || '—' }}</p>
+              </div>
+              <div class="rounded-lg bg-gray-50 dark:bg-white/[0.02] p-3">
+                <p class="text-[11px] text-gray-400">عدد عمليات الشراء</p>
+                <p class="text-sm font-bold font-mono text-gray-800 dark:text-white/90">{{ intelligence.purchase_count }}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">أفضل الموردين</p>
+                <div class="space-y-1">
+                  @for (s of intelligence.top_suppliers; track s.id) {
+                    <div class="flex justify-between text-xs px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-white/[0.02]">
+                      <span class="text-gray-700 dark:text-gray-300">{{ s.name }}</span>
+                      <span class="font-mono text-gray-400">{{ s.purchase_count }}× — {{ s.total_spent | number:'1.0-0' }} ج.م</span>
+                    </div>
+                  }
+                </div>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">الأكثر شراءً</p>
+                <div class="space-y-1">
+                  @for (p of intelligence.most_purchased_products; track p.id) {
+                    <div class="flex justify-between text-xs px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-white/[0.02]">
+                      <span class="text-gray-700 dark:text-gray-300">{{ p.name }}</span>
+                      <span class="font-mono text-gray-400">{{ p.total_qty | number:'1.0-2' }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          } @else {
+            <p class="text-sm text-gray-400 text-center py-4">لا توجد بيانات شراء سابقة لهذه الفئة بعد.</p>
+          }
+        </div>
+      }
 
       <div class="flex items-center gap-3 pt-2">
         <app-button (btnClick)="goToStep2()">التالي ← الأصناف</app-button>

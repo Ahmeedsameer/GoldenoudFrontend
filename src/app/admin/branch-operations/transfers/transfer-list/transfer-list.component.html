@@ -1,0 +1,72 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">طلبات النقل بين الفروع</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ meta?.total ?? 0 }} طلب</p>
+    </div>
+    <a routerLink="/dashboard/branch-operations/transfers/create"
+      class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors">
+      + طلب نقل جديد
+    </a>
+  </div>
+
+  <div class="mb-5 flex flex-wrap items-center gap-2">
+    <select [(ngModel)]="statusFilter" (change)="applyFilters()"
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      @for (s of statuses; track s.key) { <option [value]="s.key">{{ s.label }}</option> }
+    </select>
+    <select (change)="shopFilter = $any($event.target).value ? +$any($event.target).value : null; applyFilters()"
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <option value="">كل الفروع</option>
+      @for (s of shops; track s.id) { <option [value]="s.id">{{ s.name }}</option> }
+    </select>
+  </div>
+
+  <div class="db-tbl-card">
+    <div class="db-tbl-wrap">
+      <table class="db-tbl">
+        <thead>
+          <tr><th>رقم الطلب</th><th>من</th><th>إلى</th><th>الأولوية</th><th>الحالة</th><th>الأصناف</th><th>تاريخ الطلب</th></tr>
+        </thead>
+        <tbody>
+          @for (t of transfers; track t.id) {
+            <tr [routerLink]="['/dashboard/branch-operations/transfers', t.id]" style="cursor:pointer">
+              <td class="font-medium font-mono" style="color:#9A7B1A">{{ t.request_number }}</td>
+              <td style="color:#6B7280">{{ t.source_shop?.name }}</td>
+              <td style="color:#6B7280">{{ t.destination_shop?.name }}</td>
+              <td style="color:#6B7280">{{ t.priority }}</td>
+              <td>
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="text-xs font-medium px-2.5 py-1 rounded-full" [class]="statusClass(t.status)">{{ statusLabel(t.status) }}</span>
+                  @if (needsAction(t)) {
+                    <span class="relative flex h-2.5 w-2.5" title="بانتظار إجراءك">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-error-500"></span>
+                    </span>
+                  }
+                </span>
+              </td>
+              <td style="color:#6B7280">{{ t.items?.length ?? 0 }}</td>
+              <td style="color:#9CA3AF">{{ t.requested_date | date:'d MMM yyyy' }}</td>
+            </tr>
+          }
+          @if (!transfers.length && !loading) {
+            <tr><td colspan="7" class="text-center text-sm text-gray-400 py-8">لا توجد طلبات نقل</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (meta && meta.last_page > 1) {
+    <div class="flex items-center justify-between mt-4">
+      <button type="button" (click)="prevPage()" [disabled]="page <= 1" class="lux-btn lux-btn-sm disabled:opacity-40">السابق</button>
+      <span class="text-xs text-gray-400">صفحة {{ meta.current_page }} من {{ meta.last_page }}</span>
+      <button type="button" (click)="nextPage()" [disabled]="page >= meta.last_page" class="lux-btn lux-btn-sm disabled:opacity-40">التالي</button>
+    </div>
+  }
+
+</div>

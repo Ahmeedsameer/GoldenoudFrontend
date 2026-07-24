@@ -316,7 +316,7 @@ export class HrService {
   }
 
   approveAdvance(id: number, plan: {
-    approved_amount: number; mode: 'date_range' | 'fixed_amount' | 'fixed_months' | 'custom';
+    approved_amount: number; safe_id: number; mode: 'date_range' | 'fixed_amount' | 'fixed_months' | 'custom';
     monthly_amount?: number; months?: number; schedule?: number[];
     start_year?: number; start_month?: number; end_year?: number; end_month?: number;
   }): Observable<any> {
@@ -335,7 +335,7 @@ export class HrService {
     return this.http.put<any>(`${this.base}/advances/${id}/cancel`, {});
   }
 
-  recordAdvanceRepayment(id: number, payload: { amount: number; date: string; notes?: string | null }): Observable<any> {
+  recordAdvanceRepayment(id: number, payload: { amount: number; date: string; safe_id: number; notes?: string | null }): Observable<any> {
     return this.http.post<any>(`${this.base}/advances/${id}/repayments`, payload);
   }
 }

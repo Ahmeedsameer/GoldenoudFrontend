@@ -44,7 +44,7 @@
       <!-- General info -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
-          <p class="text-xs text-gray-400 mb-1">الأولوية</p><p class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ transfer.priority }}</p>
+          <p class="text-xs text-gray-400 mb-1">الأولوية</p><p class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ priorityLabel(transfer.priority) }}</p>
         </div>
         <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
           <p class="text-xs text-gray-400 mb-1">بواسطة</p><p class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ transfer.requested_by_user?.name }}</p>

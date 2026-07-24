@@ -19,8 +19,23 @@ export class ProductService {
         return this.httpClient.get<any>(`${ProductService.apiUrl}/${id}`);
     }
 
-    createProduct(data: FormData) {
-        return this.httpClient.post<any>(`${ProductService.apiUrl}/`, data);
+    // ── Four independent Product Creation Forms — each its own page/component,
+    //    own FormGroup, own backend request/validation class. ────────────────
+
+    createRawMaterial(data: FormData) {
+        return this.httpClient.post<any>(`${ProductService.apiUrl}/raw-materials`, data);
+    }
+
+    createPackaging(data: FormData) {
+        return this.httpClient.post<any>(`${ProductService.apiUrl}/packaging`, data);
+    }
+
+    createReadyProduct(data: FormData) {
+        return this.httpClient.post<any>(`${ProductService.apiUrl}/ready-products`, data);
+    }
+
+    createCompound(data: FormData) {
+        return this.httpClient.post<any>(`${ProductService.apiUrl}/compounds`, data);
     }
 
     updateProduct(id: number, data: FormData) {
@@ -41,5 +56,10 @@ export class ProductService {
     // components: [{ component_product_id, quantity, is_variable_quantity?, component_group? }]
     saveComponents(productId: number, components: { component_product_id: number; quantity: number; is_variable_quantity?: boolean; component_group?: string | null }[]) {
         return this.httpClient.put<any>(`${ProductService.apiUrl}/${productId}/components`, { components });
+    }
+
+    /** Composite Products' "Default Oil" picker — Raw Materials priced per-gram, NOT a recipe list. */
+    getOilOptions(search?: string) {
+        return this.httpClient.get<any>(`${ProductService.apiUrl}/oil-options`, { params: search ? { search } : {} });
     }
 }

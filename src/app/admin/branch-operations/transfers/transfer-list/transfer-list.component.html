@@ -37,7 +37,7 @@
               <td class="font-medium font-mono" style="color:#9A7B1A">{{ t.request_number }}</td>
               <td style="color:#6B7280">{{ t.source_shop?.name }}</td>
               <td style="color:#6B7280">{{ t.destination_shop?.name }}</td>
-              <td style="color:#6B7280">{{ t.priority }}</td>
+              <td style="color:#6B7280">{{ priorityLabel(t.priority) }}</td>
               <td>
                 <span class="inline-flex items-center gap-1.5">
                   <span class="text-xs font-medium px-2.5 py-1 rounded-full" [class]="statusClass(t.status)">{{ statusLabel(t.status) }}</span>

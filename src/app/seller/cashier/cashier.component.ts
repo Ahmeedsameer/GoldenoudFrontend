@@ -21,6 +21,13 @@ export interface CatalogProduct {
   id: number; name: string; sku: string | null; image?: string | null;
   product_type: 'COMPOUND' | 'READY_PRODUCT' | string | null;
   configured_unit_price: number | null; shop_stock: number | null; unit: string;
+  /** Composite Products only — a preferred oil to pre-select (never lock) in the Assemble-on-Sale dialog. */
+  default_oil_id?: number | null;
+  /** Composite Products only — whether the shop currently has at least one
+   *  priced, in-stock oil AND bottle (shop-wide, since the Builder allows any
+   *  combination — there's no fixed recipe to check stock against). */
+  compound_available?: boolean | null;
+  compound_unavailable_reason?: string | null;
 }
 
 @Component({
@@ -152,7 +159,7 @@ export class CashierComponent implements OnInit, OnDestroy {
   }
 
   /** Set only while the Product Builder is open for a Compound Product. */
-  builderProduct: { id: number; name: string } | null = null;
+  builderProduct: { id: number; name: string; default_oil_id?: number | null } | null = null;
 
   /** Ready Products with zero stock in the active branch — Compound Products
    *  have no fixed stock of their own (their oil+bottle availability is
@@ -169,6 +176,13 @@ export class CashierComponent implements OnInit, OnDestroy {
     return p.product_type !== 'COMPOUND' && p.configured_unit_price == null;
   }
 
+  /** A Compound Product the shop currently cannot compose at all — no priced,
+   *  in-stock oil or bottle exists anywhere in the branch (checked shop-wide
+   *  in searchCatalogProducts(), since the Builder allows any oil/bottle). */
+  isCompoundUnavailable(p: CatalogProduct): boolean {
+    return p.product_type === 'COMPOUND' && p.compound_available === false;
+  }
+
   /**
    * Clicking a catalog card. Ready Product → added directly to the invoice
    * immediately, exactly as today (blocked if the branch has none in stock,
@@ -179,7 +193,11 @@ export class CashierComponent implements OnInit, OnDestroy {
    */
   onCatalogCardClick(p: CatalogProduct) {
     if (p.product_type === 'COMPOUND') {
-      this.builderProduct = { id: p.id, name: p.name };
+      if (this.isCompoundUnavailable(p)) {
+        this.alert = { show: true, type: 'error', message: p.compound_unavailable_reason || `${p.name} غير متاح للتركيب حالياً.` };
+        return;
+      }
+      this.builderProduct = { id: p.id, name: p.name, default_oil_id: p.default_oil_id ?? null };
       return;
     }
     if (this.isOutOfStock(p)) {
@@ -260,9 +278,17 @@ export class CashierComponent implements OnInit, OnDestroy {
     return +(this.items.at(i)?.get('price')?.value) || 0;
   }
 
-  /** Whether a row has a usable unit price (typed or prefilled). */
+  /** The composition role of a row ('oil' | 'bottle' | 'alcohol' | null). */
+  lineRole(i: number): string | null {
+    return this.items.at(i)?.get('role')?.value ?? null;
+  }
+
+  /** Whether a row has a usable unit price. Alcohol is the sole exception:
+   *  its price is deliberately always 0 (operational material, never charged
+   *  to the customer — see catalog-sell-dialog's addToInvoice), so a zero
+   *  price there is valid/configured, not missing. */
   itemConfigured(i: number): boolean {
-    return this.lineUnitPrice(i) > 0;
+    return this.lineUnitPrice(i) > 0 || this.lineRole(i) === 'alcohol';
   }
 
   /** The selling unit for a row (g / pcs) — comes from the Product Type. */
@@ -686,9 +712,10 @@ export class CashierComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // In per-item mode, every line must have a unit price.
+    // In per-item mode, every line must have a unit price — except Alcohol,
+    // whose price is deliberately always 0 (see itemConfigured()).
     if (this.useNewEngine) {
-      const missing = this.selectedGoods.findIndex((g, idx) => g != null && this.lineUnitPrice(idx) <= 0);
+      const missing = this.selectedGoods.findIndex((g, idx) => g != null && this.lineUnitPrice(idx) <= 0 && this.lineRole(idx) !== 'alcohol');
       if (missing !== -1) {
         const name = this.selectedGoods[missing]?.supply_item?.product?.name ?? '';
         this.alert = { show: true, type: 'error', message: `يرجى إدخال سعر الوحدة للصنف "${name}".` };

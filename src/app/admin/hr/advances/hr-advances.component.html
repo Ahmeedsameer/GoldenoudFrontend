@@ -122,6 +122,16 @@
       </div>
 
       <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الخزنة/العهدة الدافعة <span class="text-error-500">*</span></label>
+        <select [(ngModel)]="approveForm.safe_id"
+          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <option [ngValue]="null" disabled>اختر الخزنة التي ستدفع السلفة</option>
+          @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
+        </select>
+        <p class="mt-1 text-[11px] text-gray-400">سيتم إنشاء عملية سحب عادية من هذه الخزنة بقيمة المبلغ المعتمد.</p>
+      </div>
+
+      <div>
         <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">طريقة التقسيط</label>
         <select [(ngModel)]="approveForm.mode" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
           <option value="date_range">بداية ونهاية الشهر (مستحسن — يُقسَّم بالتساوي)</option>
@@ -259,6 +269,12 @@
         <div class="ds-card p-3 text-center"><p class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ modeLabels[detail.installment_mode] || '—' }}</p><p class="text-[10px] text-gray-500">طريقة التقسيط</p></div>
       </div>
 
+      @if (detail.paying_safe) {
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+          الخزنة/العهدة الدافعة: <span class="font-medium text-gray-700 dark:text-gray-300">{{ safeLabel(detail.paying_safe) }}</span>
+        </p>
+      }
+
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">خطة الأقساط</h3>
         @if (isAdmin && detail.status === 'active') {
@@ -284,6 +300,7 @@
             <div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
               <span class="font-mono text-gray-500">{{ r.date }}</span>
               <span class="font-mono font-medium text-success-600">{{ r.amount | number:'1.2-2' }}</span>
+              <span class="text-xs text-gray-400">{{ r.safe ? safeLabel(r.safe) : '—' }}</span>
               <span class="text-xs text-gray-400">{{ r.recorded_by?.name }}</span>
             </div>
           }
@@ -297,6 +314,11 @@
             class="h-9 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
           <app-date-picker id="repayment-date" [value]="repaymentForm.date" (valueChange)="repaymentForm.date = $event"></app-date-picker>
         </div>
+        <select [(ngModel)]="repaymentForm.safe_id"
+          class="h-9 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-2">
+          <option [ngValue]="null" disabled>اختر الخزنة التي استلمت السداد</option>
+          @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
+        </select>
         <input type="text" [(ngModel)]="repaymentForm.notes" placeholder="ملاحظات (اختياري)"
           class="h-9 w-full rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-2" />
         <button (click)="recordRepayment()" [disabled]="busyId === detail.id" class="w-full h-9 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">تسجيل السداد</button>

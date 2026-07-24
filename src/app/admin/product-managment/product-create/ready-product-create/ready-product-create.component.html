@@ -1,0 +1,91 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="crud-page-head">
+  <div>
+    <a routerLink="/dashboard/products" class="text-xs font-medium mb-1 inline-block" style="color: #9A7B1A;">‹ الرجوع للمنتجات</a>
+    <h1 class="page-title">إضافة منتج جاهز</h1>
+    <p class="page-subtitle">عطر جاهز يُباع مباشرة — مخزون حقيقي، يظهر في كتالوج المبيعات.</p>
+  </div>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5">
+    <app-alert [variant]="$any(alert.type)" [message]="alert.message"></app-alert>
+  </div>
+}
+
+<app-component-card title="بيانات المنتج الجاهز">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <div class="sm:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          الاسم <span class="text-error-500">*</span>
+        </label>
+        <input type="text" formControlName="name" placeholder="مثال: عود الكبير 100مل"
+          class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:border-gray-700"
+          [class]="form.get('name')?.invalid && form.get('name')?.touched ? 'border-error-400' : 'border-gray-300'" />
+        @if (form.get('name')?.invalid && form.get('name')?.touched) {
+          <p class="mt-1 text-xs text-error-500">الاسم مطلوب</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          الفئة <span class="text-error-500">*</span>
+        </label>
+        <select formControlName="category_id"
+          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800">
+          <option value="">— اختر فئة —</option>
+          @for (cat of categories; track cat.id) {
+            <option [value]="cat.id">{{ cat.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          وحدة المخزون <span class="text-error-500">*</span>
+        </label>
+        <select formControlName="scalar"
+          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800">
+          @for (opt of unitOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الباركود</label>
+        <input type="text" formControlName="barcode" placeholder="اختياري"
+          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">حد التحذير</label>
+        <input type="number" formControlName="warning_quantity" min="0" step="0.001" placeholder="مثال: 20"
+          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+        <p class="text-[11px] text-gray-400 mt-1">يُورَّث من الفئة تلقائياً إن تُرك فارغاً.</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحد الحرِج</label>
+        <input type="number" formControlName="critical_quantity" min="0" step="0.001" placeholder="مثال: 5"
+          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+      </div>
+
+    </div>
+
+    <div class="flex gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-white/[0.05]">
+      <button type="submit" [disabled]="loading"
+        class="flex-1 h-10 rounded-lg font-medium text-sm transition-colors"
+        [class]="loading ? 'bg-brand-400 text-white cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600 text-white'">
+        @if (loading) { جارٍ الحفظ... } @else { إضافة المنتج الجاهز }
+      </button>
+      <a routerLink="/dashboard/products"
+        class="px-6 h-10 flex items-center rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">
+        إلغاء
+      </a>
+    </div>
+  </form>
+</app-component-card>

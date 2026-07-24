@@ -12,6 +12,9 @@ const STATUS_LABELS: Record<TransferStatus, string> = {
   draft: 'مسودة', submitted: 'بانتظار الموافقة', approved: 'تمت الموافقة', rejected: 'مرفوض',
   preparing: 'قيد التجهيز', shipped: 'تم الشحن', received: 'تم الاستلام', closed: 'مغلق',
 };
+const PRIORITY_LABELS: Record<string, string> = {
+  low: 'منخفضة', normal: 'عادية', high: 'مرتفعة', urgent: 'عاجلة',
+};
 const TIMELINE_ORDER: TransferStatus[] = ['submitted', 'approved', 'preparing', 'shipped', 'received', 'closed'];
 
 interface ReceiveRow { item_id: number; product_name: string; requested_quantity: number; received_quantity: number; missing_quantity: number; damaged_quantity: number; notes: string; }
@@ -99,6 +102,7 @@ export class TransferDetailComponent implements OnInit {
   }
 
   statusLabel(s: string): string { return STATUS_LABELS[s as TransferStatus] ?? s; }
+  priorityLabel(p: string): string { return PRIORITY_LABELS[p] ?? p; }
 
   timelineStepClass(step: TransferStatus): string {
     if (!this.transfer) return '';

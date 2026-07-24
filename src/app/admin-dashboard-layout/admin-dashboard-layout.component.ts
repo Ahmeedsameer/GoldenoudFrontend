@@ -88,6 +88,7 @@ export class AdminDashboardLayoutComponent {
         { name: "الربح الشهري",      path: "/dashboard/reports/monthly-profit" },
         { name: "تقارير التحويلات",  path: "/dashboard/reports/transfers" },
         { name: "تقرير فواتير النقل الداخلية",  path: "/dashboard/reports/transfer-invoices" },
+        { name: "تقرير سلف الرواتب",  path: "/dashboard/reports/salary-advances" },
         { name: "تقارير الهالك",     path: "/dashboard/reports/waste" },
         { name: "تقارير جرد المخزون", path: "/dashboard/reports/counts" },
         { name: "تقارير تسويات المخزون", path: "/dashboard/reports/adjustments" },

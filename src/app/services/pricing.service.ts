@@ -8,7 +8,13 @@ export interface PricingRow {
   id: number;
   name: string;
   sku: string | null;
-  product_type: 'COMPOUND' | 'READY_PRODUCT';
+  product_type: 'COMPOUND' | 'READY_PRODUCT' | 'RAW_MATERIAL' | 'PACKAGING';
+  /** Which product column this row's price actually lives in — oils (and any
+   *  other category-priced raw material) are priced per gram/ml; everything
+   *  else (Ready Products, Packaging/bottles, product-priced raw materials
+   *  like Alcohol) uses selling_price; Compound uses its own default. */
+  pricing_field: 'selling_price' | 'price_per_gram' | 'default_selling_price';
+  unit: string | null;
   current_cost: number | null;
   selling_price: number | null;
   estimated_profit: number | null;

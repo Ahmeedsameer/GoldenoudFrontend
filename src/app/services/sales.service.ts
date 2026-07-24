@@ -41,12 +41,25 @@ export class SalesService {
       .pipe(map((res) => res.data || []));
   }
 
+  // ── Product Builder: raw materials in the dedicated "كحول" category —
+  // chosen exactly like an oil, freely, every sale. ───────────────────────────
+  searchAlcoholProducts(search: string): Observable<any[]> {
+    return this.http
+      .get<any>(`${API_BASE}/sales/alcohol-products`, { params: { search } })
+      .pipe(map((res) => res.data || []));
+  }
+
   // ── Product Builder: live price calculation + bottle-capacity validation ───
   calculateCompoundPrice(params: {
     catalog_product_id: number; oil_product_id: number; oil_qty: number; bottle_product_id: number;
+    alcohol_product_id?: number; alcohol_qty?: number;
   }): Observable<{
     oil_unit_price: number; oil_cost: number; oil_stock: number;
     bottle_unit_price: number; bottle_cost: number; bottle_stock: number; bottle_capacity_ml: number | null;
+    // Alcohol is a real, fully-costed Raw Material (never zero) — its true unit
+    // price/cost is returned for its own invoice line, but total_cost (the
+    // Composite Product's commercial cost/profit basis) never includes it.
+    alcohol_unit_price: number | null; alcohol_cost: number | null; alcohol_stock: number | null;
     total_cost: number; stock_ok: boolean; default_selling_price: number | null;
   }> {
     return this.http

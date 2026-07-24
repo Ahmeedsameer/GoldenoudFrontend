@@ -77,6 +77,36 @@
           }
         </div>
 
+        <!-- Step 4: choose alcohol + quantity (auto-suggested from bottle capacity − oil qty) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">4) اختر الكحول</label>
+          <div class="relative">
+            <input type="text" [ngModel]="alcoholQuery" (ngModelChange)="onAlcoholQueryInput($event)"
+              placeholder="ابحث عن كحول…"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            @if (alcoholResults.length) {
+              <div class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                @for (a of alcoholResults; track a.id) {
+                  <button type="button" (click)="selectAlcohol(a)"
+                    class="flex w-full items-center justify-between px-3 py-2 text-right text-sm hover:bg-gray-50 dark:hover:bg-white/[0.04]">
+                    <span class="font-medium text-gray-800 dark:text-white/90">{{ a.name }}</span>
+                    <span class="text-xs font-mono text-gray-400">{{ a.configured_unit_price | number:'1.0-2' }} ج.م/{{ a.unit }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          @if (selectedAlcohol) {
+            <p class="text-[11px] text-gray-400 mt-1">المتاح: {{ selectedAlcohol.shop_stock }} {{ selectedAlcohol.unit }}</p>
+          }
+
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-3">كمية الكحول (مل)</label>
+          <input type="number" min="0.001" step="0.001" [(ngModel)]="alcoholQty" (ngModelChange)="onAlcoholQtyChange()"
+            placeholder="مقترحة تلقائياً من سعة الزجاجة"
+            class="h-10 w-32 rounded-lg border border-gray-300 px-3 text-sm text-center bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+          <p class="text-[11px] text-gray-400 mt-1">اقتراح تلقائي = سعة الزجاجة − كمية الزيت. يمكنك تعديله بحرية — الكحول مادة تشغيلية فقط ولا يؤثر على سعر البيع.</p>
+        </div>
+
         <!-- Capacity validation error -->
         @if (pricingError) {
           <div class="p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">

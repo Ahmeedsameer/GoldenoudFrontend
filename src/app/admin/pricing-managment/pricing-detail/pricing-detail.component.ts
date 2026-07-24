@@ -99,4 +99,17 @@ export class PricingDetailComponent implements OnInit {
   historyLabel(type: PriceHistoryRow['type']): string {
     return type === 'cost_update' ? 'تحديث تكلفة' : 'تعديل سعر';
   }
+
+  typeLabel(type: PricingDetail['product_type'] | undefined): string {
+    switch (type) {
+      case 'COMPOUND': return 'عطر مركّب';
+      case 'RAW_MATERIAL': return 'مادة خام';
+      case 'PACKAGING': return 'عبوة / تغليف';
+      default: return 'منتج جاهز';
+    }
+  }
+
+  priceLabel(detail: PricingDetail): string {
+    return detail.pricing_field === 'price_per_gram' ? `سعر الوحدة (لكل ${detail.unit || 'وحدة'})` : 'سعر البيع';
+  }
 }

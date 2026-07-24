@@ -40,6 +40,11 @@ export class ShopListComponent implements OnInit {
   deleteLoading = false;
 
   ngOnInit(): void {
+    // The Main Warehouse is a real Shop row internally (so Transfer Requests,
+    // dashboards, and reports can treat it as a location), but it isn't a
+    // retail branch — this CRUD list manages branches, so it's excluded here.
+    // Warehouse stock itself is managed from المخزون والتوريدات → المخزون الرئيسي.
+    this.list.filters['exclude_warehouse'] = 1;
     this.list.load();
   }
 

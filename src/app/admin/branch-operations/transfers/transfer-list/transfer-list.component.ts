@@ -11,6 +11,9 @@ const STATUS_LABELS: Record<TransferStatus, string> = {
   draft: 'مسودة', submitted: 'بانتظار الموافقة', approved: 'تمت الموافقة', rejected: 'مرفوض',
   preparing: 'قيد التجهيز', shipped: 'تم الشحن', received: 'تم الاستلام', closed: 'مغلق',
 };
+const PRIORITY_LABELS: Record<string, string> = {
+  low: 'منخفضة', normal: 'عادية', high: 'مرتفعة', urgent: 'عاجلة',
+};
 const STATUS_CLASSES: Record<TransferStatus, string> = {
   draft: 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300',
   submitted: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
@@ -104,5 +107,6 @@ export class TransferListComponent implements OnInit {
   prevPage(): void { if (this.page > 1) { this.page--; this.load(); } }
 
   statusLabel(s: string): string { return STATUS_LABELS[s as TransferStatus] ?? s; }
+  priorityLabel(p: string): string { return PRIORITY_LABELS[p] ?? p; }
   statusClass(s: string): string { return STATUS_CLASSES[s as TransferStatus] ?? 'bg-gray-100 text-gray-600'; }
 }

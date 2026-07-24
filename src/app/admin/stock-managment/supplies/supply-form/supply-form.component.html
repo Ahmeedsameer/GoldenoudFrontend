@@ -212,7 +212,8 @@
     <form [formGroup]="itemsForm" novalidate>
       <div class="space-y-3 mb-5" [formArrayName]="'items'">
         @for (item of items.controls; track $index; let i = $index) {
-          <div [formGroupName]="i" class="flex flex-wrap gap-3 items-end p-4 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+          <div [formGroupName]="i" class="p-4 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+          <div class="flex flex-wrap gap-3 items-end">
             <!-- Product typeahead -->
             <div class="flex-1 min-w-[200px]">
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">المنتج</label>
@@ -258,6 +259,25 @@
                 class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
               />
             </div>
+            <!-- Unit — dynamic per Product Type: Raw Materials offer g/kg or ml/l,
+                 Packaging/Ready Products are always "piece" (no choice to make). -->
+            <div class="w-28">
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الوحدة</label>
+              @if (hasUnitChoice(i)) {
+                <select
+                  formControlName="unit"
+                  class="h-10 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                >
+                  @for (opt of unitOptions(i); track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              } @else {
+                <div class="h-10 flex items-center px-3 rounded-lg border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-gray-800 text-sm text-gray-500 dark:text-gray-400">
+                  {{ unitOptions(i)[0]?.label || '—' }}
+                </div>
+              }
+            </div>
             <!-- Unit price -->
             <div class="w-32">
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">سعر الوحدة</label>
@@ -270,6 +290,26 @@
                 class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
               />
             </div>
+            <!-- Capacity (ml) — Packaging only; read-only once the product already has one recorded -->
+            @if (selectedCategory === 'PACKAGING') {
+              <div class="w-32">
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">سعة العبوة (مل)</label>
+                @if (productHasCapacity[i]) {
+                  <div class="h-10 flex items-center px-3 rounded-lg border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-gray-800 text-sm font-mono text-gray-500 dark:text-gray-400">
+                    {{ items.at(i).get('capacity_ml')?.value }} مل
+                  </div>
+                } @else {
+                  <input
+                    type="number"
+                    formControlName="capacity_ml"
+                    min="0.001"
+                    step="0.001"
+                    placeholder="مثال: 100"
+                    class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                  />
+                }
+              </div>
+            }
             <!-- Row total -->
             <div class="w-28">
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الإجمالي</label>
@@ -288,6 +328,16 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
+          </div>
+          <!-- Conversion preview — only shown when a larger unit (kg/l) is chosen,
+               so it's clear exactly what lands in inventory (which is always
+               tracked in the product's base unit: g/ml). -->
+          @if (showConversionPreview(i)) {
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              = {{ baseQuantity(i) | number:'1.0-3' }} {{ productScalar[i] === 'g' ? 'جم' : 'مل' }}
+              بسعر {{ baseUnitPrice(i) | number:'1.2-4' }} ج.م/{{ productScalar[i] === 'g' ? 'جم' : 'مل' }}
+            </p>
+          }
           </div>
         }
       </div>

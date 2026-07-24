@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HrService } from '../../../services/hr.service';
 import { AuthService } from '../../../services/auth.service';
 import { ShopService } from '../../../services/shop.service';
+import { SafeService } from '../../../services/safe.service';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
@@ -19,6 +20,7 @@ export class HrAdvancesComponent implements OnInit {
   private hr = inject(HrService);
   private auth = inject(AuthService);
   private shopService = inject(ShopService);
+  private safeService = inject(SafeService);
 
   loading = false;
   busyId: number | null = null;
@@ -42,6 +44,9 @@ export class HrAdvancesComponent implements OnInit {
   employees: { id: number; name: string }[] = [];
   filters = { shop_id: '', user_id: '', search: '' };
 
+  /** Every Safe/Custody in the system (Main Safe + every branch's) — the admin picks which one pays/receives. */
+  safes: any[] = [];
+
   // ── Approve + plan builder modal ─────────────────
   showApprove = false;
   approveTarget: any = null;
@@ -49,6 +54,7 @@ export class HrAdvancesComponent implements OnInit {
   now = new Date();
   approveForm = {
     approved_amount: 0,
+    safe_id: null as number | null,
     mode: 'date_range' as PlanMode,
     monthly_amount: 0,
     months: 1,
@@ -68,7 +74,7 @@ export class HrAdvancesComponent implements OnInit {
   showDetail = false;
   detail: any = null;
   detailLoading = false;
-  repaymentForm = { amount: 0, date: this.iso(new Date()), notes: '' };
+  repaymentForm = { amount: 0, date: this.iso(new Date()), safe_id: null as number | null, notes: '' };
   showPlanEdit = false;
   planEditForm = {
     mode: 'date_range' as PlanMode, monthly_amount: 0, months: 1, schedule: [0],
@@ -95,7 +101,16 @@ export class HrAdvancesComponent implements OnInit {
     this.shopService.getShops({ page: -1 }).subscribe({ next: (r) => this.shops = r.data?.data || r.data || r || [], error: () => {} });
     this.hr.getEmployees({ page: -1 }).subscribe({ next: (r) => this.employees = (r.data?.data || r.data || r || []).map((e: any) => ({ id: e.id, name: e.name })), error: () => {} });
     this.load();
-    if (this.isAdmin) { this.loadPendingCount(); }
+    if (this.isAdmin) {
+      this.loadPendingCount();
+      this.safeService.getSafes().subscribe({ next: (r) => { this.safes = r.data || []; }, error: () => {} });
+    }
+  }
+
+  /** "نوع الخزنة — اسم الفرع" (or "الشركة" for the company/main safe) — matches Safe Management's own naming convention. */
+  safeLabel(safe: any): string {
+    const location = safe.shop ? safe.shop.name : 'الشركة';
+    return `${safe.safe_type?.name || 'خزنة'} — ${location}`;
   }
 
   private loadPendingCount(): void {
@@ -137,6 +152,7 @@ export class HrAdvancesComponent implements OnInit {
     const startYear = this.now.getMonth() + 2 > 12 ? this.now.getFullYear() + 1 : this.now.getFullYear();
     this.approveForm = {
       approved_amount: Number(row.requested_amount),
+      safe_id: null,
       mode: 'date_range', monthly_amount: 0, months: 1, schedule: [0],
       start_year: startYear, start_month: startMonth, end_year: startYear, end_month: startMonth,
     };
@@ -170,7 +186,8 @@ export class HrAdvancesComponent implements OnInit {
     if (!this.approveTarget) return;
     const f = this.approveForm;
     if (!f.approved_amount || f.approved_amount <= 0) { this.approveError = 'أدخل المبلغ المعتمد'; return; }
-    const payload: any = { approved_amount: f.approved_amount, mode: f.mode, start_year: f.start_year, start_month: f.start_month };
+    if (!f.safe_id) { this.approveError = 'اختر الخزنة/العهدة التي ستدفع السلفة'; return; }
+    const payload: any = { approved_amount: f.approved_amount, safe_id: f.safe_id, mode: f.mode, start_year: f.start_year, start_month: f.start_month };
     if (f.mode === 'date_range') { payload.end_year = f.end_year; payload.end_month = f.end_month; }
     if (f.mode === 'fixed_amount') payload.monthly_amount = f.monthly_amount;
     if (f.mode === 'fixed_months') payload.months = f.months;
@@ -220,7 +237,7 @@ export class HrAdvancesComponent implements OnInit {
   openDetail(row: any) {
     this.showDetail = true;
     this.detailLoading = true;
-    this.repaymentForm = { amount: 0, date: this.iso(new Date()), notes: '' };
+    this.repaymentForm = { amount: 0, date: this.iso(new Date()), safe_id: null, notes: '' };
     this.hr.getAdvance(row.id).subscribe({
       next: (d) => { this.detail = d; this.detailLoading = false; },
       error: () => { this.detailLoading = false; },
@@ -229,9 +246,10 @@ export class HrAdvancesComponent implements OnInit {
 
   recordRepayment() {
     if (!this.detail || !this.repaymentForm.amount) return;
+    if (!this.repaymentForm.safe_id) { alert('اختر الخزنة/العهدة التي استلمت السداد'); return; }
     this.busyId = this.detail.id;
-    this.hr.recordAdvanceRepayment(this.detail.id, this.repaymentForm).subscribe({
-      next: (r) => { this.busyId = null; this.detail = r.data; this.repaymentForm = { amount: 0, date: this.iso(new Date()), notes: '' }; this.load(); },
+    this.hr.recordAdvanceRepayment(this.detail.id, { ...this.repaymentForm, safe_id: this.repaymentForm.safe_id }).subscribe({
+      next: (r) => { this.busyId = null; this.detail = r.data; this.repaymentForm = { amount: 0, date: this.iso(new Date()), safe_id: null, notes: '' }; this.load(); },
       error: (e) => { this.busyId = null; alert(e?.error?.message || 'تعذّر تسجيل السداد'); },
     });
   }

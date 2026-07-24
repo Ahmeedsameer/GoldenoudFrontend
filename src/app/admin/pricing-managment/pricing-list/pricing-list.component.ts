@@ -43,6 +43,23 @@ export class PricingListComponent implements OnInit {
     return this.rows.filter((r) => r.product_type === 'COMPOUND');
   }
 
+  /** Raw Materials (oils priced per gram/ml, plus Alcohol and other
+   *  product-priced raw materials) — real purchase cost, same as Ready
+   *  Products, just priced by weight/volume instead of by piece. */
+  get rawMaterialRows(): PricingRow[] {
+    return this.rows.filter((r) => r.product_type === 'RAW_MATERIAL');
+  }
+
+  /** Packaging (bottles and other packaging) — real purchase cost, priced
+   *  by the piece exactly like Ready Products. */
+  get packagingRows(): PricingRow[] {
+    return this.rows.filter((r) => r.product_type === 'PACKAGING');
+  }
+
+  priceLabel(row: PricingRow): string {
+    return row.pricing_field === 'price_per_gram' ? `سعر الوحدة (لكل ${row.unit || 'وحدة'})` : 'سعر البيع';
+  }
+
   ngOnInit(): void {
     this.load();
   }

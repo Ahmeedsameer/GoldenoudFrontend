@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { ProductService } from '../../../services/product.service';
@@ -38,12 +38,14 @@ export class ProductListComponent implements OnInit {
   private categoryService = inject(CategoryService);
   private formHelperService = inject(FormHelperService);
   private fb = inject(FormBuilder);
+  private router = inject(Router);
 
   list = new ListManager<any>((params) => this.productService.getProducts(params));
 
   // ── Modal state ─────────────────────────────────────────
+  // Creation now happens on its own dedicated page per type (see
+  // product-create/*) — this modal/productForm is edit-only.
   showFormModal = false;
-  isEditing = false;
   editingProduct: any = null;
 
   // ── Product Type Selector (Step 1 — "what do you want to create?") ──────
@@ -96,6 +98,8 @@ export class ProductListComponent implements OnInit {
 
   // ── Reference data ──────────────────────────────────────
   categories: { id: number; name: string; is_fixed?: boolean; product_type?: { pricing_source?: string; sold_by?: string } }[] = [];
+  /** Composite Products' "Default Oil" picker options — Raw Materials priced per-gram. */
+  oilOptions: { id: number; name: string; sku: string | null }[] = [];
 
   scalarOptions = [
     { value: 'pcs', label: 'قطعة' },
@@ -123,6 +127,9 @@ export class ProductListComponent implements OnInit {
     product_type:      [''],
     show_in_catalog:   [true],
     capacity_ml:       [null, [Validators.min(0)]],
+    // Composite Products only — a preferred oil, pre-selected (never locked) in the
+    // cashier's Assemble-on-Sale dialog. NOT a recipe: no quantity/bottle/sprayer/cap.
+    default_oil_id:    [null],
   });
 
   /** Convenience getters the template uses to show/hide field groups by creation type. */
@@ -164,6 +171,7 @@ export class ProductListComponent implements OnInit {
   ngOnInit(): void {
     this.list.setLimitAndReload(30);
     this.loadCategories();
+    this.loadOilOptions();
 
     // Debounced product search for the recipe component picker
     this.recipeSearch$
@@ -195,6 +203,13 @@ export class ProductListComponent implements OnInit {
     });
   }
 
+  loadOilOptions() {
+    this.productService.getOilOptions().subscribe({
+      next: (res) => { this.oilOptions = res.data || []; },
+      error: () => {},
+    });
+  }
+
   // ── Create ──────────────────────────────────────────────
 
   /** Step 1 — "What do you want to create?" */
@@ -203,33 +218,24 @@ export class ProductListComponent implements OnInit {
     this.showTypeSelector = true;
   }
 
-  /** Step 2 — chosen a type, now open the (type-specific) form. */
+  /** Step 2 — chosen a type: each type is a fully independent creation page
+   *  (own component, own FormGroup, own backend request validation) — never
+   *  the shared generic form. See RawMaterialCreateComponent, PackagingCreateComponent,
+   *  ReadyProductCreateComponent, CompoundCreateComponent. */
   chooseCreationType(type: 'RAW_MATERIAL' | 'PACKAGING' | 'COMPOUND' | 'READY_PRODUCT') {
-    this.selectedCreationType = type;
     this.showTypeSelector = false;
-
-    this.isEditing = false;
-    this.editingProduct = null;
-    this.selectedFile = null;
-    this.currentImageUrl = null;
-    this.formError = '';
-
-    // Raw Materials/Packaging are inventory-only; Compound/Ready are catalog-visible.
-    const showInCatalog = type === 'COMPOUND' || type === 'READY_PRODUCT';
-
-    this.productForm.reset({
-      name: '', sku: '', barcode: '', description: '',
-      scalar: 'pcs', category_id: '', is_active: true,
-      selling_price: null, price_per_gram: null, purchase_cost: null, warning_quantity: null, critical_quantity: null,
-      product_type: type, show_in_catalog: showInCatalog, capacity_ml: null,
-    });
-    this.showFormModal = true;
+    const routes: Record<typeof type, string> = {
+      RAW_MATERIAL:  '/dashboard/products/create/raw-material',
+      PACKAGING:     '/dashboard/products/create/packaging',
+      READY_PRODUCT: '/dashboard/products/create/ready-product',
+      COMPOUND:      '/dashboard/products/create/compound',
+    };
+    this.router.navigateByUrl(routes[type]);
   }
 
   // ── Edit ────────────────────────────────────────────────
 
   openEdit(product: any) {
-    this.isEditing = true;
     this.editingProduct = product;
     this.selectedFile = null;
     this.currentImageUrl = product.image || null;
@@ -254,11 +260,12 @@ export class ProductListComponent implements OnInit {
       product_type:      product.product_type      ?? '',
       show_in_catalog:   product.show_in_catalog   !== undefined ? product.show_in_catalog : true,
       capacity_ml:       product.capacity_ml        ?? null,
+      default_oil_id:    product.default_oil_id     ?? null,
     });
     this.showFormModal = true;
   }
 
-  // ── Form submit (create or update) ──────────────────────
+  // ── Form submit (edit only — creation uses the 4 dedicated pages) ────────
 
   onFormSubmit() {
     if (this.productForm.invalid) {
@@ -274,11 +281,7 @@ export class ProductListComponent implements OnInit {
       'image'
     );
 
-    const request$ = this.isEditing
-      ? this.productService.updateProduct(this.editingProduct.id, formData)
-      : this.productService.createProduct(formData);
-
-    request$.subscribe({
+    this.productService.updateProduct(this.editingProduct.id, formData).subscribe({
       next: () => {
         this.formLoading = false;
         this.showFormModal = false;

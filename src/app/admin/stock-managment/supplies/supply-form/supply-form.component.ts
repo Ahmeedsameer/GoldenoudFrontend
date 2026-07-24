@@ -71,6 +71,36 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
   productResults: any[][] = [];
   showProductDropdown: boolean[] = [];
   private productSearchSubjects: Subject<string>[] = [];
+  /** Packaging only — true once the selected bottle already has a recorded
+   *  capacity_ml (field becomes a read-only display, never overwritten). */
+  productHasCapacity: boolean[] = [];
+  /** The selected product's own inventory unit (its `scalar`) per row — drives
+   *  which purchase-unit options are offered (see unitOptions()). Null until
+   *  a product is picked. */
+  productScalar: (string | null)[] = [];
+
+  /** Purchase-unit choices offered per inventory unit — the supplier's
+   *  invoice can be denominated in a larger unit (kg, litre) than what stock
+   *  is tracked in; SupplyService::create() converts both quantity and
+   *  unit_price back into the base unit server-side. Piece-counted products
+   *  have no larger unit, so there's only ever one choice for them. */
+  private readonly unitOptionsMap: Record<string, { value: string; label: string }[]> = {
+    g:   [{ value: 'g', label: 'جرام' }, { value: 'kg', label: 'كيلوجرام' }],
+    ml:  [{ value: 'ml', label: 'مليلتر' }, { value: 'l', label: 'لتر' }],
+    pcs: [{ value: 'pcs', label: 'قطعة' }],
+  };
+
+  unitOptions(index: number): { value: string; label: string }[] {
+    const scalar = this.productScalar[index];
+    return scalar ? (this.unitOptionsMap[scalar] ?? []) : [];
+  }
+
+  /** Whether this row's product has more than one purchase-unit choice
+   *  (RAW_MATERIAL only) — Packaging/Ready Products show a plain "قطعة" label
+   *  instead of a dropdown since there's nothing else to pick. */
+  hasUnitChoice(index: number): boolean {
+    return this.unitOptions(index).length > 1;
+  }
 
   headerForm: FormGroup = this.fb.group({
     supplier_id: [null, Validators.required],
@@ -153,6 +183,8 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
     this.productQueries = [];
     this.productResults = [];
     this.showProductDropdown = [];
+    this.productHasCapacity = [];
+    this.productScalar = [];
     this.productSearchSubjects.forEach((s) => s.complete());
     this.productSearchSubjects = [];
     this.addItem();
@@ -173,11 +205,22 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
       product_id: [null, Validators.required],
       quantity: [null, [Validators.required, Validators.min(0.001)]],
       unit_price: [null, [Validators.required, Validators.min(0)]],
+      // The unit this line's quantity/unit_price are denominated in — set to
+      // the product's own inventory unit as soon as it's picked (see
+      // selectProduct()), editable only when there's more than one choice
+      // (e.g. g vs kg for a Raw Material).
+      unit: [null, Validators.required],
+      // Packaging only — lets the first-ever supply of a bottle record its
+      // physical capacity right when received (see selectProduct()). Left
+      // untouched (and not sent) for every other category.
+      capacity_ml: [null, [Validators.min(0.001)]],
     });
     this.items.push(itemGroup);
     this.productQueries.push('');
     this.productResults.push([]);
     this.showProductDropdown.push(false);
+    this.productHasCapacity.push(false);
+    this.productScalar.push(null);
 
     const subject = new Subject<string>();
     this.productSearchSubjects.push(subject);
@@ -208,6 +251,8 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
       this.productQueries.splice(index, 1);
       this.productResults.splice(index, 1);
       this.showProductDropdown.splice(index, 1);
+      this.productHasCapacity.splice(index, 1);
+      this.productScalar.splice(index, 1);
       const subj = this.productSearchSubjects.splice(index, 1)[0];
       subj.complete();
     }
@@ -224,10 +269,47 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
     this.items.at(index).get('product_id')?.setValue(product.id);
     this.showProductDropdown[index] = false;
     this.productResults[index] = [];
+
+    // Packaging only — if this bottle already has a recorded capacity, show
+    // it read-only; otherwise leave the field open for the cashier receiving
+    // it to record it now (never overwrites an existing value).
+    const hasCapacity = product.capacity_ml != null;
+    this.productHasCapacity[index] = hasCapacity;
+    this.items.at(index).get('capacity_ml')?.setValue(hasCapacity ? product.capacity_ml : null);
+
+    // Default the purchase unit to the product's own inventory unit (g/ml/pcs)
+    // — the admin can switch to the larger unit (kg/l) if that's how the
+    // supplier's invoice is denominated; conversion happens server-side.
+    this.productScalar[index] = product.scalar ?? null;
+    this.items.at(index).get('unit')?.setValue(product.scalar ?? null);
   }
 
   closeProductDropdown(index: number) {
     setTimeout(() => { this.showProductDropdown[index] = false; }, 200);
+  }
+
+  // ── Unit conversion preview ─────────────────────────────
+  // Purely a display aid — the authoritative conversion happens server-side
+  // in SupplyService::create(), never trusted from the client.
+
+  private readonly unitFactor: Record<string, number> = { g: 1, kg: 1000, ml: 1, l: 1000, pcs: 1 };
+
+  /** Whether this row's chosen unit differs from the product's base inventory
+   *  unit (kg/l picked instead of g/ml) — only then is a conversion preview shown. */
+  showConversionPreview(index: number): boolean {
+    const row = this.items.at(index).value;
+    return !!row.unit && (this.unitFactor[row.unit] ?? 1) !== 1;
+  }
+
+  baseQuantity(index: number): number {
+    const row = this.items.at(index).value;
+    return (row.quantity || 0) * (this.unitFactor[row.unit] ?? 1);
+  }
+
+  baseUnitPrice(index: number): number {
+    const row = this.items.at(index).value;
+    const factor = this.unitFactor[row.unit] ?? 1;
+    return factor > 0 ? (row.unit_price || 0) / factor : (row.unit_price || 0);
   }
 
   // ── Totals ─────────────────────────────────────────────

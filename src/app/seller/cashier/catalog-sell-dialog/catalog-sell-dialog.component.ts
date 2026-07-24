@@ -24,7 +24,7 @@ export interface ComposedLine {
   quantity: number;
   price: number;
   stock: number;
-  role: 'oil' | 'bottle' | null;
+  role: 'oil' | 'bottle' | 'alcohol' | null;
   parent_product_id: number;
 }
 
@@ -58,7 +58,7 @@ export class CatalogSellDialogComponent implements OnInit, OnChanges {
   private salesService = inject(SalesService);
 
   /** Set to open the Builder immediately for this product; null closes it. */
-  @Input() product: { id: number; name: string } | null = null;
+  @Input() product: { id: number; name: string; default_oil_id?: number | null } | null = null;
   @Output() closed = new EventEmitter<void>();
   @Output() added = new EventEmitter<ComposedLine[]>();
 
@@ -75,11 +75,26 @@ export class CatalogSellDialogComponent implements OnInit, OnChanges {
   private bottleSearch$ = new Subject<string>();
   selectedBottle: PickerProduct | null = null;
 
+  alcoholQuery = '';
+  alcoholResults: PickerProduct[] = [];
+  private alcoholSearch$ = new Subject<string>();
+  selectedAlcohol: PickerProduct | null = null;
+  alcoholQty: number | null = null;
+  /** True once the cashier has typed into Alcohol Quantity themselves — after that,
+   *  the auto-suggestion (bottle capacity − oil qty) never overwrites it again. */
+  private alcoholQtyTouched = false;
+
   /** Reference costs only — no margin. default_selling_price is Pricing
-   *  Management's stored default, used once to pre-fill sellingPrice below. */
+   *  Management's stored default, used once to pre-fill sellingPrice below.
+   *  Business rule: Alcohol is a real, fully-costed Raw Material (its own
+   *  purchase/FIFO cost, never zero) — total_cost here is still Oil + Bottle
+   *  ONLY (the Composite Product's commercial/profit basis shown to the
+   *  cashier); alcohol_unit_price/alcohol_cost are real values used only to
+   *  record Alcohol's true cost on its own invoice line (see addToInvoice). */
   pricing: {
     oil_unit_price: number; oil_cost: number; oil_stock: number;
     bottle_unit_price: number; bottle_cost: number; bottle_stock: number; bottle_capacity_ml: number | null;
+    alcohol_unit_price: number | null; alcohol_cost: number | null; alcohol_stock: number | null;
     total_cost: number; stock_ok: boolean; default_selling_price: number | null;
   } | null = null;
   pricingLoading = false;
@@ -106,6 +121,11 @@ export class CatalogSellDialogComponent implements OnInit, OnChanges {
       switchMap((q) => q.trim().length === 0 ? of([]) : this.salesService.searchBottleProducts(q.trim())),
     ).subscribe((rows) => { this.bottleResults = rows; });
 
+    this.alcoholSearch$.pipe(
+      debounceTime(300), distinctUntilChanged(),
+      switchMap((q) => q.trim().length === 0 ? of([]) : this.salesService.searchAlcoholProducts(q.trim())),
+    ).subscribe((rows) => { this.alcoholResults = rows; });
+
     this.pricing$.pipe(
       debounceTime(250),
       switchMap(() => {
@@ -117,6 +137,9 @@ export class CatalogSellDialogComponent implements OnInit, OnChanges {
           oil_product_id: this.selectedOil.id,
           oil_qty: +this.oilQty,
           bottle_product_id: this.selectedBottle.id,
+          ...(this.selectedAlcohol && this.alcoholQty && +this.alcoholQty > 0
+            ? { alcohol_product_id: this.selectedAlcohol.id, alcohol_qty: +this.alcoholQty }
+            : {}),
         });
       }),
     ).subscribe({
@@ -143,21 +166,36 @@ export class CatalogSellDialogComponent implements OnInit, OnChanges {
     if (changes['product'] && this.product) {
       this.oilQuery = ''; this.oilResults = []; this.selectedOil = null; this.oilQty = null;
       this.bottleQuery = ''; this.bottleResults = []; this.selectedBottle = null;
+      this.alcoholQuery = ''; this.alcoholResults = []; this.selectedAlcohol = null; this.alcoholQty = null;
+      this.alcoholQtyTouched = false;
       this.pricing = null; this.pricingError = ''; this.pricingLoading = false;
       this.sellingPrice = null;
 
-      this.salesService.searchOilProducts('').subscribe((rows) => { this.oilResults = rows; });
+      const defaultOilId = this.product.default_oil_id;
+      this.salesService.searchOilProducts('').subscribe((rows) => {
+        this.oilResults = rows;
+        // Phase 7 — Default Oil is a pure convenience PRE-SELECTION, never a lock:
+        // reuses the exact same selectOil() the seller would use by clicking a row,
+        // so the field stays fully editable — the seller can pick any other oil.
+        if (defaultOilId) {
+          const match = rows.find((o: PickerProduct) => o.id === defaultOilId);
+          if (match) { this.selectOil(match); }
+        }
+      });
       this.salesService.searchBottleProducts('').subscribe((rows) => { this.bottleResults = rows; });
+      this.salesService.searchAlcoholProducts('').subscribe((rows) => { this.alcoholResults = rows; });
     }
   }
 
   onOilQueryInput(v: string) { this.oilQuery = v; this.oilSearch$.next(v); }
   onBottleQueryInput(v: string) { this.bottleQuery = v; this.bottleSearch$.next(v); }
+  onAlcoholQueryInput(v: string) { this.alcoholQuery = v; this.alcoholSearch$.next(v); }
 
   selectOil(o: PickerProduct) {
     this.selectedOil = o;
     this.oilQuery = o.name;
     this.oilResults = [];
+    this.suggestAlcoholQty();
     this.pricing$.next();
   }
 
@@ -165,11 +203,39 @@ export class CatalogSellDialogComponent implements OnInit, OnChanges {
     this.selectedBottle = b;
     this.bottleQuery = b.name;
     this.bottleResults = [];
+    this.suggestAlcoholQty();
+    this.pricing$.next();
+  }
+
+  selectAlcohol(a: PickerProduct) {
+    this.selectedAlcohol = a;
+    this.alcoholQuery = a.name;
+    this.alcoholResults = [];
     this.pricing$.next();
   }
 
   onOilQtyChange() {
+    this.suggestAlcoholQty();
     this.pricing$.next();
+  }
+
+  /** Cashier typed the alcohol quantity themselves — the auto-suggestion must
+   *  never overwrite a manually-entered value again for this sale. */
+  onAlcoholQtyChange() {
+    this.alcoholQtyTouched = true;
+    this.pricing$.next();
+  }
+
+  /** Pure convenience suggestion — Alcohol Quantity = Bottle Capacity − Oil
+   *  Quantity — recomputed whenever the bottle or oil quantity changes, but
+   *  ONLY until the cashier edits the alcohol field themselves; after that it
+   *  is left alone completely, exactly like Selling Price's one-time pre-fill. */
+  private suggestAlcoholQty(): void {
+    if (this.alcoholQtyTouched) return;
+    if (!this.selectedBottle?.capacity_ml || !this.oilQty || +this.oilQty <= 0) return;
+
+    const suggested = Math.round((this.selectedBottle.capacity_ml - +this.oilQty) * 1000) / 1000;
+    this.alcoholQty = suggested > 0 ? suggested : null;
   }
 
   /** Expected Profit / Profit % — computed live for THIS invoice only, from
@@ -188,15 +254,25 @@ export class CatalogSellDialogComponent implements OnInit, OnChanges {
   get canAdd(): boolean {
     return !!this.product && !!this.selectedOil && !!this.selectedBottle
       && !!this.oilQty && +this.oilQty > 0
+      && !!this.selectedAlcohol && !!this.alcoholQty && +this.alcoholQty > 0
       && !this.pricingLoading && !this.pricingError
       && !!this.pricing && this.pricing.stock_ok
       && !!this.sellingPrice && +this.sellingPrice > 0;
   }
 
   addToInvoice() {
-    if (!this.canAdd || !this.product || !this.selectedOil || !this.selectedBottle || !this.pricing || !this.sellingPrice) return;
+    if (!this.canAdd || !this.product || !this.selectedOil || !this.selectedBottle || !this.selectedAlcohol || !this.pricing || !this.sellingPrice) return;
 
     const parentId = this.product.id;
+    // Business rule: NO line ever absorbs a remainder. Every component keeps its
+    // own real configured price — Oil and Bottle are charged to the customer at
+    // their true price, full stop. Alcohol is an operational material only: its
+    // real purchase cost/FIFO cost/inventory value are already fully and
+    // independently recorded by the Supply → Goods → FIFO chain the moment it
+    // was purchased, regardless of what price this SALES invoice line carries —
+    // so this line's price is deliberately always 0 (never charged to the
+    // customer, never redistributed into Bottle's or any other line's price).
+    // The invoice total is therefore always exactly Oil Price + Bottle Price.
     const lines: ComposedLine[] = [
       {
         product_id: this.selectedOil.id, name: this.selectedOil.name, sku: this.selectedOil.sku,
@@ -204,14 +280,16 @@ export class CatalogSellDialogComponent implements OnInit, OnChanges {
         stock: this.pricing.oil_stock, role: 'oil', parent_product_id: parentId,
       },
       {
+        product_id: this.selectedAlcohol.id, name: this.selectedAlcohol.name, sku: this.selectedAlcohol.sku,
+        unit: this.selectedAlcohol.unit, quantity: +this.alcoholQty!, price: 0,
+        stock: this.pricing.alcohol_stock ?? 0, role: 'alcohol', parent_product_id: parentId,
+      },
+      {
         product_id: this.selectedBottle.id, name: this.selectedBottle.name, sku: this.selectedBottle.sku,
-        unit: this.selectedBottle.unit, quantity: 1, price: +this.sellingPrice - (this.pricing.oil_unit_price * +this.oilQty!),
+        unit: this.selectedBottle.unit, quantity: 1, price: this.pricing.bottle_unit_price,
         stock: this.pricing.bottle_stock, role: 'bottle', parent_product_id: parentId,
       },
     ];
-    // The seller's typed Selling Price is folded entirely into the bottle
-    // line so the invoice's line-total (oil + bottle) equals it exactly —
-    // the customer only ever sees the one summarized perfume line anyway.
 
     this.added.emit(lines);
     this.closed.emit();

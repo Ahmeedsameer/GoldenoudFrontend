@@ -4,7 +4,7 @@
 <div class="crud-page-head">
   <div>
     <h1 class="page-title">إدارة الأسعار</h1>
-    <p class="page-subtitle">أسعار البيع للمنتجات القابلة للبيع — العطور المركّبة والمنتجات الجاهزة</p>
+    <p class="page-subtitle">أسعار البيع للمنتجات القابلة للبيع — العطور المركّبة، المنتجات الجاهزة، المواد الخام، والعبوات</p>
   </div>
 
   <div class="flex flex-wrap items-center gap-2">
@@ -111,6 +111,171 @@
           <tr>
             <td colspan="7" style="padding: 3rem 1rem; text-align: center;">
               <p class="text-sm font-medium" style="color: #6B7280;">لا توجد منتجات جاهزة</p>
+            </td>
+          </tr>
+        }
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Raw Materials — real inventory, priced per gram/ml (oils) or per unit (Alcohol) ── -->
+<div class="mb-3">
+  <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">مواد خام</h2>
+  <p class="text-xs" style="color: #9CA3AF;">زيوت وكحول وخامات أخرى — مخزون حقيقي بتكلفة شراء فعلية. الزيوت تُسعَّر لكل وحدة وزن/حجم.</p>
+</div>
+<div class="db-tbl-card mb-8">
+  <div class="db-tbl-wrap">
+    <table class="db-tbl">
+      <thead>
+        <tr>
+          <th>المنتج</th>
+          <th class="hidden md:table-cell">التكلفة الحالية</th>
+          <th>السعر</th>
+          <th class="hidden lg:table-cell">الربح المتوقع</th>
+          <th class="hidden lg:table-cell">نسبة الربح</th>
+          <th class="hidden md:table-cell">آخر تحديث</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        @for (row of rawMaterialRows; track row.id) {
+          <tr [routerLink]="[row.id]" style="cursor: pointer;">
+
+            <td class="font-semibold" style="color: #111827;">
+              {{ row.name }}
+              @if (row.sku) { <span class="text-xs font-mono" style="color: #9CA3AF;"> ({{ row.sku }})</span> }
+            </td>
+
+            <td class="hidden md:table-cell font-mono" style="color: #6B7280;">
+              {{ row.current_cost != null ? (row.current_cost | number:'1.2-2') + ' ج.م' : '—' }}
+            </td>
+
+            <td class="font-mono font-semibold" style="color: #111827;">
+              @if (row.selling_price != null) {
+                {{ row.selling_price | number:'1.2-2' }} ج.م
+                @if (row.pricing_field === 'price_per_gram') { /{{ row.unit }} }
+              } @else { — }
+            </td>
+
+            <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
+              {{ row.estimated_profit != null ? (row.estimated_profit | number:'1.2-2') + ' ج.م' : '—' }}
+            </td>
+
+            <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
+              {{ row.profit_percent != null ? (row.profit_percent | number:'1.1-1') + '%' : '—' }}
+            </td>
+
+            <td class="hidden md:table-cell" style="color: #9CA3AF;">
+              {{ row.last_price_update ? (row.last_price_update | date:'d MMM') : '—' }}
+            </td>
+
+            <td>
+              @if (row.status === 'needs_review') {
+                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #FEF3C7; color: #92400E; padding: 3px 10px;">
+                  🟡 يحتاج مراجعة
+                </span>
+              } @else if (row.status === 'no_price') {
+                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #F3F4F6; color: #6B7280; padding: 3px 10px;">
+                  بلا سعر
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #D1FAE5; color: #065F46; padding: 3px 10px;">
+                  محدَّث
+                </span>
+              }
+            </td>
+
+          </tr>
+        }
+
+        @if (!loading && rawMaterialRows.length === 0) {
+          <tr>
+            <td colspan="7" style="padding: 3rem 1rem; text-align: center;">
+              <p class="text-sm font-medium" style="color: #6B7280;">لا توجد مواد خام</p>
+            </td>
+          </tr>
+        }
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Packaging (bottles, tools, wrapping) — real inventory, priced per piece ── -->
+<div class="mb-3">
+  <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">عبوات وتغليف</h2>
+  <p class="text-xs" style="color: #9CA3AF;">زجاجات وأدوات ومستلزمات تغليف — مخزون حقيقي بتكلفة شراء فعلية.</p>
+</div>
+<div class="db-tbl-card mb-8">
+  <div class="db-tbl-wrap">
+    <table class="db-tbl">
+      <thead>
+        <tr>
+          <th>المنتج</th>
+          <th class="hidden md:table-cell">التكلفة الحالية</th>
+          <th>سعر البيع</th>
+          <th class="hidden lg:table-cell">الربح المتوقع</th>
+          <th class="hidden lg:table-cell">نسبة الربح</th>
+          <th class="hidden md:table-cell">آخر تحديث</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        @for (row of packagingRows; track row.id) {
+          <tr [routerLink]="[row.id]" style="cursor: pointer;">
+
+            <td class="font-semibold" style="color: #111827;">
+              {{ row.name }}
+              @if (row.sku) { <span class="text-xs font-mono" style="color: #9CA3AF;"> ({{ row.sku }})</span> }
+            </td>
+
+            <td class="hidden md:table-cell font-mono" style="color: #6B7280;">
+              {{ row.current_cost != null ? (row.current_cost | number:'1.2-2') + ' ج.م' : '—' }}
+            </td>
+
+            <td class="font-mono font-semibold" style="color: #111827;">
+              {{ row.selling_price != null ? (row.selling_price | number:'1.2-2') + ' ج.م' : '—' }}
+            </td>
+
+            <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
+              {{ row.estimated_profit != null ? (row.estimated_profit | number:'1.2-2') + ' ج.م' : '—' }}
+            </td>
+
+            <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
+              {{ row.profit_percent != null ? (row.profit_percent | number:'1.1-1') + '%' : '—' }}
+            </td>
+
+            <td class="hidden md:table-cell" style="color: #9CA3AF;">
+              {{ row.last_price_update ? (row.last_price_update | date:'d MMM') : '—' }}
+            </td>
+
+            <td>
+              @if (row.status === 'needs_review') {
+                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #FEF3C7; color: #92400E; padding: 3px 10px;">
+                  🟡 يحتاج مراجعة
+                </span>
+              } @else if (row.status === 'no_price') {
+                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #F3F4F6; color: #6B7280; padding: 3px 10px;">
+                  بلا سعر
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #D1FAE5; color: #065F46; padding: 3px 10px;">
+                  محدَّث
+                </span>
+              }
+            </td>
+
+          </tr>
+        }
+
+        @if (!loading && packagingRows.length === 0) {
+          <tr>
+            <td colspan="7" style="padding: 3rem 1rem; text-align: center;">
+              <p class="text-sm font-medium" style="color: #6B7280;">لا توجد عبوات أو تغليف</p>
             </td>
           </tr>
         }

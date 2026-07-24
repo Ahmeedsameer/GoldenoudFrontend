@@ -5,7 +5,7 @@
     <a routerLink="/dashboard/pricing" class="text-xs font-medium mb-1 inline-block" style="color: #9A7B1A;">‹ الرجوع لإدارة الأسعار</a>
     <h1 class="page-title">{{ detail?.name }}</h1>
     <p class="page-subtitle">
-      {{ detail?.product_type === 'COMPOUND' ? 'عطر مركّب' : 'منتج جاهز' }}
+      {{ typeLabel(detail?.product_type) }}
       @if (detail?.sku) { — {{ detail?.sku }} }
     </p>
   </div>
@@ -16,7 +16,7 @@
   <!-- Summary cards -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
-    @if (detail.product_type === 'READY_PRODUCT') {
+    @if (detail.product_type !== 'COMPOUND') {
       <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
         <p class="text-xs text-gray-400 mb-1">آخر سعر شراء</p>
         <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
@@ -45,13 +45,16 @@
     }
 
     <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
-      <p class="text-xs text-gray-400 mb-1">{{ detail.product_type === 'COMPOUND' ? 'سعر البيع الافتراضي' : 'سعر البيع الحالي' }}</p>
+      <p class="text-xs text-gray-400 mb-1">{{ priceLabel(detail) }}</p>
       <p class="text-lg font-bold font-mono" style="color: #9A7B1A;">
-        {{ detail.selling_price != null ? (detail.selling_price | number:'1.2-2') + ' ج.م' : '—' }}
+        @if (detail.selling_price != null) {
+          {{ detail.selling_price | number:'1.2-2' }} ج.م
+          @if (detail.pricing_field === 'price_per_gram') { /{{ detail.unit }} }
+        } @else { — }
       </p>
     </div>
 
-    @if (detail.product_type === 'READY_PRODUCT') {
+    @if (detail.product_type !== 'COMPOUND') {
       <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
         <p class="text-xs text-gray-400 mb-1">الربح المتوقع</p>
         <p class="text-lg font-bold font-mono" style="color: #16794F;">
@@ -72,7 +75,7 @@
   @if (isAdmin) {
     <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-5 mb-6">
       <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">
-        {{ detail.product_type === 'COMPOUND' ? 'تعديل سعر البيع الافتراضي' : 'تعديل سعر البيع' }}
+        {{ detail.product_type === 'COMPOUND' ? 'تعديل سعر البيع الافتراضي' : 'تعديل ' + priceLabel(detail) }}
       </h3>
 
       @if (!editing) {

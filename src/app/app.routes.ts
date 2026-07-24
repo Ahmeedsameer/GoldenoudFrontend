@@ -30,6 +30,10 @@ import { CreateCategoryComponent } from './admin/category-managment/create-categ
 import { EditCategoryComponent } from './admin/category-managment/edit-category/edit-category.component';
 import { ProductListComponent } from './admin/product-managment/product-list/product-list.component';
 import { ProductDetailComponent } from './admin/product-managment/product-detail/product-detail.component';
+import { RawMaterialCreateComponent } from './admin/product-managment/product-create/raw-material-create/raw-material-create.component';
+import { PackagingCreateComponent } from './admin/product-managment/product-create/packaging-create/packaging-create.component';
+import { ReadyProductCreateComponent } from './admin/product-managment/product-create/ready-product-create/ready-product-create.component';
+import { CompoundCreateComponent } from './admin/product-managment/product-create/compound-create/compound-create.component';
 import { PricingListComponent } from './admin/pricing-managment/pricing-list/pricing-list.component';
 import { PricingDetailComponent } from './admin/pricing-managment/pricing-detail/pricing-detail.component';
 import { ShopListComponent as AdminShopListComponent } from './admin/shop-managment/list/shop-list/shop-list.component';
@@ -73,6 +77,7 @@ import { CountListComponent } from './admin/branch-operations/counts/count-list/
 import { CountDetailComponent } from './admin/branch-operations/counts/count-detail/count-detail.component';
 import { TransferReportsComponent } from './admin/reports/transfers/transfer-reports.component';
 import { TransferInvoiceReportComponent } from './admin/reports/transfer-invoices/transfer-invoice-report.component';
+import { SalaryAdvanceReportComponent } from './admin/reports/salary-advances/salary-advance-report.component';
 import { WasteReportsComponent } from './admin/reports/waste/waste-reports.component';
 import { CountReportsComponent } from './admin/reports/counts/count-reports.component';
 import { AdjustmentReportsComponent } from './admin/reports/adjustments/adjustment-reports.component';
@@ -166,6 +171,12 @@ export const routes: Routes = [
           { path: '', children: [
             { path: '', component: ProductListComponent },
             { path: 'view/:id', component: ProductDetailComponent },
+            // Four independent Product Creation Forms — each its own
+            // component/page, own FormGroup, own backend request validation.
+            { path: 'create/raw-material',  component: RawMaterialCreateComponent },
+            { path: 'create/packaging',     component: PackagingCreateComponent },
+            { path: 'create/ready-product', component: ReadyProductCreateComponent },
+            { path: 'create/compound',      component: CompoundCreateComponent },
           ] },
           {
             path: 'categories',
@@ -192,6 +203,7 @@ export const routes: Routes = [
       { path: 'reports/monthly-profit', component: MonthlyProfitReportComponent },
       { path: 'reports/transfers', component: TransferReportsComponent },
       { path: 'reports/transfer-invoices', component: TransferInvoiceReportComponent },
+      { path: 'reports/salary-advances', component: SalaryAdvanceReportComponent },
       { path: 'reports/waste', component: WasteReportsComponent },
       { path: 'reports/counts', component: CountReportsComponent },
       { path: 'reports/adjustments', component: AdjustmentReportsComponent },

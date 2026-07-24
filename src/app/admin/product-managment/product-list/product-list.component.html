@@ -204,7 +204,7 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-          {{ isEditing ? 'تعديل المنتج' : 'إضافة منتج جديد' }}
+          تعديل المنتج
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1.5">
           @if (selectedCreationType) {
@@ -284,6 +284,23 @@
             <input type="number" formControlName="capacity_ml" min="0" step="0.01" placeholder="مثال: 30"
               class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
             <p class="text-[11px] text-gray-400 mt-1">سعر الزجاجة يشمل البخاخ والغطاء — لا حاجة لمنتجات منفصلة لهما.</p>
+          </div>
+        }
+
+        @if (isCompound) {
+          <!-- Default Oil (Composite Products only) — a convenience pre-selection,
+               NOT a recipe: no quantity/bottle/sprayer/cap is ever stored here, and
+               the cashier can always change the oil freely at sale time. -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الزيت الافتراضي (اختياري)</label>
+            <select formControlName="default_oil_id"
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800">
+              <option [ngValue]="null">— بدون زيت افتراضي —</option>
+              @for (oil of oilOptions; track oil.id) {
+                <option [ngValue]="oil.id">{{ oil.name }}</option>
+              }
+            </select>
+            <p class="text-[11px] text-gray-400 mt-1">مجرد اختيار مبدئي يسرّع عملية البيع — الكاشير يقدر يغيّره لأي زيت آخر عند كل عملية بيع.</p>
           </div>
         }
 
@@ -386,7 +403,7 @@
           [class]="formLoading
             ? 'bg-brand-400 text-white cursor-not-allowed'
             : 'bg-brand-500 hover:bg-brand-600 text-white'">
-          @if (formLoading) { جاري الحفظ... } @else { {{ isEditing ? 'تحديث المنتج' : 'إضافة المنتج' }} }
+          @if (formLoading) { جاري الحفظ... } @else { تحديث المنتج }
         </button>
         <button type="button" (click)="showFormModal = false" [disabled]="formLoading"
           class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">

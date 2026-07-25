@@ -44,6 +44,80 @@
       <app-form-error [control]="form.get('phone')!"></app-form-error>
     </div>
 
+    <div>
+      <app-label>العنوان <span class="text-error-500">*</span></app-label>
+      <app-input-field
+        [value]="form.get('address')?.value"
+        (valueChange)="form.get('address')?.setValue($event)"
+        placeholder="العنوان"
+        type="text"
+      ></app-input-field>
+      <app-form-error [control]="form.get('address')!"></app-form-error>
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div>
+        <app-label>رقم الحساب البنكي</app-label>
+        <app-input-field
+          [value]="form.get('bank_account_number')?.value"
+          (valueChange)="form.get('bank_account_number')?.setValue($event)"
+          placeholder="اختياري"
+          type="text"
+        ></app-input-field>
+      </div>
+
+      <div>
+        <app-label>IBAN</app-label>
+        <app-input-field
+          [value]="form.get('iban')?.value"
+          (valueChange)="form.get('iban')?.setValue($event)"
+          placeholder="اختياري"
+          type="text"
+        ></app-input-field>
+      </div>
+
+      <div>
+        <app-label>محفظة موبايل</app-label>
+        <app-input-field
+          [value]="form.get('mobile_wallet')?.value"
+          (valueChange)="form.get('mobile_wallet')?.setValue($event)"
+          placeholder="اختياري"
+          type="text"
+        ></app-input-field>
+      </div>
+
+      <div>
+        <app-label>InstaPay</app-label>
+        <app-input-field
+          [value]="form.get('instapay')?.value"
+          (valueChange)="form.get('instapay')?.setValue($event)"
+          placeholder="رقم الموبايل المرتبط بـ InstaPay"
+          type="text"
+        ></app-input-field>
+      </div>
+    </div>
+
+    <div>
+      <app-label>الرصيد الافتتاحي</app-label>
+      <app-input-field
+        [value]="form.get('opening_balance')?.value"
+        (valueChange)="form.get('opening_balance')?.setValue($event)"
+        placeholder="0"
+        type="number"
+      ></app-input-field>
+      <p class="mt-1 text-xs text-gray-400">لتسجيل رصيد مستحق سابق على المورد قبل بدء التعامل معه عبر النظام (اختياري).</p>
+    </div>
+
+    <div>
+      <app-label>ملاحظات</app-label>
+      <app-input-field
+        [value]="form.get('notes')?.value"
+        (valueChange)="form.get('notes')?.setValue($event)"
+        placeholder="اختياري"
+        type="text"
+      ></app-input-field>
+    </div>
+
     <div class="flex items-center gap-3 pt-2">
       <app-button (btnClick)="onSubmit()" [disabled]="loading">{{ isEdit ? 'حفظ التعديلات' : 'إضافة المورد' }}</app-button>
       <app-button routerLink="/dashboard/stock" variant="outline">إلغاء</app-button>

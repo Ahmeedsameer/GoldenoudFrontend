@@ -69,6 +69,8 @@ import { MonthlyProfitReportComponent } from './admin/reports/monthly-profit/mon
 import { TransferListComponent } from './admin/branch-operations/transfers/transfer-list/transfer-list.component';
 import { TransferCreateComponent } from './admin/branch-operations/transfers/transfer-create/transfer-create.component';
 import { TransferDetailComponent } from './admin/branch-operations/transfers/transfer-detail/transfer-detail.component';
+import { StockRequestListComponent } from './admin/branch-operations/stock-requests/stock-request-list/stock-request-list.component';
+import { StockRequestCreateComponent } from './admin/branch-operations/stock-requests/stock-request-create/stock-request-create.component';
 import { BranchDashboardComponent } from './admin/branch-operations/branch-dashboard/branch-dashboard.component';
 import { LogisticsDashboardComponent } from './admin/branch-operations/logistics-dashboard/logistics-dashboard.component';
 import { WasteListComponent } from './admin/branch-operations/waste/waste-list.component';
@@ -76,6 +78,7 @@ import { AdjustmentListComponent } from './admin/branch-operations/adjustments/a
 import { CountListComponent } from './admin/branch-operations/counts/count-list/count-list.component';
 import { CountDetailComponent } from './admin/branch-operations/counts/count-detail/count-detail.component';
 import { TransferReportsComponent } from './admin/reports/transfers/transfer-reports.component';
+import { SupplierReportsComponent } from './admin/reports/suppliers/supplier-reports.component';
 import { TransferInvoiceReportComponent } from './admin/reports/transfer-invoices/transfer-invoice-report.component';
 import { SalaryAdvanceReportComponent } from './admin/reports/salary-advances/salary-advance-report.component';
 import { WasteReportsComponent } from './admin/reports/waste/waste-reports.component';
@@ -202,6 +205,7 @@ export const routes: Routes = [
       { path: 'reports/branch-comparison', component: BranchComparisonReportComponent },
       { path: 'reports/monthly-profit', component: MonthlyProfitReportComponent },
       { path: 'reports/transfers', component: TransferReportsComponent },
+      { path: 'reports/suppliers', component: SupplierReportsComponent },
       { path: 'reports/transfer-invoices', component: TransferInvoiceReportComponent },
       { path: 'reports/salary-advances', component: SalaryAdvanceReportComponent },
       { path: 'reports/waste', component: WasteReportsComponent },
@@ -216,6 +220,8 @@ export const routes: Routes = [
       { path: 'branch-operations/transfers',         component: TransferListComponent },
       { path: 'branch-operations/transfers/create',  component: TransferCreateComponent },
       { path: 'branch-operations/transfers/:id',     component: TransferDetailComponent },
+      { path: 'branch-operations/stock-requests',        component: StockRequestListComponent },
+      { path: 'branch-operations/stock-requests/create', component: StockRequestCreateComponent },
       { path: 'branch-operations/waste',             component: WasteListComponent },
       { path: 'branch-operations/adjustments',       component: AdjustmentListComponent },
       { path: 'branch-operations/counts',            component: CountListComponent },
@@ -267,6 +273,8 @@ export const routes: Routes = [
       { path: 'branch-operations/transfers',         component: TransferListComponent },
       { path: 'branch-operations/transfers/create',  component: TransferCreateComponent },
       { path: 'branch-operations/transfers/:id',     component: TransferDetailComponent },
+      { path: 'branch-operations/stock-requests',        component: StockRequestListComponent },
+      { path: 'branch-operations/stock-requests/create', component: StockRequestCreateComponent },
       { path: 'branch-operations/waste',             component: WasteListComponent },
       { path: 'safe/my-shop',       component: ManagerSafeComponent },
       { path: 'safe/my-shop/:safeId/transactions', component: ManagerTransactionsComponent },

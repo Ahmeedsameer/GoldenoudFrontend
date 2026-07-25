@@ -3,9 +3,31 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
 const API_BASE = 'http://127.0.0.1:8000/api/branch-operations/transfers';
+const STOCK_REQUEST_API_BASE = 'http://127.0.0.1:8000/api/branch-operations/stock-requests';
 
 export type TransferStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'preparing' | 'shipped' | 'received' | 'closed';
 export type TransferPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+/** Shared across the general Transfer screens and the Stock Request screens
+ *  (a Stock Request IS a TransferRequest — see storeStockRequest() on the
+ *  backend) so both present the exact same status/priority vocabulary. */
+export const TRANSFER_STATUS_LABELS: Record<TransferStatus, string> = {
+  draft: 'مسودة', submitted: 'بانتظار الموافقة', approved: 'تمت الموافقة', rejected: 'مرفوض',
+  preparing: 'قيد التجهيز', shipped: 'تم الشحن', received: 'تم الاستلام', closed: 'مغلق',
+};
+export const TRANSFER_PRIORITY_LABELS: Record<string, string> = {
+  low: 'منخفضة', normal: 'عادية', high: 'مرتفعة', urgent: 'عاجلة',
+};
+export const TRANSFER_STATUS_CLASSES: Record<TransferStatus, string> = {
+  draft: 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300',
+  submitted: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+  approved: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
+  rejected: 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-300',
+  preparing: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
+  shipped: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300',
+  received: 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300',
+  closed: 'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-300',
+};
 
 export interface TransferRequestItem {
   id: number; product_id: number;
@@ -38,7 +60,11 @@ export interface TransferRequestPage {
   data: TransferRequest[]; current_page: number; last_page: number; total: number; per_page: number;
 }
 
-export interface TransferRequestFilters { status?: string; shop_id?: number; page?: number; per_page?: number; }
+export interface TransferRequestFilters {
+  status?: string; shop_id?: number; page?: number; per_page?: number;
+  /** Stock Requests view — every transfer sourced from the Main Warehouse (see backend baseQuery()). */
+  warehouse_source?: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class TransferRequestService {
@@ -69,6 +95,20 @@ export class TransferRequestService {
     return this.http.post<any>(API_BASE, payload).pipe(map((r) => r.data));
   }
 
+  /**
+   * Branch Manager entry point — creates a TransferRequest exactly like
+   * create() above, except source (Main Warehouse) and destination (the
+   * caller's own branch) are hard-locked server-side, and it always submits
+   * immediately (a Stock Request has no draft concept). See
+   * TransferRequestController::storeStockRequest().
+   */
+  createStockRequest(payload: {
+    requested_date?: string; priority?: TransferPriority; notes?: string;
+    items: { product_id: number; requested_quantity: number }[];
+  }): Observable<TransferRequest> {
+    return this.http.post<any>(STOCK_REQUEST_API_BASE, payload).pipe(map((r) => r.data));
+  }
+
   submit(id: number): Observable<TransferRequest> { return this.http.post<any>(`${API_BASE}/${id}/submit`, {}).pipe(map((r) => r.data)); }
   approve(id: number, notes?: string): Observable<TransferRequest> { return this.http.post<any>(`${API_BASE}/${id}/approve`, { notes }).pipe(map((r) => r.data)); }
   reject(id: number, reason: string): Observable<TransferRequest> { return this.http.post<any>(`${API_BASE}/${id}/reject`, { reason }).pipe(map((r) => r.data)); }
@@ -82,5 +122,14 @@ export class TransferRequestService {
     items: { item_id: number; received_quantity: number; missing_quantity?: number; damaged_quantity?: number; notes?: string }[];
   }): Observable<TransferRequest> {
     return this.http.post<any>(`${API_BASE}/${id}/receive`, payload).pipe(map((r) => r.data));
+  }
+
+  /**
+   * Turns missing/damaged quantity reported in receive() above into real
+   * WasteRecord rows — one entry per flagged item, covering that item's full
+   * missing+damaged total. See TransferRequestController::registerReceivingWaste().
+   */
+  registerReceivingWaste(id: number, entries: { item_id: number; reason: string; notes?: string }[]): Observable<TransferRequest> {
+    return this.http.post<any>(`${API_BASE}/${id}/receiving-waste`, { entries }).pipe(map((r) => r.data));
   }
 }

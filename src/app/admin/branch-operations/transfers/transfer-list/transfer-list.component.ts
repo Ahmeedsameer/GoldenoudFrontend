@@ -3,27 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { LoadingComponent } from '../../../../loading/loading.component';
-import { TransferRequestService, TransferRequest, TransferStatus } from '../../../../services/transfer-request.service';
+import {
+  TransferRequestService, TransferRequest, TransferStatus,
+  TRANSFER_STATUS_LABELS as STATUS_LABELS,
+  TRANSFER_PRIORITY_LABELS as PRIORITY_LABELS,
+  TRANSFER_STATUS_CLASSES as STATUS_CLASSES,
+} from '../../../../services/transfer-request.service';
 import { ShopService } from '../../../../services/shop.service';
 import { AuthService } from '../../../../services/auth.service';
-
-const STATUS_LABELS: Record<TransferStatus, string> = {
-  draft: 'مسودة', submitted: 'بانتظار الموافقة', approved: 'تمت الموافقة', rejected: 'مرفوض',
-  preparing: 'قيد التجهيز', shipped: 'تم الشحن', received: 'تم الاستلام', closed: 'مغلق',
-};
-const PRIORITY_LABELS: Record<string, string> = {
-  low: 'منخفضة', normal: 'عادية', high: 'مرتفعة', urgent: 'عاجلة',
-};
-const STATUS_CLASSES: Record<TransferStatus, string> = {
-  draft: 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300',
-  submitted: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-  approved: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-  rejected: 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-300',
-  preparing: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
-  shipped: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300',
-  received: 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300',
-  closed: 'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-300',
-};
 
 @Component({
   selector: 'app-transfer-list',

@@ -4,19 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { ReportEmptyStateComponent } from '../../../shared/components/reports/report-empty-state/report-empty-state.component';
-import { WasteService, WasteRecord, WasteReason } from '../../../services/waste.service';
+import { WasteService, WasteRecord, WasteReason, WASTE_REASON_LABELS } from '../../../services/waste.service';
 import { ShopService } from '../../../services/shop.service';
 import { ProductService } from '../../../services/product.service';
 import { AuthService } from '../../../services/auth.service';
 
-const REASONS: { key: WasteReason; label: string }[] = [
-  { key: 'broken', label: 'كسر' },
-  { key: 'expired', label: 'انتهاء صلاحية' },
-  { key: 'leakage', label: 'تسرب' },
-  { key: 'lost', label: 'فقدان' },
-  { key: 'damaged_during_transfer', label: 'تلف أثناء النقل' },
-  { key: 'other', label: 'أخرى' },
-];
+const REASONS: { key: WasteReason; label: string }[] = Object.entries(WASTE_REASON_LABELS).map(([key, label]) => ({ key: key as WasteReason, label }));
 
 @Component({
   selector: 'app-waste-list',

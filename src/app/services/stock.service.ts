@@ -2,9 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, retry } from 'rxjs';
 import {
+  CreateSupplierPaymentRequest,
   CreateSupplyRequest,
   Goods,
   Supplier,
+  SupplierContact,
+  SupplierLedger,
   Supply,
   TransferRequest,
   TransferResponse,
@@ -33,16 +36,72 @@ export class StockService {
     return this.http.get<any>(`${this.suppliersUrl}/show/${id}`).pipe(retry(2));
   }
 
-  createSupplier(data: { name: string; phone: string }) {
+  createSupplier(data: {
+    name: string; phone: string; address: string;
+    bank_account_number?: string; mobile_wallet?: string; instapay?: string; iban?: string;
+    opening_balance?: number; notes?: string;
+  }) {
     return this.http.post<any>(`${this.suppliersUrl}/create`, data);
   }
 
-  updateSupplier(id: number, data: { name?: string; phone?: string }) {
+  updateSupplier(id: number, data: Partial<{
+    name: string; phone: string; address: string;
+    bank_account_number: string; mobile_wallet: string; instapay: string; iban: string;
+    opening_balance: number; notes: string;
+  }>) {
     return this.http.put<any>(`${this.suppliersUrl}/update/${id}`, data);
   }
 
   deleteSupplier(id: number) {
     return this.http.delete<any>(`${this.suppliersUrl}/destroy/${id}`);
+  }
+
+  // ── Supplier Contacts — no limit per supplier ──────────
+  getSupplierContacts(supplierId: number) {
+    return this.http.get<any>(`${this.suppliersUrl}/${supplierId}/contacts`).pipe(map((res) => (res.data || []) as SupplierContact[]));
+  }
+
+  addSupplierContact(supplierId: number, data: { name: string; phone: string; address: string; position?: string }) {
+    return this.http.post<any>(`${this.suppliersUrl}/${supplierId}/contacts`, data);
+  }
+
+  updateSupplierContact(supplierId: number, contactId: number, data: { name: string; phone: string; address: string; position?: string }) {
+    return this.http.put<any>(`${this.suppliersUrl}/${supplierId}/contacts/${contactId}`, data);
+  }
+
+  deleteSupplierContact(supplierId: number, contactId: number) {
+    return this.http.delete<any>(`${this.suppliersUrl}/${supplierId}/contacts/${contactId}`);
+  }
+
+  // ── Supplier Ledger — purchase history, payment history, balances ─────
+  getSupplierLedger(supplierId: number) {
+    return this.http.get<any>(`${this.suppliersUrl}/${supplierId}/ledger`).pipe(map((res) => res.data as SupplierLedger));
+  }
+
+  // ── Supplier Payments — always against exactly ONE invoice ────────────
+  getSupplierPayments(params?: any) {
+    return this.http.get<any>(`${API_BASE}/stock/supplier-payments`, { params }).pipe(retry(2));
+  }
+
+  paySupplier(data: CreateSupplierPaymentRequest) {
+    return this.http.post<any>(`${API_BASE}/stock/supplier-payments`, data);
+  }
+
+  // ── Supplier Reports (cross-supplier) ──────────────────
+  getSupplierBalances(params?: any) {
+    return this.http.get<any>(`${this.suppliersUrl}/reports/balances`, { params }).pipe(map((res) => res.data));
+  }
+
+  getOutstandingSuppliers(params?: any) {
+    return this.http.get<any>(`${this.suppliersUrl}/reports/outstanding`, { params }).pipe(map((res) => res.data));
+  }
+
+  getSupplierPurchaseReport(params?: any) {
+    return this.http.get<any>(`${this.suppliersUrl}/reports/purchases`, { params }).pipe(map((res) => res.data));
+  }
+
+  getSupplierPaymentReport(params?: any) {
+    return this.http.get<any>(`${this.suppliersUrl}/reports/payments`, { params });
   }
 
   // ── Supplier intelligence (per product type, for the Supply screen) ────
@@ -82,23 +141,11 @@ export class StockService {
     return this.http.post<TransferResponse>(`${this.inventoryUrl}/transfer`, data);
   }
 
-  // ── Manager Inventory & Transfer ─────────────────────
+  // ── Manager Inventory (view only — see ManagerInventoryController) ──
   private managerInventoryUrl = `${API_BASE}/manager/inventory`;
-  private managerShopsUrl     = `${API_BASE}/manager/shops`;
 
   getManagerInventory(params?: any) {
     return this.http.get<any>(this.managerInventoryUrl, { params }).pipe(retry(2));
-  }
-
-  getManagerShops() {
-    return this.http.get<any>(this.managerShopsUrl).pipe(
-      retry(2),
-      map((res) => (res.data || []) as { id: number; name: string }[])
-    );
-  }
-
-  managerTransferGoods(data: { goods_id: number; quantity: number; to_shop_id: number | null }) {
-    return this.http.post<any>(`${this.managerInventoryUrl}/transfer`, data);
   }
 
   // ── Shops (for dropdowns) ─────────────────────────────

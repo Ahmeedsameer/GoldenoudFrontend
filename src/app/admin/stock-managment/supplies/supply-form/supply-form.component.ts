@@ -6,6 +6,7 @@ import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, map, takeUntil } from 'rxjs';
 import { StockService } from '../../../../services/stock.service';
 import { ProductService } from '../../../../services/product.service';
+import { SafeService } from '../../../../services/safe.service';
 import { FormHelperService, AlertState } from '../../../../services/form-helper.service';
 import { Supplier } from '../../../../models/stock.model';
 import { ButtonComponent } from '../../../../shared/components/ui/button/button.component';
@@ -38,9 +39,15 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private stockService = inject(StockService);
   private productService = inject(ProductService);
+  private safeService = inject(SafeService);
   private formHelperService = inject(FormHelperService);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
+
+  /** Only needed when payment_method='immediate' — which Safe pays the
+   *  invoice in full right now (see SupplyService::create()). */
+  safes: { id: number; name: string }[] = [];
+  currencies: { id: number; code: string }[] = [];
 
   step: Step = 1;
   loading = false;
@@ -105,6 +112,15 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
   headerForm: FormGroup = this.fb.group({
     supplier_id: [null, Validators.required],
     payment_method: ['immediate', Validators.required],
+    // A Supply row IS the purchase invoice — invoice_number is optional
+    // (auto-generated server-side, PUR-YYYYMMDD-0042, if left blank).
+    invoice_number: [''],
+    discount: [null, [Validators.min(0)]],
+    tax: [null, [Validators.min(0)]],
+    // Only read server-side when payment_method='immediate' — which Safe
+    // pays the invoice in full right now.
+    safe_id: [null],
+    currency_id: [null],
   });
 
   /** Read-only display of the supply date — the server always stamps the real creation date. */
@@ -135,6 +151,19 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
     ).subscribe((results) => {
       this.supplierResults = results;
       this.showSupplierDropdown = results.length > 0;
+    });
+
+    this.safeService.getSafes().subscribe({
+      next: (res) => {
+        this.safes = (res.data || []).map((s: any) => ({ id: s.id, name: s.shop?.name || 'الخزنة الرئيسية' }));
+      },
+    });
+    this.safeService.getCurrencies({ active_only: true }).subscribe({
+      next: (res) => {
+        this.currencies = res.data || [];
+        const egp = this.currencies.find((c) => c.code === 'EGP');
+        if (egp) { this.headerForm.get('currency_id')?.setValue(egp.id); }
+      },
     });
 
     this.addItem();
@@ -323,6 +352,18 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
     return this.items.controls.reduce((sum, _, i) => sum + this.rowTotal(i), 0);
   }
 
+  /** Preview only — the authoritative total (subtotal − discount + tax) is
+   *  always computed server-side (Supply::getTotalAmountAttribute()). */
+  finalTotal(): number {
+    const discount = +(this.headerForm.get('discount')?.value || 0);
+    const tax = +(this.headerForm.get('tax')?.value || 0);
+    return this.grandTotal() - discount + tax;
+  }
+
+  get isImmediate(): boolean {
+    return this.headerForm.get('payment_method')?.value === 'immediate';
+  }
+
   // ── Step navigation ────────────────────────────────────
 
   goToStep2() {
@@ -332,6 +373,12 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
     }
     if (!this.selectedCategory) {
       this.alert = { show: true, type: 'error', message: 'اختر فئة المنتجات أولاً.' };
+      return;
+    }
+    // "فوري" only actually pays if a Safe is chosen (see SupplyService::create())
+    // — enforced here so the label never silently means nothing again.
+    if (this.isImmediate && !this.headerForm.get('safe_id')?.value) {
+      this.alert = { show: true, type: 'error', message: 'اختر الخزنة التي سيُدفع منها المبلغ فوراً.' };
       return;
     }
     this.step = 2;
@@ -359,8 +406,14 @@ export class SupplyFormComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.alert = { show: false, type: '', message: '' };
 
+    const header = this.headerForm.value;
     const payload = {
-      ...this.headerForm.value,
+      ...header,
+      // Empty string would fail the backend's unique-if-present rule on a
+      // second blank submission — omit entirely so it auto-generates.
+      invoice_number: header.invoice_number?.trim() || undefined,
+      safe_id: this.isImmediate ? header.safe_id : undefined,
+      currency_id: this.isImmediate ? header.currency_id : undefined,
       items: this.items.value,
     };
 

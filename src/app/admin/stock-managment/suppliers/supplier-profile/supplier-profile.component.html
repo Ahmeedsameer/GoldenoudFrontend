@@ -13,6 +13,244 @@
 
 @if (profile) {
 
+  <!-- Tabs -->
+  <div class="flex gap-1 border-b border-gray-200 dark:border-gray-800">
+    <button type="button" (click)="setTab('overview')"
+      class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors"
+      [class]="activeTab === 'overview' ? 'border-brand-500 text-brand-600 dark:text-brand-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'">
+      نظرة عامة
+    </button>
+    <button type="button" (click)="setTab('ledger')"
+      class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors"
+      [class]="activeTab === 'ledger' ? 'border-brand-500 text-brand-600 dark:text-brand-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'">
+      السجل المالي
+    </button>
+    <button type="button" (click)="setTab('contacts')"
+      class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors"
+      [class]="activeTab === 'contacts' ? 'border-brand-500 text-brand-600 dark:text-brand-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'">
+      جهات الاتصال
+    </button>
+  </div>
+
+  <!-- ═══════════════ LEDGER TAB ═══════════════ -->
+  @if (activeTab === 'ledger') {
+    <app-loading [loading]="ledgerLoading"></app-loading>
+    @if (ledger) {
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">الرصيد الافتتاحي</p>
+          <p class="text-lg font-bold text-gray-900 dark:text-white">{{ ledger.opening_balance | number:'1.0-2' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">إجمالي الفواتير</p>
+          <p class="text-lg font-bold text-gray-900 dark:text-white">{{ ledger.total_invoiced | number:'1.0-2' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">إجمالي المدفوع</p>
+          <p class="text-lg font-bold text-green-600 dark:text-green-400">{{ ledger.total_paid | number:'1.0-2' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">الآجل الحالي (فواتير غير مسددة)</p>
+          <p class="text-lg font-bold text-amber-600 dark:text-amber-400">{{ ledger.current_credit | number:'1.0-2' }}</p>
+        </div>
+        <div class="col-span-2 md:col-span-1 bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-4 text-white">
+          <p class="text-xs text-brand-100 mb-1">الرصيد المستحق الإجمالي</p>
+          <p class="text-lg font-bold">{{ ledger.outstanding_balance | number:'1.0-2' }}</p>
+        </div>
+      </div>
+
+      <!-- Purchase (invoices) history -->
+      <div class="mt-6">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">سجل الفواتير</h2>
+        <div class="db-tbl-card">
+          <div class="db-tbl-wrap">
+            <table class="db-tbl">
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th><th>التاريخ</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (inv of ledger.invoices; track inv.id) {
+                  <tr>
+                    <td class="font-mono" style="color:#9A7B1A">{{ inv.invoice_number }}</td>
+                    <td style="color:#9CA3AF">{{ inv.date | date:'d MMM yyyy' }}</td>
+                    <td class="font-mono" style="color:#6B7280">{{ inv.total_amount | number:'1.0-2' }}</td>
+                    <td class="font-mono" style="color:#6B7280">{{ inv.paid_amount | number:'1.0-2' }}</td>
+                    <td class="font-mono" style="color:#6B7280">{{ inv.remaining_amount | number:'1.0-2' }}</td>
+                    <td>
+                      <span class="text-xs font-medium px-2 py-0.5 rounded-full" [class]="paymentStatusClasses[inv.payment_status]">
+                        {{ paymentStatusLabels[inv.payment_status] }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (inv.remaining_amount > 0) {
+                        <button type="button" (click)="openPayForm(inv.id, inv.remaining_amount)"
+                          class="text-xs font-medium px-3 py-1 rounded-lg text-white" style="background:#9A7B1A">
+                          دفع
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+                @if (!ledger.invoices.length) {
+                  <tr><td colspan="7" class="text-center text-sm text-gray-400 py-6">لا توجد فواتير لهذا المورد</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment history -->
+      <div class="mt-6">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">سجل الدفعات</h2>
+        <div class="db-tbl-card">
+          <div class="db-tbl-wrap">
+            <table class="db-tbl">
+              <thead><tr><th>الفاتورة</th><th>التاريخ</th><th>المبلغ</th><th>الخزنة</th><th>العملة</th><th>بواسطة</th><th>ملاحظة</th></tr></thead>
+              <tbody>
+                @for (p of ledger.payments; track p.id) {
+                  <tr>
+                    <td class="font-mono" style="color:#9A7B1A">{{ p.invoice_number }}</td>
+                    <td style="color:#9CA3AF">{{ p.date | date:'d MMM yyyy' }}</td>
+                    <td class="font-mono" style="color:#6B7280">{{ p.amount | number:'1.0-2' }}</td>
+                    <td style="color:#6B7280">{{ p.safe }}</td>
+                    <td style="color:#6B7280">{{ p.currency || '—' }}</td>
+                    <td style="color:#6B7280">{{ p.user || '—' }}</td>
+                    <td style="color:#9CA3AF">{{ p.note || '—' }}</td>
+                  </tr>
+                }
+                @if (!ledger.payments.length) {
+                  <tr><td colspan="7" class="text-center text-sm text-gray-400 py-6">لا توجد دفعات مسجلة بعد</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Payment modal -->
+    @if (showPayForm) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="closePayForm()">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 w-full max-w-md" (click)="$event.stopPropagation()">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-1">تسجيل دفعة</h3>
+          <p class="text-xs text-gray-400 mb-4">المبلغ المتبقي على هذه الفاتورة: {{ payingInvoiceRemaining | number:'1.0-2' }}</p>
+
+          @if (payAlert.show) {
+            <div class="mb-3">
+              <app-alert variant="error" [message]="payAlert.message"></app-alert>
+            </div>
+          }
+
+          <form [formGroup]="payForm" class="space-y-4" novalidate>
+            <div>
+              <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">الخزنة</label>
+              <select formControlName="safe_id" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700">
+                <option [ngValue]="null" disabled>اختر الخزنة</option>
+                @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">العملة</label>
+              <select formControlName="currency_id" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700">
+                <option [ngValue]="null" disabled>اختر العملة</option>
+                @for (c of currencies; track c.id) { <option [ngValue]="c.id">{{ c.code }}</option> }
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">المبلغ</label>
+              <input type="number" formControlName="amount" step="0.01" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" placeholder="0.00" />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">ملاحظة</label>
+              <input type="text" formControlName="note" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" placeholder="اختياري" />
+            </div>
+            <div class="flex items-center gap-2 pt-2">
+              <app-button (btnClick)="submitPayment()" [disabled]="payLoading">تأكيد الدفع</app-button>
+              <app-button variant="outline" (btnClick)="closePayForm()">إلغاء</app-button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- ═══════════════ CONTACTS TAB ═══════════════ -->
+  @if (activeTab === 'contacts') {
+    <app-loading [loading]="contactsLoading"></app-loading>
+
+    <div class="flex items-center justify-between">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">جهات الاتصال ({{ contacts.length }})</h2>
+      <app-button (btnClick)="openAddContact()">+ إضافة جهة اتصال</app-button>
+    </div>
+
+    <div class="db-tbl-card mt-3">
+      <div class="db-tbl-wrap">
+        <table class="db-tbl">
+          <thead><tr><th>الاسم</th><th>الهاتف</th><th>العنوان</th><th>المنصب</th><th></th></tr></thead>
+          <tbody>
+            @for (c of contacts; track c.id) {
+              <tr>
+                <td class="font-medium" style="color:#374151">{{ c.name }}</td>
+                <td class="font-mono" style="color:#6B7280">{{ c.phone }}</td>
+                <td style="color:#6B7280">{{ c.address }}</td>
+                <td style="color:#9CA3AF">{{ c.position || '—' }}</td>
+                <td class="flex gap-2">
+                  <button type="button" (click)="openEditContact(c)" class="text-xs font-medium" style="color:#9A7B1A">تعديل</button>
+                  <button type="button" (click)="deleteContact(c)" class="text-xs font-medium text-red-500">حذف</button>
+                </td>
+              </tr>
+            }
+            @if (!contacts.length) {
+              <tr><td colspan="5" class="text-center text-sm text-gray-400 py-6">لا توجد جهات اتصال بعد</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    @if (showContactForm) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="closeContactForm()">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 w-full max-w-md" (click)="$event.stopPropagation()">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-4">{{ editingContactId ? 'تعديل جهة اتصال' : 'إضافة جهة اتصال' }}</h3>
+
+          @if (contactAlert.show) {
+            <div class="mb-3">
+              <app-alert variant="error" [message]="contactAlert.message"></app-alert>
+            </div>
+          }
+
+          <form [formGroup]="contactForm" class="space-y-4" novalidate>
+            <div>
+              <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">الاسم</label>
+              <input type="text" formControlName="name" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">رقم الهاتف</label>
+              <input type="text" formControlName="phone" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">العنوان</label>
+              <input type="text" formControlName="address" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">المنصب (اختياري)</label>
+              <input type="text" formControlName="position" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+            </div>
+            <div class="flex items-center gap-2 pt-2">
+              <app-button (btnClick)="submitContact()">حفظ</app-button>
+              <app-button variant="outline" (btnClick)="closeContactForm()">إلغاء</app-button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  }
+
+  @if (activeTab === 'overview') {
+
   <!-- Badges — where this supplier stands in the global rankings -->
   @if (insights) {
     <div class="flex flex-wrap gap-2">
@@ -129,6 +367,8 @@
       }
     </div>
   }
+
+  } <!-- /activeTab === 'overview' -->
 
 }
 

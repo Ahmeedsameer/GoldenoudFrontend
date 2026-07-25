@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LoadingComponent } from '../../../../loading/loading.component';
 import { AlertComponent } from '../../../../shared/components/ui/alert/alert.component';
 import { TransferRequestService, TransferRequest, TransferStatus } from '../../../../services/transfer-request.service';
+import { WasteReason, WASTE_REASON_LABELS } from '../../../../services/waste.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ReportExportService } from '../../../../services/report-export.service';
 
@@ -18,6 +19,7 @@ const PRIORITY_LABELS: Record<string, string> = {
 const TIMELINE_ORDER: TransferStatus[] = ['submitted', 'approved', 'preparing', 'shipped', 'received', 'closed'];
 
 interface ReceiveRow { item_id: number; product_name: string; requested_quantity: number; received_quantity: number; missing_quantity: number; damaged_quantity: number; notes: string; }
+interface ReceivingWasteRow { item_id: number; product_name: string; quantity: number; reason: WasteReason; notes: string; }
 
 @Component({
   selector: 'app-transfer-detail',
@@ -44,6 +46,15 @@ export class TransferDetailComponent implements OnInit {
   showReceiveForm = false;
   receiveRows: ReceiveRow[] = [];
   receiveNotes = '';
+
+  /** Follow-up to receive() — prompted automatically once any item comes back
+   *  with missing/damaged quantity, so that discrepancy becomes a real,
+   *  reportable Waste entry instead of a bare number (see
+   *  TransferRequestService::registerReceivingWaste). */
+  showReceivingWasteForm = false;
+  receivingWasteRows: ReceivingWasteRow[] = [];
+  receivingWasteReasons = Object.entries(WASTE_REASON_LABELS).map(([key, label]) => ({ key: key as WasteReason, label }));
+  receivingWasteReasonLabel(r: string): string { return WASTE_REASON_LABELS[r as WasteReason] ?? r; }
 
   timelineOrder = TIMELINE_ORDER;
 
@@ -85,6 +96,50 @@ export class TransferDetailComponent implements OnInit {
         this.buildReceiveRows();
       },
       error: () => { this.loading = false; this.errorMsg = 'تعذّر تحميل بيانات طلب النقل'; },
+    });
+  }
+
+  /** Whether this transfer has missing/damaged quantity that hasn't been turned into a Waste record yet. */
+  get hasUnregisteredReceivingWaste(): boolean {
+    if (!this.transfer) return false;
+    if (this.transfer.status !== 'received' && this.transfer.status !== 'closed') return false;
+    const alreadyRegistered = (this.transfer.logs ?? []).some((l) => l.action === 'receiving_waste_registered');
+    if (alreadyRegistered) return false;
+    return this.transfer.items.some((i) => (+(i.missing_quantity ?? 0) + +(i.damaged_quantity ?? 0)) > 0);
+  }
+
+  private buildReceivingWasteRows(): void {
+    if (!this.transfer) return;
+    this.receivingWasteRows = this.transfer.items
+      .filter((i) => (+(i.missing_quantity ?? 0) + +(i.damaged_quantity ?? 0)) > 0)
+      .map((i) => {
+        const missing = +(i.missing_quantity ?? 0);
+        const damaged = +(i.damaged_quantity ?? 0);
+        return {
+          item_id: i.id,
+          product_name: i.product?.name ?? '',
+          quantity: Math.round((missing + damaged) * 1000) / 1000,
+          // Sensible default so the manager doesn't have to think when it's obvious — still editable.
+          reason: (damaged > 0 && missing === 0 ? 'damaged_during_transfer' : missing > 0 && damaged === 0 ? 'lost' : 'damaged_during_transfer') as WasteReason,
+          notes: '',
+        };
+      });
+  }
+
+  openReceivingWasteForm(): void {
+    this.buildReceivingWasteRows();
+    this.showReceivingWasteForm = true;
+  }
+
+  submitReceivingWaste(): void {
+    if (!this.receivingWasteRows.length) return;
+    this.actionLoading = true;
+    this.errorMsg = '';
+    this.svc.registerReceivingWaste(this.id, this.receivingWasteRows.map((r) => ({
+      item_id: r.item_id, reason: r.reason, notes: r.notes || undefined,
+    }))).subscribe({
+      next: (t) => { this.transfer = t; this.actionLoading = false; this.showReceivingWasteForm = false; },
+      error: (err) => { this.actionLoading = false; this.errorMsg = err?.error?.message || 'فشل تسجيل الهالك'; },
     });
   }
 
@@ -146,12 +201,25 @@ export class TransferDetailComponent implements OnInit {
   }
 
   submitReceive(): void {
-    this.runAction(this.svc.receive(this.id, {
+    this.actionLoading = true;
+    this.errorMsg = '';
+    this.svc.receive(this.id, {
       notes: this.receiveNotes || undefined,
       items: this.receiveRows.map((r) => ({
         item_id: r.item_id, received_quantity: r.received_quantity,
         missing_quantity: r.missing_quantity, damaged_quantity: r.damaged_quantity, notes: r.notes || undefined,
       })),
-    }));
+    }).subscribe({
+      next: (t) => {
+        this.transfer = t;
+        this.actionLoading = false;
+        this.buildReceiveRows();
+        this.showReceiveForm = false;
+        // Automatically prompt for the missing/damaged follow-up — no
+        // silent numbers left un-reported (see hasUnregisteredReceivingWaste).
+        if (this.hasUnregisteredReceivingWaste) { this.openReceivingWasteForm(); }
+      },
+      error: (err) => { this.actionLoading = false; this.errorMsg = err?.error?.message || 'فشل تنفيذ الإجراء'; },
+    });
   }
 }

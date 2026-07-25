@@ -5,7 +5,6 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { StockService } from '../../services/stock.service';
 import { LoadingComponent } from '../../loading/loading.component';
-import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
 
 export interface ManagerGoodsItem {
   id: number;
@@ -22,42 +21,41 @@ export interface ManagerGoodsItem {
   };
 }
 
+/** A batch received within this many days is badged "جديد". */
+const NEW_THRESHOLD_DAYS = 7;
+/** A batch that's been sitting longer than this is badged "قديم" (aging, worth checking on). */
+const OLD_THRESHOLD_DAYS = 60;
+
+/**
+ * View-only branch inventory for managers — see it, can't touch it. The only
+ * legitimate way stock enters/leaves a branch is the Stock Request / Transfer
+ * Request workflow (طلبات المخزون / طلبات النقل بين الفروع); the old instant
+ * "manager transfer" action has been removed, not merely hidden here.
+ *
+ * Each row is one FIFO batch (not an aggregate per product), so recently-
+ * received and long-sitting stock of the same product show as separate,
+ * separately-dated rows — badged "جديد"/"قديم" from that date.
+ */
 @Component({
   selector: 'app-inventory-transfer',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent],
   templateUrl: './inventory-transfer.component.html',
 })
 export class InventoryTransferComponent implements OnInit {
   private stockService = inject(StockService);
 
-  // ── State ────────────────────────────────────────────────────────
-  loading       = false;
-  transferring  = false;
-  alert: { show: boolean; type: 'success' | 'error'; message: string } =
-    { show: false, type: 'success', message: '' };
+  loading = false;
 
-  // ── Inventory list ───────────────────────────────────────────────
   goods: ManagerGoodsItem[] = [];
-  currentPage  = 1;
-  lastPage     = 1;
-  total        = 0;
+  currentPage = 1;
+  lastPage = 1;
+  total = 0;
 
-  // ── Search ───────────────────────────────────────────────────────
-  searchQuery  = '';
+  searchQuery = '';
   private search$ = new Subject<string>();
 
-  // ── Transfer form ────────────────────────────────────────────────
-  selected: ManagerGoodsItem | null = null;
-  transferQty    = 0;
-  toShopId: number | null = null;   // null = main warehouse
-
-  // ── Destination shops ────────────────────────────────────────────
-  shops: { id: number; name: string }[] = [];
-
-  // ────────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.loadShops();
     this.loadGoods();
 
     this.search$
@@ -65,7 +63,6 @@ export class InventoryTransferComponent implements OnInit {
       .subscribe(() => { this.currentPage = 1; this.loadGoods(); });
   }
 
-  // ── Data loading ─────────────────────────────────────────────────
   loadGoods(): void {
     this.loading = true;
     const params: any = { page: this.currentPage, per_page: 25 };
@@ -83,13 +80,6 @@ export class InventoryTransferComponent implements OnInit {
     });
   }
 
-  loadShops(): void {
-    this.stockService.getManagerShops().subscribe({
-      next: (shops) => { this.shops = shops; },
-    });
-  }
-
-  // ── Search ───────────────────────────────────────────────────────
   onSearchInput(value: string): void {
     this.searchQuery = value;
     this.search$.next(value);
@@ -101,81 +91,33 @@ export class InventoryTransferComponent implements OnInit {
     this.loadGoods();
   }
 
-  // ── Pagination ────────────────────────────────────────────────────
   prevPage(): void { if (this.currentPage > 1) { this.currentPage--; this.loadGoods(); } }
   nextPage(): void { if (this.currentPage < this.lastPage) { this.currentPage++; this.loadGoods(); } }
 
-  // ── Selection ─────────────────────────────────────────────────────
-  selectGoods(item: ManagerGoodsItem): void {
-    this.selected    = item;
-    this.transferQty = 0;
-    this.toShopId    = null;
-    this.alert       = { show: false, type: 'success', message: '' };
-  }
+  productName(item: ManagerGoodsItem): string { return item.supply_item?.product?.name ?? '—'; }
+  sku(item: ManagerGoodsItem): string { return item.supply_item?.product?.sku ?? '—'; }
+  scalar(item: ManagerGoodsItem): string { return item.supply_item?.product?.scalar ?? ''; }
+  categoryName(item: ManagerGoodsItem): string { return item.supply_item?.product?.category?.name ?? '—'; }
 
-  clearSelection(): void {
-    this.selected    = null;
-    this.transferQty = 0;
-    this.toShopId    = null;
-  }
-
-  // ── Transfer submit ───────────────────────────────────────────────
-  submitTransfer(): void {
-    if (!this.selected) return;
-
-    if (!this.transferQty || this.transferQty <= 0) {
-      this.alert = { show: true, type: 'error', message: 'يرجى إدخال كمية صحيحة أكبر من صفر.' };
-      return;
-    }
-    if (this.transferQty > this.selected.current_quantity) {
-      this.alert = {
-        show: true, type: 'error',
-        message: `الكمية المطلوبة (${this.transferQty}) تتجاوز المتاح (${this.selected.current_quantity}).`,
-      };
-      return;
-    }
-
-    this.transferring = true;
-    this.alert        = { show: false, type: 'success', message: '' };
-
-    this.stockService.managerTransferGoods({
-      goods_id:   this.selected.id,
-      quantity:   this.transferQty,
-      to_shop_id: this.toShopId,
-    }).subscribe({
-      next: (res) => {
-        this.transferring = false;
-        const destName = res.data?.destination?.shop?.name ?? 'المستودع الرئيسي';
-        this.alert = {
-          show: true, type: 'success',
-          message: `تم نقل ${this.transferQty} ${this.selected!.supply_item.product.scalar} إلى ${destName} بنجاح.`,
-        };
-        this.clearSelection();
-        this.loadGoods();        // refresh list so quantities update
-      },
-      error: (err) => {
-        this.transferring = false;
-        this.alert = { show: true, type: 'error', message: err?.error?.message ?? 'حدث خطأ أثناء النقل.' };
-      },
-    });
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────────
-  productName(item: ManagerGoodsItem): string {
-    return item.supply_item?.product?.name ?? '—';
-  }
-  sku(item: ManagerGoodsItem): string {
-    return item.supply_item?.product?.sku ?? '—';
-  }
-  scalar(item: ManagerGoodsItem): string {
-    return item.supply_item?.product?.scalar ?? '';
-  }
-  categoryName(item: ManagerGoodsItem): string {
-    return item.supply_item?.product?.category?.name ?? '—';
-  }
   stockLevel(qty: number): 'critical' | 'low' | 'ok' {
-    if (qty <= 0)   return 'critical';
-    if (qty <= 10)  return 'low';
+    if (qty <= 0) return 'critical';
+    if (qty <= 10) return 'low';
     return 'ok';
+  }
+
+  private ageDays(item: ManagerGoodsItem): number {
+    const received = new Date(item.date).getTime();
+    return Math.floor((Date.now() - received) / (1000 * 60 * 60 * 24));
+  }
+
+  ageBadge(item: ManagerGoodsItem): { label: string; class: string } | null {
+    const days = this.ageDays(item);
+    if (days <= NEW_THRESHOLD_DAYS) {
+      return { label: 'جديد', class: 'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-300' };
+    }
+    if (days >= OLD_THRESHOLD_DAYS) {
+      return { label: 'قديم', class: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' };
+    }
+    return null;
   }
 }

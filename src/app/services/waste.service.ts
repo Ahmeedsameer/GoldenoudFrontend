@@ -6,6 +6,11 @@ const API_BASE = 'http://127.0.0.1:8000/api/branch-operations/waste';
 
 export type WasteReason = 'broken' | 'expired' | 'leakage' | 'lost' | 'damaged_during_transfer' | 'other';
 
+export const WASTE_REASON_LABELS: Record<WasteReason, string> = {
+  broken: 'كسر', expired: 'انتهاء صلاحية', leakage: 'تسرب', lost: 'فقدان',
+  damaged_during_transfer: 'تلف أثناء النقل', other: 'أخرى',
+};
+
 export interface WasteRecord {
   id: number; shop_id: number; product_id: number; quantity: number; reason: WasteReason;
   date: string; estimated_value: number; notes: string | null;

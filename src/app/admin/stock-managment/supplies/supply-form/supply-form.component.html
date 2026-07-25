@@ -114,6 +114,34 @@
         </div>
       </div>
 
+      @if (isImmediate) {
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-brand-200 dark:border-brand-500/30 bg-brand-50/40 dark:bg-brand-500/5">
+          <div>
+            <app-label>الخزنة <span class="text-error-500">*</span></app-label>
+            <select [formControl]="$any(headerForm.get('safe_id'))"
+              class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700">
+              <option [ngValue]="null">اختر الخزنة</option>
+              @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+            </select>
+            <p class="text-[11px] text-gray-400 mt-1">سيُدفع إجمالي الفاتورة كاملاً من هذه الخزنة فور الحفظ.</p>
+          </div>
+          <div>
+            <app-label>العملة</app-label>
+            <select [formControl]="$any(headerForm.get('currency_id'))"
+              class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700">
+              @for (c of currencies; track c.id) { <option [ngValue]="c.id">{{ c.code }}</option> }
+            </select>
+          </div>
+        </div>
+      }
+
+      <!-- Invoice number — optional, auto-generated if left blank -->
+      <div>
+        <app-label>رقم الفاتورة (اختياري)</app-label>
+        <input type="text" formControlName="invoice_number" placeholder="يُنشأ تلقائياً إن تُرك فارغاً"
+          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700" />
+      </div>
+
       <!-- Category — chosen once, scopes which products can be added and
            drives the Supplier Intelligence panel below. -->
       <div>
@@ -354,11 +382,21 @@
         إضافة صنف
       </button>
 
-      <!-- Grand total -->
-      <div class="flex justify-end mb-5">
+      <!-- Discount / Tax / Final total -->
+      <div [formGroup]="headerForm" class="flex flex-wrap items-end justify-end gap-4 mb-5">
+        <div class="w-36">
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الخصم</label>
+          <input type="number" formControlName="discount" min="0" step="0.01" placeholder="0.00"
+            class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+        </div>
+        <div class="w-36">
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الضريبة</label>
+          <input type="number" formControlName="tax" min="0" step="0.01" placeholder="0.00"
+            class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+        </div>
         <div class="flex items-center gap-4 px-5 py-3 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
-          <span class="text-sm text-gray-500 dark:text-gray-400">الإجمالي الكلي</span>
-          <span class="text-xl font-bold font-mono text-gray-800 dark:text-white/90">{{ grandTotal() | number:'1.2-2' }}</span>
+          <span class="text-sm text-gray-500 dark:text-gray-400">الإجمالي النهائي</span>
+          <span class="text-xl font-bold font-mono text-gray-800 dark:text-white/90">{{ finalTotal() | number:'1.2-2' }}</span>
         </div>
       </div>
 

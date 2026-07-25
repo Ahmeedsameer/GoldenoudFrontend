@@ -48,6 +48,7 @@ export class ManagerDashboardLayoutComponent {
       subItems: [
         { name: 'لوحة عمليات الفرع', path: '/dashboard/branch-operations/dashboard' },
         { name: 'طلبات النقل بين الفروع', path: '/dashboard/branch-operations/transfers' },
+        { name: 'طلبات المخزون من المخزن الرئيسي', path: '/dashboard/branch-operations/stock-requests' },
         { name: 'إدارة الهالك', path: '/dashboard/branch-operations/waste' },
       ],
     },
@@ -62,7 +63,7 @@ export class ManagerDashboardLayoutComponent {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
       name: 'المخزون',
       subItems: [
-        { name: 'نقل المخزون', path: '/dashboard/inventory-transfer' },
+        { name: 'مخزون فرعي', path: '/dashboard/inventory-transfer' },
       ],
     },
     {

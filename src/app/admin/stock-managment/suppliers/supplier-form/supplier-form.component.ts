@@ -45,6 +45,13 @@ export class SupplierFormComponent implements OnInit {
   form: FormGroup = this.fb.group({
     name: ['', Validators.required],
     phone: ['', Validators.required],
+    address: ['', Validators.required],
+    bank_account_number: [''],
+    mobile_wallet: [''],
+    instapay: [''],
+    iban: [''],
+    opening_balance: [0],
+    notes: [''],
   });
 
   ngOnInit(): void {
@@ -60,7 +67,17 @@ export class SupplierFormComponent implements OnInit {
     this.stockService.getSupplierById(this.supplierId!).subscribe({
       next: (res) => {
         const supplier = res.data || res;
-        this.form.patchValue({ name: supplier.name, phone: supplier.phone });
+        this.form.patchValue({
+          name: supplier.name,
+          phone: supplier.phone,
+          address: supplier.address,
+          bank_account_number: supplier.bank_account_number,
+          mobile_wallet: supplier.mobile_wallet,
+          instapay: supplier.instapay,
+          iban: supplier.iban,
+          opening_balance: supplier.opening_balance,
+          notes: supplier.notes,
+        });
         this.pageLoading = false;
       },
       error: () => { this.pageLoading = false; },

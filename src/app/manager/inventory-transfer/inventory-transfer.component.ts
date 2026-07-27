@@ -21,6 +21,23 @@ export interface ManagerGoodsItem {
   };
 }
 
+export interface ProductShipment {
+  transfer_request_id: number;
+  request_number: string;
+  source_shop: string | null;
+  received_quantity: number;
+  missing_quantity: number;
+  damaged_quantity: number;
+  received_at: string | null;
+}
+
+export interface ProductHistory {
+  product_id: number;
+  current_quantity: number;
+  total_received: number;
+  shipments: ProductShipment[];
+}
+
 /** A batch received within this many days is badged "جديد". */
 const NEW_THRESHOLD_DAYS = 7;
 /** A batch that's been sitting longer than this is badged "قديم" (aging, worth checking on). */
@@ -54,6 +71,12 @@ export class InventoryTransferComponent implements OnInit {
 
   searchQuery = '';
   private search$ = new Subject<string>();
+
+  // ── Per-product receiving history (what was sent, what's left, when) ──
+  showHistory = false;
+  historyLoading = false;
+  historyProductName = '';
+  history: ProductHistory | null = null;
 
   ngOnInit(): void {
     this.loadGoods();
@@ -119,5 +142,33 @@ export class InventoryTransferComponent implements OnInit {
       return { label: 'قديم', class: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' };
     }
     return null;
+  }
+
+  /** Clicking any batch row shows the full receiving history for that PRODUCT (across all its batches), not just this one row. */
+  openHistory(item: ManagerGoodsItem): void {
+    const productId = item.supply_item?.product?.id;
+    if (!productId) return;
+
+    this.historyProductName = this.productName(item);
+    this.history = null;
+    this.historyLoading = true;
+    this.showHistory = true;
+
+    this.stockService.getManagerProductHistory(productId).subscribe({
+      next: (h) => { this.history = h; this.historyLoading = false; },
+      error: () => { this.historyLoading = false; },
+    });
+  }
+
+  closeHistory(): void {
+    this.showHistory = false;
+    this.history = null;
+  }
+
+  /** Same "جديد" convention as the batch list — a shipment received within the last week. */
+  isRecentShipment(receivedAt: string | null): boolean {
+    if (!receivedAt) return false;
+    const days = Math.floor((Date.now() - new Date(receivedAt).getTime()) / (1000 * 60 * 60 * 24));
+    return days <= NEW_THRESHOLD_DAYS;
   }
 }

@@ -56,7 +56,9 @@ export class SupplierProfileComponent implements OnInit {
   payingInvoiceRemaining = 0;
   safes: { id: number; name: string }[] = [];
   currencies: { id: number; code: string }[] = [];
+  paymentMethods: import('../../../../models/sales.model').PaymentMethod[] = [];
   payForm: FormGroup = this.fb.group({
+    payment_method_id: [null],
     safe_id: [null, Validators.required],
     currency_id: [null, Validators.required],
     amount: [null, [Validators.required, Validators.min(0.01)]],
@@ -143,7 +145,7 @@ export class SupplierProfileComponent implements OnInit {
   openPayForm(invoiceId: number, remaining: number) {
     this.payingInvoiceId = invoiceId;
     this.payingInvoiceRemaining = remaining;
-    this.payForm.reset({ safe_id: null, currency_id: null, amount: null, note: '' });
+    this.payForm.reset({ payment_method_id: null, safe_id: null, currency_id: null, amount: null, note: '' });
     this.payAlert = { show: false, type: '', message: '' };
     this.showPayForm = true;
     if (!this.safes.length) {
@@ -164,6 +166,24 @@ export class SupplierProfileComponent implements OnInit {
         error: () => {},
       });
     }
+    if (!this.paymentMethods.length) {
+      this.safeService.getPaymentMethods({ active_only: true }).subscribe({
+        next: (res) => { this.paymentMethods = res.data || []; },
+        error: () => {},
+      });
+    }
+  }
+
+  /** Reusing the Payment Methods module (optional) — when the chosen method has
+   *  an assigned safe, auto-fill it (no manual safe pick needed, same as sales). */
+  onPaymentMethodChange(methodId: number | null): void {
+    const method = this.paymentMethods.find((m) => m.id === methodId);
+    if (method?.safe_id) {
+      this.payForm.patchValue({ safe_id: method.safe_id });
+    }
+    if (method?.currency_id) {
+      this.payForm.patchValue({ currency_id: method.currency_id });
+    }
   }
 
   closePayForm() {
@@ -183,6 +203,7 @@ export class SupplierProfileComponent implements OnInit {
       currency_id: this.payForm.value.currency_id,
       amount: this.payForm.value.amount,
       note: this.payForm.value.note || undefined,
+      payment_method_id: this.payForm.value.payment_method_id || undefined,
     }).subscribe({
       next: () => {
         this.payLoading = false;

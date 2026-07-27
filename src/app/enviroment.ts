@@ -14,6 +14,7 @@ export const environment = {
     safeTypes:          `${API_URL_BASE}/safe-types`,
     transactionReasons: `${API_URL_BASE}/transaction-reasons`,
     safeManagement:     `${API_URL_BASE}/safe-management`,
+    paymentMethods:     `${API_URL_BASE}/payment-methods`,
     conventions:        `${API_URL_BASE}/conventions`,
     notifications:      `${API_URL_BASE}/notifications`,
     managerBase:        `${API_URL_BASE}/manager`,

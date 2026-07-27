@@ -38,12 +38,14 @@
         <app-date-picker id="supplies-date-from" [value]="list.filters['date_from']" (valueChange)="setDateFrom($event)"></app-date-picker>
         <app-date-picker id="supplies-date-to" [value]="list.filters['date_to']" (valueChange)="setDateTo($event)"></app-date-picker>
       </div>
-      <app-button routerLink="/dashboard/stock/supplies/create" size="sm">
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-        </svg>
-        توريد جديد
-      </app-button>
+      @if (isAdmin) {
+        <app-button routerLink="/dashboard/stock/supplies/create" size="sm">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          توريد جديد
+        </app-button>
+      }
     </div>
   </div>
 
@@ -83,6 +85,9 @@
                 >
                   {{ supply.payment_method === 'debt' ? 'آجل' : 'فوري' }}
                 </span>
+                @if (supply.is_cancelled) {
+                  <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-error-50 text-error-700 dark:bg-error-500/10 dark:text-error-400 mr-1">ملغاة</span>
+                }
               </td>
               <td class="ds-td text-gray-600 dark:text-gray-300">{{ supply.items_count }}</td>
               <td class="ds-td font-mono text-gray-800 dark:text-white/90">{{ calcTotal(supply) | number:'1.2-2' }}</td>
@@ -90,10 +95,12 @@
                 <div class="flex items-center justify-center gap-1.5">
                   <a [routerLink]="['/dashboard/stock/supplies/show', supply.id]"
                     class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10 transition-colors">عرض</a>
-                  <a [routerLink]="['/dashboard/stock/supplies/edit', supply.id]"
-                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-white/[0.04] transition-colors">تعديل</a>
-                  <button (click)="confirmDelete(supply.id)"
-                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors">حذف</button>
+                  @if (isAdmin) {
+                    <a [routerLink]="['/dashboard/stock/supplies/edit', supply.id]"
+                      class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-white/[0.04] transition-colors">تعديل</a>
+                    <button (click)="confirmDelete(supply.id)"
+                      class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors">حذف</button>
+                  }
                 </div>
               </td>
             </tr>

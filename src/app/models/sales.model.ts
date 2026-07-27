@@ -62,11 +62,16 @@ export interface InvoiceItem {
   price: number;
   subtotal?: number;
   goods_id?: number;
+  /** Real FIFO batch cost, falling back to product average cost — report/detail views only, never printed. */
+  unit_cost?: number;
+  line_cost?: number;
+  line_profit?: number;
   product?: {
     id: number;
     name: string;
     sku: string;
     scalar: string;
+    purchase_cost?: number;
   };
 }
 
@@ -88,28 +93,40 @@ export interface Invoice {
 }
 
 /**
- * Supported payment methods. Mirror of the backend PaymentMethod enum.
- * Add a new method here (and to PAYMENT_METHODS below) to surface it in the UI.
+ * Payment Methods module — admin-managed, unlimited (Cash EGP, Visa CIB,
+ * Vodafone Cash, InstaPay, Fawry, ...). Replaces the old hardcoded 2-value
+ * PaymentMethodValue union — fetched from the backend, never hardcoded here.
  */
-export type PaymentMethodValue = 'cash' | 'visa';
+export type PaymentMethodType = 'cash' | 'visa' | 'mastercard' | 'bank_card' | 'mobile_wallet' | 'bank_transfer' | 'other';
 
-export interface PaymentMethodOption {
-  value: PaymentMethodValue;
-  label: string;
-  /** Whether this method requires a transaction/reference number. */
-  requiresTransactionNumber: boolean;
+export const PAYMENT_METHOD_TYPE_LABELS: Record<PaymentMethodType, string> = {
+  cash: 'نقدي', visa: 'فيزا', mastercard: 'ماستركارد', bank_card: 'بطاقة بنكية',
+  mobile_wallet: 'محفظة إلكترونية', bank_transfer: 'تحويل بنكي', other: 'أخرى',
+};
+
+/** Card types eligible for a processing fee — mirrors PaymentMethod::CARD_TYPES on the backend. */
+export const CARD_PAYMENT_TYPES: PaymentMethodType[] = ['visa', 'mastercard', 'bank_card'];
+
+export interface PaymentMethod {
+  id: number;
+  name: string;
+  type: PaymentMethodType;
+  currency_id: number;
+  processing_fee_percent: number;
+  is_active: boolean;
+  currency?: { id: number; code: string; symbol?: string };
+  /** Assigned safe — every payment via this method auto-credits it, no manual pick at sale time. Null = falls back to the branch's default physical safe. */
+  safe_id?: number | null;
+  safe?: { id: number; shop?: { id: number; name: string } | null } | null;
+  /** Branch restriction — empty/absent = unrestricted (every active branch can use it). */
+  shops?: { id: number; name: string }[];
 }
-
-export const PAYMENT_METHODS: PaymentMethodOption[] = [
-  { value: 'cash', label: 'نقدي', requiresTransactionNumber: false },
-  { value: 'visa', label: 'فيزا', requiresTransactionNumber: true },
-];
 
 export interface InvoicePaymentRow {
   currency_id: number;
   amount: number;
-  payment_method: PaymentMethodValue;
-  /** Required when payment_method needs a reference (e.g. visa). */
+  payment_method_id: number;
+  /** Required when the selected method is a card type (visa/mastercard/bank_card). */
   transaction_number?: string | null;
 }
 
@@ -118,7 +135,12 @@ export interface InvoicePayment {
   id?: number;
   currency_id: number;
   amount: number;
-  payment_method: PaymentMethodValue;
+  payment_method_id?: number;
+  /** Legacy string snapshot (derived server-side from the method's type) — kept for old rows. */
+  payment_method?: string;
+  processing_fee_percent?: number;
+  processing_fee_amount?: number;
+  net_amount?: number;
   transaction_number?: string | null;
   currency?: { id: number; code: string; symbol?: string };
 }

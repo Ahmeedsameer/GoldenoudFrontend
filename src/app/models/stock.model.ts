@@ -51,11 +51,15 @@ export interface Supply {
   discount: number;
   tax: number;
   paid_amount: number;
+  cancelled_at: string | null;
+  cancelled_by: number | null;
+  cancelledBy?: { id: number; name: string } | null;
   // Derived server-side (Supply model accessors) — never stored, never trust a stale client copy.
   items_subtotal: number;
   total_amount: number;
   remaining_amount: number;
   payment_status: PaymentStatus;
+  is_cancelled: boolean;
   items_count: number;
   supplier: Pick<Supplier, 'id' | 'name' | 'phone'>;
   items: SupplyItem[];
@@ -129,6 +133,8 @@ export interface CreateSupplierPaymentRequest {
   currency_id: number;
   amount: number;
   note?: string;
+  /** Optional — reuses the Payment Methods module; when the chosen method has an assigned safe, it overrides `safe_id`. */
+  payment_method_id?: number;
 }
 
 // ── Supplier Ledger ───────────────────────────────────────────────────────

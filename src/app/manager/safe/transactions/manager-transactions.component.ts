@@ -35,6 +35,8 @@ export class ManagerTransactionsComponent implements OnInit {
     { value: 'manager_expense', label: 'مصروف (مدير)' },
     { value: 'transfer_in', label: 'تحويل وارد' },
     { value: 'transfer_out', label: 'تحويل صادر' },
+    { value: 'bank_charge', label: 'رسوم بنكية' },
+    { value: 'bank_charge_reversal', label: 'استرجاع رسوم بنكية' },
   ];
 
   ngOnInit(): void {
@@ -55,12 +57,13 @@ export class ManagerTransactionsComponent implements OnInit {
       admin_deposit: 'إيداع (أدمن)', admin_withdrawal: 'سحب (أدمن)',
       manager_deposit: 'إيداع (مدير)', manager_expense: 'مصروف (مدير)',
       transfer_in: 'تحويل وارد', transfer_out: 'تحويل صادر',
+      bank_charge: 'رسوم بنكية', bank_charge_reversal: 'استرجاع رسوم بنكية',
     };
     return map[type] ?? type;
   }
 
   typeBadgeClass(type: TransactionType): string {
-    const inTypes = ['sale', 'admin_deposit', 'manager_deposit', 'transfer_in'];
+    const inTypes = ['sale', 'admin_deposit', 'manager_deposit', 'transfer_in', 'bank_charge_reversal'];
     return inTypes.includes(type)
       ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400'
       : 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400';

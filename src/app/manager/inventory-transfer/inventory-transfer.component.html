@@ -69,7 +69,7 @@
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-white/[0.04]">
           @for (item of goods; track item.id) {
-            <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer" (click)="openHistory(item)">
 
               <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90">
                 {{ productName(item) }}
@@ -129,6 +129,64 @@
           </button>
         </div>
       }
+    </div>
+  </div>
+}
+
+<!-- Per-product receiving history modal -->
+@if (showHistory) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="closeHistory()">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 w-full max-w-2xl max-h-[85vh] overflow-y-auto" (click)="$event.stopPropagation()">
+
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">سجل استلام المنتج</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ historyProductName }}</p>
+        </div>
+        <button type="button" (click)="closeHistory()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <app-loading [loading]="historyLoading"></app-loading>
+
+      @if (!historyLoading && history) {
+        <div class="grid grid-cols-2 gap-4 mb-5">
+          <div class="bg-gray-50 dark:bg-white/[0.03] rounded-xl p-4">
+            <p class="text-xs text-gray-400 mb-1">إجمالي ما تم إرساله لك على الإطلاق</p>
+            <p class="text-xl font-bold font-mono text-gray-900 dark:text-white">{{ history.total_received | number:'1.0-3' }}</p>
+          </div>
+          <div class="bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl p-4 text-white">
+            <p class="text-xs text-brand-100 mb-1">الفاضل حالياً في فرعك</p>
+            <p class="text-xl font-bold font-mono">{{ history.current_quantity | number:'1.0-3' }}</p>
+          </div>
+        </div>
+
+        <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">تفاصيل كل شحنة وصلتك</h4>
+        <div class="space-y-2">
+          @for (s of history.shipments; track s.transfer_request_id) {
+            <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 dark:border-white/[0.06]">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-mono text-gray-500 dark:text-gray-400">{{ s.request_number }}</span>
+                  @if (isRecentShipment(s.received_at)) {
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-300">جديد</span>
+                  }
+                </div>
+                <p class="text-xs text-gray-400 mt-0.5">من {{ s.source_shop || '—' }} · {{ s.received_at | date:'d MMM yyyy, h:mm a' }}</p>
+                @if (s.missing_quantity > 0 || s.damaged_quantity > 0) {
+                  <p class="text-[11px] text-error-500 mt-0.5">مفقود: {{ s.missing_quantity }} · تالف: {{ s.damaged_quantity }}</p>
+                }
+              </div>
+              <span class="font-mono text-sm font-bold text-gray-800 dark:text-white/90 shrink-0">{{ s.received_quantity | number:'1.0-3' }}</span>
+            </div>
+          }
+          @if (!history.shipments.length) {
+            <p class="text-sm text-gray-400 text-center py-6">لا يوجد سجل استلام لهذا المنتج بعد</p>
+          }
+        </div>
+      }
+
     </div>
   </div>
 }

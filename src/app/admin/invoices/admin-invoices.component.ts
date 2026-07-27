@@ -28,6 +28,39 @@ export class AdminInvoicesComponent implements OnInit {
     { key: 'cancelled', label: 'مرفوضة' },
   ];
 
+  /** Sortable columns — values (total_cost/gross_profit/bank_fee/net_profit) come straight
+   *  from the backend's Invoice accessors (same figures as the invoice detail page); sorting
+   *  itself is done in-memory over the already-loaded page, no extra calculation or API call. */
+  sortColumns: { key: string; label: string }[] = [
+    { key: 'date',          label: 'التاريخ' },
+    { key: 'total_amount',  label: 'الإجمالي' },
+    { key: 'total_cost',    label: 'التكلفة' },
+    { key: 'gross_profit',  label: 'الربح الإجمالي' },
+    { key: 'bank_fee',      label: 'رسوم البنك' },
+    { key: 'net_profit',    label: 'صافي الربح' },
+  ];
+  sortBy = 'date';
+  sortDir: 'asc' | 'desc' = 'desc';
+
+  setSort(key: string): void {
+    if (this.sortBy === key) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = key;
+      this.sortDir = 'desc';
+    }
+  }
+
+  get sortedInvoices(): any[] {
+    const dir = this.sortDir === 'asc' ? 1 : -1;
+    const key = this.sortBy;
+    return [...this.invoices].sort((a, b) => {
+      const va = key === 'date' ? new Date(a.date).getTime() : +(a[key] ?? 0);
+      const vb = key === 'date' ? new Date(b.date).getTime() : +(b[key] ?? 0);
+      return (va - vb) * dir;
+    });
+  }
+
   ngOnInit(): void {
     this.load();
     this.loadPendingCount();
@@ -98,6 +131,26 @@ export class AdminInvoicesComponent implements OnInit {
       error: (err) => {
         this.actingId = null;
         this.alert = { show: true, type: 'error', message: err?.error?.message || 'تعذّر تنفيذ العملية.' };
+      },
+    });
+  }
+
+  /** Cancel a completed (approved) sale — returns the sold products to stock and refunds the safe. */
+  cancelSale(inv: any) {
+    const reason = prompt(`سبب إلغاء الفاتورة #${inv.id} (اختياري):`);
+    if (reason === null) return; // user pressed Cancel on the prompt itself
+    if (!confirm(`سيتم إرجاع المنتجات للمخزون واسترجاع المبلغ من الخزنة. هل تريد إلغاء الفاتورة #${inv.id}؟`)) return;
+
+    this.actingId = inv.id;
+    this.service.cancel(inv.id, reason || undefined).subscribe({
+      next: (res) => {
+        this.actingId = null;
+        this.alert = { show: true, type: 'success', message: res?.message || 'تم إلغاء الفاتورة' };
+        this.invoices = this.invoices.filter(i => i.id !== inv.id);
+      },
+      error: (err) => {
+        this.actingId = null;
+        this.alert = { show: true, type: 'error', message: err?.error?.message || 'تعذّر إلغاء الفاتورة.' };
       },
     });
   }

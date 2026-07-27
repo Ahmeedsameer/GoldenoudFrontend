@@ -29,6 +29,7 @@ export class SafeService {
   private safeTypes          = environment.apiUrl.safeTypes;
   private transactionReasons = environment.apiUrl.transactionReasons;
   private safeManagement     = environment.apiUrl.safeManagement;
+  private paymentMethods     = environment.apiUrl.paymentMethods;
   private managerBase        = 'http://127.0.0.1:8000/api/manager';
 
   // ── Currencies ────────────────────────────────────────────────────────────────
@@ -57,6 +58,24 @@ export class SafeService {
 
   updateSafeType(id: number, body: Partial<{ name: string; is_active: boolean }>): Observable<any> {
     return this.http.put<any>(`${this.safeTypes}/${id}`, body);
+  }
+
+  // ── Payment Methods (admin-managed, unlimited) ─────────────────────────────────
+
+  getPaymentMethods(params?: { active_only?: boolean }): Observable<any> {
+    return this.http.get<any>(this.paymentMethods, { params: params as any });
+  }
+
+  createPaymentMethod(body: { name: string; type: string; currency_id: number; processing_fee_percent?: number; is_active?: boolean; safe_id?: number | null; shop_ids?: number[] }): Observable<any> {
+    return this.http.post<any>(this.paymentMethods, body);
+  }
+
+  updatePaymentMethod(id: number, body: Partial<{ name: string; type: string; currency_id: number; processing_fee_percent: number; is_active: boolean; safe_id: number | null; shop_ids: number[] }>): Observable<any> {
+    return this.http.put<any>(`${this.paymentMethods}/${id}`, body);
+  }
+
+  togglePaymentMethod(id: number): Observable<any> {
+    return this.http.put<any>(`${this.paymentMethods}/${id}/toggle`, {});
   }
 
   // ── Transaction Reasons ───────────────────────────────────────────────────────
@@ -131,6 +150,11 @@ export class SafeService {
 
   getManagerTransactions(safeId: number, params?: TransactionFilters): Observable<any> {
     return this.http.get<any>(`${this.managerBase}/safe/my-shop/${safeId}/transactions`, { params: params as any });
+  }
+
+  /** Per-payment-method totals for the manager's own shop on a single day — powers the Safe Reconciliation breakdown table. */
+  getPaymentMethodsBreakdown(date?: string): Observable<any> {
+    return this.http.get<any>(`${this.managerBase}/reports/payment-methods-breakdown`, { params: date ? { date } : {} });
   }
 
   managerDeposit(safeId: number, body: SafeTransactionBody): Observable<any> {

@@ -146,6 +146,15 @@
 
           <form [formGroup]="payForm" class="space-y-4" novalidate>
             <div>
+              <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">وسيلة الدفع (اختياري)</label>
+              <select formControlName="payment_method_id" (change)="onPaymentMethodChange($any($event.target).value ? +$any($event.target).value : null)"
+                class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700">
+                <option [ngValue]="null">بدون — اختيار الخزنة يدوياً</option>
+                @for (m of paymentMethods; track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
+              </select>
+              <p class="mt-1 text-xs text-gray-400">إذا كانت الوسيلة مرتبطة بخزنة محددة، سيتم اختيارها تلقائياً.</p>
+            </div>
+            <div>
               <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">الخزنة</label>
               <select formControlName="safe_id" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700">
                 <option [ngValue]="null" disabled>اختر الخزنة</option>

@@ -41,8 +41,25 @@ export class SafeReconciliationComponent implements OnInit {
   selectedWithdrawReasonId: number | null = null;
   note = '';
 
+  // ── Payment method breakdown (today, own shop) ─────────────────────
+  // No real "shift/session" concept exists in this codebase — this is a
+  // same-day snapshot alongside the reconciliation, not a period-close action.
+  paymentMethodRows: { method: number; label: string; amount_egp: number; payment_count: number }[] = [];
+  paymentMethodsLoading = false;
+
   // ── Lifecycle ─────────────────────────────────────────────────────
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    this.loadPaymentMethodBreakdown();
+  }
+
+  loadPaymentMethodBreakdown(): void {
+    this.paymentMethodsLoading = true;
+    this.safeService.getPaymentMethodsBreakdown().subscribe({
+      next: (res) => { this.paymentMethodRows = res?.data?.methods || []; this.paymentMethodsLoading = false; },
+      error: () => { this.paymentMethodsLoading = false; },
+    });
+  }
 
   load(): void {
     this.loading  = true;

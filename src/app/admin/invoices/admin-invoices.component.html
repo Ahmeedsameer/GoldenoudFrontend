@@ -32,8 +32,25 @@
   </div>
 }
 
+<!-- Sort toolbar -->
+@if (invoices.length > 0) {
+  <div class="flex flex-wrap items-center gap-1.5 mb-4">
+    <span class="text-xs text-gray-400 me-1">ترتيب حسب:</span>
+    @for (col of sortColumns; track col.key) {
+      <button type="button" (click)="setSort(col.key)"
+        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors"
+        [class]="sortBy === col.key ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">
+        {{ col.label }}
+        @if (sortBy === col.key) {
+          <span>{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+        }
+      </button>
+    }
+  </div>
+}
+
 <div class="space-y-4">
-  @for (inv of invoices; track inv.id) {
+  @for (inv of sortedInvoices; track inv.id) {
     <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] overflow-hidden">
 
       <!-- Header -->
@@ -59,6 +76,14 @@
         <div><span class="block text-xs text-gray-400">البائع</span><span class="text-gray-700 dark:text-gray-300">{{ inv.seller?.name || '—' }}</span></div>
         <div><span class="block text-xs text-gray-400">العميل</span><span class="text-gray-700 dark:text-gray-300">{{ inv.name || inv.customer?.name || '—' }}</span></div>
         <div><span class="block text-xs text-gray-400">نوع السعر</span><span class="text-gray-700 dark:text-gray-300">{{ inv.price_type === 'wholesale' ? 'جملة' : 'قطاعي' }}</span></div>
+      </div>
+
+      <!-- Financial summary (admin-only, never printed) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 px-5 py-3 text-sm bg-gray-50 dark:bg-white/[0.02] border-t border-b border-gray-100 dark:border-white/[0.05]">
+        <div><span class="block text-xs text-gray-400">التكلفة</span><span class="font-mono font-semibold text-amber-600 dark:text-amber-400">{{ inv.total_cost | number:'1.2-2' }}</span></div>
+        <div><span class="block text-xs text-gray-400">الربح الإجمالي</span><span class="font-mono font-semibold" [class]="inv.gross_profit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">{{ inv.gross_profit | number:'1.2-2' }}</span></div>
+        <div><span class="block text-xs text-gray-400">رسوم البنك</span><span class="font-mono font-semibold text-error-600 dark:text-error-400">{{ inv.bank_fee ? ('- ' + (inv.bank_fee | number:'1.2-2')) : '—' }}</span></div>
+        <div><span class="block text-xs text-gray-400">صافي الربح</span><span class="font-mono font-bold" [class]="inv.net_profit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">{{ inv.net_profit | number:'1.2-2' }}</span></div>
       </div>
 
       <!-- Items -->
@@ -101,6 +126,16 @@
           <button type="button" (click)="approve(inv)" [disabled]="actingId === inv.id"
             class="px-4 py-2 rounded-lg bg-success-500 hover:bg-success-600 text-white text-sm font-medium disabled:opacity-40 transition-colors">
             اعتماد
+          </button>
+        </div>
+      }
+
+      <!-- Cancel a completed sale (only for approved) — reverses stock + money -->
+      @if (inv.status === 'approved') {
+        <div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+          <button type="button" (click)="cancelSale(inv)" [disabled]="actingId === inv.id"
+            class="px-4 py-2 rounded-lg border border-error-300 text-error-600 hover:bg-error-50 dark:border-error-500/40 dark:hover:bg-error-500/10 text-sm font-medium disabled:opacity-40 transition-colors">
+            إلغاء الفاتورة (استرجاع المخزون والمبلغ)
           </button>
         </div>
       }

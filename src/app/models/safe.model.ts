@@ -6,7 +6,9 @@ export type TransactionType =
   | 'manager_deposit'
   | 'manager_expense'
   | 'transfer_in'
-  | 'transfer_out';
+  | 'transfer_out'
+  | 'bank_charge'
+  | 'bank_charge_reversal';
 
 export type TransactionDirection = 'in' | 'out';
 
@@ -62,6 +64,7 @@ export interface SafeTransaction {
   invoice: { id: number; status: string; date: string } | null;
   invoice_id: number | null;
   transfer_id: number | null;
+  invoice_payment: { id: number; payment_method: { id: number; name: string; type: string } | null } | null;
 }
 
 export interface SafeTransfer {

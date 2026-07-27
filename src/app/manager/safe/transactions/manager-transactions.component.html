@@ -52,6 +52,7 @@
           <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">الاتجاه</th>
           <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">العملة</th>
           <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">المبلغ</th>
+          <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">وسيلة الدفع</th>
           <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">السبب</th>
           <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">الملاحظة</th>
           <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">التاريخ</th>
@@ -85,6 +86,7 @@
                 {{ tx.direction === 'in' ? '+' : '−' }}{{ tx.amount | number:'1.2-2' }}
               </span>
             </td>
+            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tx.invoice_payment?.payment_method?.name || '—' }}</td>
             <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tx.reason?.name || '—' }}</td>
             <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-[160px]">
               @if (tx.note) { <span class="truncate block" [title]="tx.note">{{ tx.note }}</span> }
@@ -94,7 +96,7 @@
           </tr>
         }
         @if (!list.loading && list.result.data.length === 0) {
-          <tr><td colspan="8" class="px-5 py-16 text-center text-sm text-gray-400">لا توجد معاملات</td></tr>
+          <tr><td colspan="9" class="px-5 py-16 text-center text-sm text-gray-400">لا توجد معاملات</td></tr>
         }
       </tbody>
     </table>

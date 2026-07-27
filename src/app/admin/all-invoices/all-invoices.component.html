@@ -1,0 +1,112 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">كل الفواتير في النظام</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">فواتير البيع، فواتير الشراء من الموردين، وفواتير النقل الداخلي — كلها في مكان واحد، مرتبة بالتوقيت الفعلي.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <app-date-picker id="all-inv-from" [value]="from" (valueChange)="from = $event; applyRange()"></app-date-picker>
+      <app-date-picker id="all-inv-to" [value]="to" (valueChange)="to = $event; applyRange()"></app-date-picker>
+      @if (from || to) {
+        <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء</button>
+      }
+    </div>
+  </div>
+
+  @if (summary) {
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-5">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">إجمالي فواتير البيع ({{ summary.counts.sale }})</p>
+        <p class="text-lg font-bold text-success-600 dark:text-success-400">{{ summary.sales_total | number:'1.0-2' }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">إجمالي فواتير الشراء ({{ summary.counts.purchase }})</p>
+        <p class="text-lg font-bold text-brand-600 dark:text-brand-400">{{ summary.purchases_total | number:'1.0-2' }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-400 mb-1">إجمالي فواتير النقل الداخلي ({{ summary.counts.internal_transfer }})</p>
+        <p class="text-lg font-bold text-warning-600 dark:text-warning-400">{{ summary.internal_transfers_total | number:'1.0-2' }}</p>
+      </div>
+    </div>
+  }
+
+  <div class="flex flex-wrap gap-2 mb-5">
+    @for (t of tabs; track t.key) {
+      <button type="button" (click)="setType(t.key)"
+        class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+        [class]="activeType === t.key ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">
+        {{ t.label }}
+      </button>
+    }
+  </div>
+
+  <div class="db-tbl-card">
+    <div class="db-tbl-wrap">
+      <table class="db-tbl">
+        <thead>
+          <tr>
+            <th>النوع</th><th>الرقم</th><th>التاريخ والوقت</th><th>الطرف</th><th>الفرع</th><th>بواسطة</th><th>المبلغ</th>
+            <th class="text-error-600 dark:text-error-400">رسوم البنك</th>
+            <th class="text-success-600 dark:text-success-400">الربح</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows; track r.type + '-' + r.id) {
+            <tr (click)="open(r)" style="cursor:pointer">
+              <td>
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full" [class]="typeBadgeClass(r.type)">{{ r.type_label }}</span>
+              </td>
+              <td class="font-mono" style="color:#9A7B1A">{{ r.number }}</td>
+              <td style="color:#9CA3AF">{{ r.time | date:'d MMM yyyy, h:mm a' }}</td>
+              <td style="color:#374151">{{ r.party || '—' }}</td>
+              <td style="color:#6B7280">{{ r.branch || '—' }}</td>
+              <td style="color:#6B7280">{{ r.created_by || '—' }}</td>
+              <td class="font-mono" style="color:#6B7280">{{ r.amount | number:'1.0-2' }}</td>
+              <td class="font-mono">
+                @if (r.type === 'sale' && r.bank_fee) {
+                  <span class="text-error-600 dark:text-error-400">- {{ r.bank_fee | number:'1.2-2' }}</span>
+                } @else {
+                  <span style="color:#9CA3AF">—</span>
+                }
+              </td>
+              <td class="font-mono">
+                @if (r.type === 'sale' && r.total_profit != null) {
+                  <span [class]="r.total_profit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">{{ r.total_profit | number:'1.2-2' }}</span>
+                } @else {
+                  <span style="color:#9CA3AF">—</span>
+                }
+              </td>
+              <td>
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+                  [class]="r.is_cancelled ? 'bg-error-50 text-error-700 dark:bg-error-500/10 dark:text-error-400' : 'bg-gray-100 text-gray-600 dark:bg-white/[0.05] dark:text-gray-400'">
+                  {{ r.status_label }}
+                </span>
+              </td>
+            </tr>
+          }
+          @if (!loading && !rows.length) {
+            <tr><td colspan="10" class="text-center text-sm text-gray-400 py-6">لا توجد فواتير</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">{{ total }} فاتورة</p>
+      @if (lastPage > 1) {
+        <div class="flex items-center gap-2">
+          <button type="button" (click)="prevPage()" [disabled]="currentPage === 1"
+            class="h-8 px-3 rounded-lg border border-gray-300 text-xs text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-400">السابق</button>
+          <span class="text-xs text-gray-500 dark:text-gray-400">{{ currentPage }} / {{ lastPage }}</span>
+          <button type="button" (click)="nextPage()" [disabled]="currentPage === lastPage"
+            class="h-8 px-3 rounded-lg border border-gray-300 text-xs text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-400">التالي</button>
+        </div>
+      }
+    </div>
+  </div>
+
+</div>

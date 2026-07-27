@@ -45,6 +45,8 @@ import { SupplierProfileComponent } from './admin/stock-managment/suppliers/supp
 import { SupplyFormComponent } from './admin/stock-managment/supplies/supply-form/supply-form.component';
 import { SupplyEditComponent } from './admin/stock-managment/supplies/supply-form/supply-edit.component';
 import { SupplyDetailComponent } from './admin/stock-managment/supplies/supply-detail/supply-detail.component';
+import { SuppliesListComponent } from './admin/stock-managment/supplies/supplies-list/supplies-list.component';
+import { ManagerInvoicesComponent } from './manager/invoices/manager-invoices.component';
 import { AdminShopSafeComponent } from './admin/safe/admin-shop-safe.component';
 import { ConventionShopComponent } from './admin/convention/convention-shop.component';
 import { ConventionDetailComponent } from './admin/convention/detail/convention-detail.component';
@@ -54,6 +56,7 @@ import { AdminSafeDetailComponent } from './admin/safe/detail/admin-safe-detail.
 import { SafeManagementComponent } from './admin/safe/management/safe-management.component';
 import { CurrencyManagementComponent } from './admin/safe/currencies/currency-management.component';
 import { SafeTypeManagementComponent } from './admin/safe/safe-types/safe-type-management.component';
+import { PaymentMethodManagementComponent } from './admin/safe/payment-methods/payment-method-management.component';
 import { TransactionReasonManagementComponent } from './admin/safe/transaction-reasons/transaction-reason-management.component';
 import { ManagerSafeComponent } from './manager/safe/manager-safe.component';
 import { ManagerTransactionsComponent } from './manager/safe/transactions/manager-transactions.component';
@@ -79,6 +82,8 @@ import { CountListComponent } from './admin/branch-operations/counts/count-list/
 import { CountDetailComponent } from './admin/branch-operations/counts/count-detail/count-detail.component';
 import { TransferReportsComponent } from './admin/reports/transfers/transfer-reports.component';
 import { SupplierReportsComponent } from './admin/reports/suppliers/supplier-reports.component';
+import { PaymentMethodReportsComponent } from './admin/reports/payment-methods/payment-method-reports.component';
+import { AllInvoicesComponent } from './admin/all-invoices/all-invoices.component';
 import { TransferInvoiceReportComponent } from './admin/reports/transfer-invoices/transfer-invoice-report.component';
 import { SalaryAdvanceReportComponent } from './admin/reports/salary-advances/salary-advance-report.component';
 import { WasteReportsComponent } from './admin/reports/waste/waste-reports.component';
@@ -155,6 +160,7 @@ export const routes: Routes = [
       },
       { path: 'currencies',          component: CurrencyManagementComponent },
       { path: 'safe-types',          component: SafeTypeManagementComponent },
+      { path: 'payment-methods',     component: PaymentMethodManagementComponent },
       { path: 'transaction-reasons', component: TransactionReasonManagementComponent },
       {
         path: 'stock',
@@ -206,6 +212,7 @@ export const routes: Routes = [
       { path: 'reports/monthly-profit', component: MonthlyProfitReportComponent },
       { path: 'reports/transfers', component: TransferReportsComponent },
       { path: 'reports/suppliers', component: SupplierReportsComponent },
+      { path: 'reports/payment-methods', component: PaymentMethodReportsComponent },
       { path: 'reports/transfer-invoices', component: TransferInvoiceReportComponent },
       { path: 'reports/salary-advances', component: SalaryAdvanceReportComponent },
       { path: 'reports/waste', component: WasteReportsComponent },
@@ -229,6 +236,7 @@ export const routes: Routes = [
       { path: 'inventory-dashboard', component: InventoryDashboardComponent },
       { path: 'stock-intelligence', component: AdminStockIntelligenceComponent },
       { path: 'pending-invoices',   component: AdminInvoicesComponent },
+      { path: 'all-invoices',       component: AllInvoicesComponent },
       { path: 'hr/employees',       component: HrEmployeesComponent },
       { path: 'hr/transfers',       component: HrTransfersComponent },
       { path: 'hr/attendance',      component: HrAttendanceComponent },
@@ -276,6 +284,11 @@ export const routes: Routes = [
       { path: 'branch-operations/stock-requests',        component: StockRequestListComponent },
       { path: 'branch-operations/stock-requests/create', component: StockRequestCreateComponent },
       { path: 'branch-operations/waste',             component: WasteListComponent },
+      // ── Purchase invoices — view + cancel only (create/edit/delete stay admin-only) ──
+      { path: 'stock/supplies',           component: SuppliesListComponent },
+      { path: 'stock/supplies/show/:id',  component: SupplyDetailComponent },
+      // ── Sales invoices — branch-wide (every seller), with cancel ────
+      { path: 'branch-invoices',          component: ManagerInvoicesComponent },
       { path: 'safe/my-shop',       component: ManagerSafeComponent },
       { path: 'safe/my-shop/:safeId/transactions', component: ManagerTransactionsComponent },
       { path: 'conventions',        component: ManagerConventionComponent },

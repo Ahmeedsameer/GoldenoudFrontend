@@ -26,6 +26,7 @@ export class ManagerDashboardLayoutComponent {
       subItems: [
         { name: 'نقطة البيع (كاشير)', path: '/dashboard/cashier' },
         { name: 'الفواتير', path: '/dashboard/invoices' },
+        { name: 'فواتير البيع — الفرع (إلغاء)', path: '/dashboard/branch-invoices' },
       ],
     },
     {
@@ -64,6 +65,7 @@ export class ManagerDashboardLayoutComponent {
       name: 'المخزون',
       subItems: [
         { name: 'مخزون فرعي', path: '/dashboard/inventory-transfer' },
+        { name: 'فواتير الشراء من الموردين', path: '/dashboard/stock/supplies' },
       ],
     },
     {

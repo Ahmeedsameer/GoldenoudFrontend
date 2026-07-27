@@ -16,6 +16,10 @@ export interface InvoiceDisplayLine {
   unit?: string;
   price: number;
   lineTotal: number;
+  /** Cost basis (real FIFO batch cost, falling back to product average cost) — report/detail views only, never printed. */
+  cost: number;
+  /** lineTotal - cost — report/detail views only, never printed. */
+  profit: number;
 }
 
 /**
@@ -39,20 +43,27 @@ export function buildInvoiceDisplayLines(items: any[], showComposition = true): 
     }
   }
 
-  const lines: InvoiceDisplayLine[] = plain.map((item) => ({
-    composed: false,
-    name: item.product?.name ?? '',
-    quantity: +item.quantity,
-    unit: item.product?.scalar,
-    price: +item.price,
-    lineTotal: +item.quantity * +item.price,
-  }));
+  const lines: InvoiceDisplayLine[] = plain.map((item) => {
+    const lineTotal = +item.quantity * +item.price;
+    const cost = +(item.line_cost ?? 0);
+    return {
+      composed: false,
+      name: item.product?.name ?? '',
+      quantity: +item.quantity,
+      unit: item.product?.scalar,
+      price: +item.price,
+      lineTotal,
+      cost,
+      profit: +(lineTotal - cost).toFixed(2),
+    };
+  });
 
   for (const [, groupItems] of groups) {
     const bottle = groupItems.find((i) => i.role === 'bottle');
     const oil = groupItems.find((i) => i.role === 'oil');
     const parentName = groupItems[0]?.parent_product?.name ?? groupItems[0]?.parentProduct?.name ?? '—';
     const total = groupItems.reduce((s, i) => s + (+i.quantity * +i.price), 0);
+    const cost = groupItems.reduce((s, i) => s + +(i.line_cost ?? 0), 0);
 
     lines.push({
       composed: true,
@@ -63,6 +74,8 @@ export function buildInvoiceDisplayLines(items: any[], showComposition = true): 
       quantity: 1,
       price: total,
       lineTotal: total,
+      cost,
+      profit: +(total - cost).toFixed(2),
     });
   }
 

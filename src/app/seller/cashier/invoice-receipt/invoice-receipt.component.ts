@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PAYMENT_METHODS } from '../../../models/sales.model';
+import { CARD_PAYMENT_TYPES, PAYMENT_METHOD_TYPE_LABELS, PaymentMethodType } from '../../../models/sales.model';
 import { CompanySettingsService } from '../../../services/company-settings.service';
 import { buildInvoiceDisplayLines, InvoiceDisplayLine } from '../../../models/invoice-display.util';
 import { AuthService } from '../../../services/auth.service';
@@ -38,14 +38,14 @@ export class InvoiceReceiptComponent {
     return buildInvoiceDisplayLines(this.invoice?.items ?? [], canSeeComposition);
   }
 
-  /** Arabic label for a payment-method value (falls back to the raw value). */
+  /** Arabic label for a payment-method's type (legacy `payment_method` string, now the method's `type` — see SalesService::createInvoice()). Falls back to the raw value. */
   methodLabel(method: string): string {
-    return PAYMENT_METHODS.find(m => m.value === method)?.label ?? method;
+    return PAYMENT_METHOD_TYPE_LABELS[method as PaymentMethodType] ?? method;
   }
 
-  /** Whether a payment method carries a transaction/reference number. */
+  /** Whether a payment method's type carries a transaction/reference number (card types). */
   methodHasTxn(method: string): boolean {
-    return PAYMENT_METHODS.find(m => m.value === method)?.requiresTransactionNumber ?? false;
+    return CARD_PAYMENT_TYPES.includes(method as PaymentMethodType);
   }
 
   /**

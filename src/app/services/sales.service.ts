@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, retry } from 'rxjs';
-import { CreateInvoiceRequest, Customer, GoodsSearchResult, Invoice, SalesCategory } from '../models/sales.model';
+import { CreateInvoiceRequest, Customer, GoodsSearchResult, Invoice, PaymentMethod, SalesCategory } from '../models/sales.model';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -127,5 +127,20 @@ export class SalesService {
     return this.http
       .get<any>(`${API_BASE}/sales/safes`)
       .pipe(map((res) => res.data || []));
+  }
+
+  // ── Seller-accessible payment methods (admin-managed, unlimited) ──
+  getSellerPaymentMethods(): Observable<PaymentMethod[]> {
+    return this.http
+      .get<any>(`${API_BASE}/sales/payment-methods`)
+      .pipe(map((res) => res.data || []));
+  }
+
+  /** Live pre-sale cost preview for the cashier's cart — reuses the exact same
+   *  FIFO batch order the sale itself will drain from (SalesService::quoteCartCost()). */
+  quoteCartCost(items: { product_id: number; quantity: number }[]): Observable<{ total_cost: number; lines: { product_id: number; quantity: number; cost: number }[] }> {
+    return this.http
+      .post<any>(`${API_BASE}/sales/quote-cost`, { items })
+      .pipe(map((res) => res.data));
   }
 }

@@ -1,0 +1,31 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+
+const API_BASE = 'http://127.0.0.1:8000/api/admin/reports/payment-methods';
+
+/** Payment Methods module reports — Payment Method Report, Card Fees Report, Bank Charges Report. */
+@Injectable({ providedIn: 'root' })
+export class PaymentMethodReportService {
+  private http = inject(HttpClient);
+
+  getPaymentMethods(params?: Record<string, any>): Observable<any> {
+    return this.http.get<any>(API_BASE, { params });
+  }
+
+  getCardFees(params?: Record<string, any>): Observable<any> {
+    return this.http.get<any>(`${API_BASE}/card-fees`, { params });
+  }
+
+  getBankCharges(params?: Record<string, any>): Observable<any> {
+    return this.http.get<any>(`${API_BASE}/bank-charges`, { params });
+  }
+
+  getBranchPayments(params?: Record<string, any>): Observable<any> {
+    return this.http.get<any>(`${API_BASE}/branch-payments`, { params });
+  }
+
+  getCurrencyReport(params?: Record<string, any>): Observable<any> {
+    return this.http.get<any>(`${API_BASE}/currency`, { params });
+  }
+}

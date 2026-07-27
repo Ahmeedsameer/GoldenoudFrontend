@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SalesService } from '../../../services/sales.service';
-import { Invoice, PAYMENT_METHODS } from '../../../models/sales.model';
+import { Invoice, PAYMENT_METHOD_TYPE_LABELS, PaymentMethodType } from '../../../models/sales.model';
 import { BadgeComponent } from '../../../shared/components/ui/badge/badge.component';
 import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
 import { LoadingComponent } from '../../../loading/loading.component';
@@ -97,6 +97,23 @@ export class InvoiceDetailComponent implements OnInit {
     return this.displayLines.reduce((sum, line) => sum + line.lineTotal, 0);
   }
 
+  totalCost(): number {
+    return this.displayLines.reduce((sum, line) => sum + line.cost, 0);
+  }
+
+  totalProfit(): number {
+    return this.displayLines.reduce((sum, line) => sum + line.profit, 0);
+  }
+
+  /** Total bank processing fee across all payment lines — report view only, never printed, invoice total is unaffected. */
+  totalBankFee(): number {
+    return (this.invoice?.payments ?? []).reduce((sum, p) => sum + (+(p.processing_fee_amount ?? 0)), 0);
+  }
+
+  hasBankFee(): boolean {
+    return this.totalBankFee() > 0;
+  }
+
   statusBadgeColor(status: string): 'warning' | 'success' | 'error' {
     if (status === 'approved') return 'success';
     if (status === 'cancelled') return 'error';
@@ -109,7 +126,8 @@ export class InvoiceDetailComponent implements OnInit {
     return 'معلقة';
   }
 
-  paymentMethodLabel(method: string): string {
-    return PAYMENT_METHODS.find(m => m.value === method)?.label ?? method;
+  paymentMethodLabel(method: string | undefined): string {
+    if (!method) return '—';
+    return PAYMENT_METHOD_TYPE_LABELS[method as PaymentMethodType] ?? method;
   }
 }

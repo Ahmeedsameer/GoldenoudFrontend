@@ -5,7 +5,7 @@ import { Subject, of, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { SalesService } from '../../services/sales.service';
 import { OverrideService, OverrideViolation } from '../../services/override.service';
-import { Customer, GoodsSearchResult, PAYMENT_METHODS } from '../../models/sales.model';
+import { CARD_PAYMENT_TYPES, Customer, GoodsSearchResult, PaymentMethod } from '../../models/sales.model';
 import { InvoiceReceiptComponent } from './invoice-receipt/invoice-receipt.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { LoadingComponent } from '../../loading/loading.component';
@@ -344,6 +344,62 @@ export class CashierComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ── Live cost summary (Part 2) ───────────────────────────────────────────
+  /** Real FIFO cost of the current cart, fetched from the same batch-drain
+   *  order the sale itself will use (SalesService::quoteCartCost() / fifoBatchesQuery()) —
+   *  never a second cost engine, just the same figure computed ahead of time. */
+  cartCost = 0;
+  cartCostLoading = false;
+  private costQuote$ = new Subject<void>();
+
+  private cartItemsForQuote(): { product_id: number; quantity: number }[] {
+    return this.items.value
+      .filter((it: any) => it.product_id && (+it.quantity || 0) > 0)
+      .map((it: any) => ({ product_id: +it.product_id, quantity: +it.quantity }));
+  }
+
+  /** Items total (before cost) − the same figure shown as "إجمالي الفاتورة". */
+  get cartItemsTotal(): number {
+    return this.computedTotal;
+  }
+
+  get cartItemCount(): number {
+    return this.cartItemsForQuote().length;
+  }
+
+  get expectedProfit(): number {
+    return +(this.cartItemsTotal - this.cartCost).toFixed(2);
+  }
+
+  // ── Card fee preview (Part 3) — instant, purely client-side from the
+  // already-loaded paymentMethods (same processing_fee_percent the backend
+  // uses at sale time); never changes the invoice total, informational only.
+  private round2(n: number): number {
+    return Math.round((n + Number.EPSILON) * 100) / 100;
+  }
+
+  lineFeeAmount(payment: AbstractControl): number {
+    const amount = +(payment.get('amount')?.value) || 0;
+    return this.round2(amount * this.methodFeePercent(payment) / 100);
+  }
+
+  lineCompanyReceives(payment: AbstractControl): number {
+    const amount = +(payment.get('amount')?.value) || 0;
+    return this.round2(amount - this.lineFeeAmount(payment));
+  }
+
+  get totalCardFee(): number {
+    return this.round2(this.payments.controls.reduce((sum, c) => sum + this.lineFeeAmount(c), 0));
+  }
+
+  get totalCompanyReceives(): number {
+    return this.round2(this.paymentsTotal - this.totalCardFee);
+  }
+
+  get hasAnyCardFee(): boolean {
+    return this.totalCardFee > 0;
+  }
+
   // ── Lifecycle ───────────────────────────────────────────
 
   ngOnInit(): void {
@@ -353,10 +409,12 @@ export class CashierComponent implements OnInit, OnDestroy {
     forkJoin({
       currencies: this.salesService.getSellerCurrencies(),
       safes:      this.salesService.getSellerShopSafes(),
+      paymentMethods: this.salesService.getSellerPaymentMethods(),
     }).subscribe({
-      next: ({ currencies, safes }) => {
+      next: ({ currencies, safes, paymentMethods }) => {
         this.currencies = currencies;
         this.shopSafes  = safes;
+        this.paymentMethods = paymentMethods;
         if (this.isPhysicalSafe && this.payments.length === 0) {
           this.addPayment();
         }
@@ -386,7 +444,22 @@ export class CashierComponent implements OnInit, OnDestroy {
     // Recompute the automatic invoice total whenever quantities change.
     this.items.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.syncComputedTotal());
+      .subscribe(() => { this.syncComputedTotal(); this.costQuote$.next(); });
+
+    // Live cost preview — debounced so it doesn't fire on every keystroke.
+    this.costQuote$.pipe(
+      debounceTime(400),
+      switchMap(() => {
+        const cartItems = this.cartItemsForQuote();
+        if (!cartItems.length) { this.cartCost = 0; return of(null); }
+        this.cartCostLoading = true;
+        return this.salesService.quoteCartCost(cartItems);
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe({
+      next: (res) => { this.cartCostLoading = false; if (res) this.cartCost = res.total_cost; },
+      error: () => { this.cartCostLoading = false; },
+    });
 
     this.addItem();
   }
@@ -644,30 +717,45 @@ export class CashierComponent implements OnInit, OnDestroy {
   }
 
   // ── Payments ────────────────────────────────────────────
-  /** Payment method options for the dropdown (mirror of backend enum). */
-  readonly paymentMethods = PAYMENT_METHODS;
+  /** Payment method options for the dropdown — admin-managed, unlimited (see Payment Methods module). */
+  paymentMethods: PaymentMethod[] = [];
 
-  /** Whether the given payment row's method requires a transaction number. */
+  /** Card-type methods (visa/mastercard/bank_card) require a transaction/reference number. */
+  private methodRequiresTxn(methodId: number | null): boolean {
+    const method = this.paymentMethods.find(m => m.id === methodId);
+    return !!method && CARD_PAYMENT_TYPES.includes(method.type);
+  }
+
   methodNeedsTxn(payment: AbstractControl): boolean {
-    const method = payment.get('payment_method')?.value;
-    return this.paymentMethods.find(m => m.value === method)?.requiresTransactionNumber ?? false;
+    return this.methodRequiresTxn(payment.get('payment_method_id')?.value);
+  }
+
+  /** The processing fee % configured for a payment row's currently selected method (0 for non-card types). */
+  methodFeePercent(payment: AbstractControl): number {
+    const method = this.paymentMethods.find(m => m.id === payment.get('payment_method_id')?.value);
+    return method ? +method.processing_fee_percent : 0;
+  }
+
+  methodName(payment: AbstractControl): string {
+    const method = this.paymentMethods.find(m => m.id === payment.get('payment_method_id')?.value);
+    return method?.name ?? '';
   }
 
   addPayment() {
     const defaultCurrency = this.currencies.find(c => c.code === 'EGP') ?? this.currencies[0];
+    const defaultMethod = this.paymentMethods.find(m => m.type === 'cash') ?? this.paymentMethods[0];
     const group = this.fb.group({
       currency_id:        [defaultCurrency?.id ?? null, Validators.required],
       amount:             [null, [Validators.required, Validators.min(0.01)]],
-      payment_method:     ['cash', Validators.required],
+      payment_method_id:  [defaultMethod?.id ?? null, Validators.required],
       transaction_number: [''],
     });
 
-    // Transaction number is required only for methods that need it (e.g. visa).
-    // Toggle the validator dynamically as the method changes.
-    group.get('payment_method')?.valueChanges.subscribe((method) => {
+    // Transaction number is required only for card-type methods. Toggle the
+    // validator dynamically as the selected method changes.
+    group.get('payment_method_id')?.valueChanges.subscribe((methodId) => {
       const txn = group.get('transaction_number');
-      const needs = this.paymentMethods.find(m => m.value === method)?.requiresTransactionNumber ?? false;
-      if (needs) {
+      if (this.methodRequiresTxn(methodId)) {
         txn?.setValidators([Validators.required, Validators.maxLength(100)]);
       } else {
         txn?.clearValidators();
@@ -765,8 +853,8 @@ export class CashierComponent implements OnInit, OnDestroy {
         ? this.payments.value.map((p: any) => ({
             currency_id:        +p.currency_id,
             amount:             +p.amount,
-            payment_method:     p.payment_method,
-            transaction_number: p.payment_method === 'cash' ? null : (p.transaction_number?.trim() || null),
+            payment_method_id:  +p.payment_method_id,
+            transaction_number: this.methodRequiresTxn(+p.payment_method_id) ? (p.transaction_number?.trim() || null) : null,
           }))
         : [],
       items: this.items.value.map((item: any) => ({
@@ -816,6 +904,7 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.showProductDropdown = [];
     this.selectedGoods = [];
     this.productSearchSubjects = [];
+    this.cartCost = 0;
     this.addItem();
     if (this.isPhysicalSafe) { this.addPayment(); }
   }

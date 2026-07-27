@@ -10,8 +10,40 @@
       </div>
       <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">تفاصيل التوريد</h2>
     </div>
-    <app-button [routerLink]="['/dashboard/stock/supplies/edit', supply.id]" variant="outline" size="sm">تعديل</app-button>
+    <div class="flex items-center gap-2">
+      @if (supply.is_cancelled) {
+        <app-badge variant="light" color="error" size="sm">ملغاة</app-badge>
+      }
+      @if (isAdmin) {
+        <app-button [routerLink]="['/dashboard/stock/supplies/edit', supply.id]" variant="outline" size="sm">تعديل</app-button>
+      }
+      @if (canCancel && !supply.is_cancelled) {
+        <app-button (btnClick)="confirmCancel()" variant="outline" size="sm">إلغاء الفاتورة</app-button>
+      }
+    </div>
   </div>
+
+  @if (supply.is_cancelled) {
+    <div class="mb-5">
+      <app-alert variant="error" message="تم إلغاء هذه الفاتورة{{ supply.cancelledBy ? ' بواسطة ' + supply.cancelledBy.name : '' }} في {{ supply.cancelled_at | date:'d MMM yyyy, h:mm a' }} — تمت إعادة الكمية إلى صفر واسترجاع أي دفعة سُددت للمورد."></app-alert>
+    </div>
+  }
+
+  @if (showCancelConfirm) {
+    <div class="mb-5 rounded-2xl border border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/5 p-5">
+      <h3 class="text-sm font-semibold text-error-700 dark:text-error-300 mb-1">تأكيد إلغاء فاتورة التوريد</h3>
+      <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">
+        سيتم تصفير الكمية التي أضافتها هذه الفاتورة في المستودع الرئيسي، واسترجاع أي دفعة سُددت للمورد إلى نفس الخزنة. لا يمكن التراجع عن هذا الإجراء.
+      </p>
+      @if (cancelError) {
+        <div class="mb-3"><app-alert variant="error" [message]="cancelError"></app-alert></div>
+      }
+      <div class="flex items-center gap-2">
+        <app-button (btnClick)="cancelSupply()" [disabled]="cancelLoading" size="sm">تأكيد الإلغاء</app-button>
+        <app-button (btnClick)="showCancelConfirm = false" variant="outline" size="sm">تراجع</app-button>
+      </div>
+    </div>
+  }
 
   <!-- Header card -->
   <div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] p-6 mb-5">

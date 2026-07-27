@@ -45,6 +45,7 @@ export class AdminDashboardLayoutComponent {
       name: "مراجعة الفواتير",
       subItems: [
         { name: "الفواتير المعلّقة", path: "/dashboard/pending-invoices" },
+        { name: "كل الفواتير في النظام", path: "/dashboard/all-invoices" },
       ],
     },
     {
@@ -91,6 +92,7 @@ export class AdminDashboardLayoutComponent {
         { name: "تقرير فواتير النقل الداخلية",  path: "/dashboard/reports/transfer-invoices" },
         { name: "تقرير سلف الرواتب",  path: "/dashboard/reports/salary-advances" },
         { name: "تقارير الموردين",   path: "/dashboard/reports/suppliers" },
+        { name: "تقارير وسائل الدفع", path: "/dashboard/reports/payment-methods" },
         { name: "تقارير الهالك",     path: "/dashboard/reports/waste" },
         { name: "تقارير جرد المخزون", path: "/dashboard/reports/counts" },
         { name: "تقارير تسويات المخزون", path: "/dashboard/reports/adjustments" },
@@ -124,6 +126,7 @@ export class AdminDashboardLayoutComponent {
         { name: "الخزن",             path: "/dashboard/safe/management" },
         { name: "العملات",            path: "/dashboard/currencies" },
         { name: "أنواع الخزن",        path: "/dashboard/safe-types" },
+        { name: "وسائل الدفع",        path: "/dashboard/payment-methods" },
         { name: "أسباب المعاملات",    path: "/dashboard/transaction-reasons" },
       ],
     },

@@ -17,4 +17,9 @@ export class AdminInvoiceService {
   updateStatus(id: number, status: 'approved' | 'cancelled'): Observable<any> {
     return this.http.put<any>(`${API_BASE}/${id}/status`, { status });
   }
+
+  /** Cancel an already-approved (completed) sale — reverses stock AND money, unlike updateStatus('cancelled') above. */
+  cancel(id: number, reason?: string): Observable<any> {
+    return this.http.post<any>(`${API_BASE}/${id}/cancel`, { reason });
+  }
 }

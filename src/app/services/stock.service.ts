@@ -132,6 +132,11 @@ export class StockService {
     return this.http.delete<any>(`${this.suppliesUrl}/destroy/${id}`);
   }
 
+  /** Cancel a purchase invoice — reverses the warehouse stock it added and refunds any supplier payment. Admin or branch manager only (route-gated). */
+  cancelSupply(id: number) {
+    return this.http.post<any>(`${this.suppliesUrl}/${id}/cancel`, {});
+  }
+
   // ── Inventory ─────────────────────────────────────────
   getInventory(params: any) {
     return this.http.get<any>(this.inventoryUrl, { params }).pipe(retry(2));
@@ -146,6 +151,11 @@ export class StockService {
 
   getManagerInventory(params?: any) {
     return this.http.get<any>(this.managerInventoryUrl, { params }).pipe(retry(2));
+  }
+
+  /** Per-product receiving history for the manager's own branch — how much was ever sent, what's left, and each shipment's date/quantity. */
+  getManagerProductHistory(productId: number) {
+    return this.http.get<any>(`${this.managerInventoryUrl}/${productId}/history`).pipe(map((res) => res.data));
   }
 
   // ── Shops (for dropdowns) ─────────────────────────────

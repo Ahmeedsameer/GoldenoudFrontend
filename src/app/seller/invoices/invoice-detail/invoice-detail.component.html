@@ -116,6 +116,8 @@
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الكمية</th>
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">سعر الوحدة</th>
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الإجمالي</th>
+              <th class="px-5 py-3.5 text-right text-xs font-medium text-amber-600 dark:text-amber-400">التكلفة</th>
+              <th class="px-5 py-3.5 text-right text-xs font-medium text-success-600 dark:text-success-400">الربح</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
@@ -140,14 +142,40 @@
                 <td class="px-5 py-3.5 font-mono font-semibold text-gray-800 dark:text-white/90">
                   {{ line.lineTotal | number:'1.2-2' }}
                 </td>
+                <td class="px-5 py-3.5 font-mono text-amber-600 dark:text-amber-400">
+                  {{ line.cost | number:'1.2-2' }}
+                </td>
+                <td class="px-5 py-3.5 font-mono font-semibold" [class]="line.profit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                  {{ line.profit | number:'1.2-2' }}
+                </td>
               </tr>
             }
           </tbody>
         </table>
       </div>
 
-      <!-- Grand total -->
-      <div class="px-6 py-4 border-t border-gray-100 dark:border-white/[0.05] flex justify-end">
+      <!-- Grand total + cost/profit/fee summary (report view only — never printed) -->
+      <div class="px-6 py-4 border-t border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-end gap-x-8 gap-y-2">
+        @if (hasBankFee()) {
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400">رسوم البنك المتوقع خصمها</span>
+            <span class="font-mono text-sm font-semibold text-error-600 dark:text-error-400">
+              - {{ totalBankFee() | number:'1.2-2' }}
+            </span>
+          </div>
+        }
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">إجمالي التكلفة</span>
+          <span class="font-mono text-sm font-semibold text-amber-600 dark:text-amber-400">
+            {{ totalCost() | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">إجمالي الربح</span>
+          <span class="font-mono text-sm font-semibold" [class]="totalProfit() >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+            {{ totalProfit() | number:'1.2-2' }}
+          </span>
+        </div>
         <div class="flex items-center gap-4">
           <span class="text-sm text-gray-500 dark:text-gray-400">الإجمالي الكلي</span>
           <span class="text-xl font-bold font-mono text-gray-800 dark:text-white/90">

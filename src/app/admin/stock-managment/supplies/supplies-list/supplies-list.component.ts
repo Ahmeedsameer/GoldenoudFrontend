@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ListManager } from '../../../../services/list-manager';
 import { StockService } from '../../../../services/stock.service';
+import { AuthService } from '../../../../services/auth.service';
 import { Supply } from '../../../../models/stock.model';
 import { Supplier } from '../../../../models/stock.model';
 import { PaginationComponent } from '../../../../pagination/pagination.component';
@@ -29,7 +30,11 @@ import { DatePickerComponent } from '../../../../shared/components/form/date-pic
 })
 export class SuppliesListComponent implements OnInit {
   private stockService = inject(StockService);
+  private auth = inject(AuthService);
   list = new ListManager<Supply>((params) => this.stockService.getSupplies(params));
+
+  /** Create/edit/delete stay admin-only — a manager may only view and cancel (see SupplyDetailComponent). */
+  get isAdmin(): boolean { return this.auth.getUserRole() === 'admin'; }
 
   suppliers: Supplier[] = [];
   supplierOptions: Option[] = [{ value: '', label: 'كل الموردين' }];

@@ -41,9 +41,35 @@ export class TransferCreateComponent implements OnInit {
   get myShopId(): number | null { return this.auth.getUser()?.shop_id ?? null; }
   get myShopName(): string { return this.shops.find((s) => s.id === this.myShopId)?.name ?? '—'; }
 
-  /** A manager can never pick their own branch as the source — they're always the destination/requester (Part 5.8). */
+  /**
+   * A manager is always one endpoint of the transfer — either the destination
+   * (requesting stock in) or the source (sending stock out, e.g. returning
+   * goods to the Main Warehouse or to another branch). `direction` picks which
+   * side is locked to their own shop; the OTHER side is freely chosen from the
+   * dropdown below. Irrelevant for admin, who can pick both sides freely.
+   */
+  direction: 'incoming' | 'outgoing' = 'incoming';
+
   get availableSourceShops(): { id: number; name: string }[] {
-    return this.isManager ? this.shops.filter((s) => s.id !== this.myShopId) : this.shops;
+    if (!this.isManager) return this.shops;
+    return this.direction === 'outgoing' ? this.shops.filter((s) => s.id === this.myShopId) : this.shops.filter((s) => s.id !== this.myShopId);
+  }
+
+  get availableDestinationShops(): { id: number; name: string }[] {
+    if (!this.isManager) return this.shops;
+    return this.direction === 'incoming' ? this.shops.filter((s) => s.id === this.myShopId) : this.shops.filter((s) => s.id !== this.myShopId);
+  }
+
+  onDirectionChange(): void {
+    if (!this.isManager) return;
+    if (this.direction === 'incoming') {
+      this.destinationShopId = this.myShopId;
+      this.sourceShopId = null;
+    } else {
+      this.sourceShopId = this.myShopId;
+      this.destinationShopId = null;
+    }
+    this.onSourceShopChange();
   }
 
   /**
@@ -53,7 +79,12 @@ export class TransferCreateComponent implements OnInit {
    * approval authority over every shop — same create() call either way, no separate flow.
    */
   get willAutoAdvance(): boolean {
-    return !!this.sourceShopId && this.isAdmin;
+    if (!this.sourceShopId) return false;
+    if (this.isAdmin) return true;
+    // Mirrors TransferRequestService::canApproveShop() — a manager who owns the
+    // source shop's stock (sending it out) auto-advances straight to shipped,
+    // same as the admin does for any shop.
+    return this.isManager && this.sourceShopId === this.myShopId;
   }
 
   shops: { id: number; name: string }[] = [];

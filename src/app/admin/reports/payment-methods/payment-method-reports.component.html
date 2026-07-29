@@ -17,9 +17,17 @@
   @if (errorMsg) { <div class="mb-5"><app-alert variant="error" [message]="errorMsg"></app-alert></div> }
 
   @if (totalFees !== null) {
-    <div class="mb-5 bg-gradient-to-br from-warning-500 to-warning-700 rounded-2xl p-4 text-white max-w-xs">
-      <p class="text-xs text-warning-100 mb-1">إجمالي الرسوم في الفترة المحددة</p>
-      <p class="text-lg font-bold">{{ totalFees | number:'1.0-2' }}</p>
+    <div class="mb-5 flex flex-wrap gap-4">
+      <div class="bg-gradient-to-br from-warning-500 to-warning-700 rounded-2xl p-4 text-white max-w-xs">
+        <p class="text-xs text-warning-100 mb-1">إجمالي الرسوم في الفترة المحددة</p>
+        <p class="text-lg font-bold">{{ totalFees | number:'1.0-2' }}</p>
+      </div>
+      @if (totalNetRevenue !== null) {
+        <div class="bg-gradient-to-br from-success-500 to-success-700 rounded-2xl p-4 text-white max-w-xs">
+          <p class="text-xs text-success-100 mb-1">صافي إيراد البطاقات (Net Card Revenue)</p>
+          <p class="text-lg font-bold">{{ totalNetRevenue | number:'1.0-2' }}</p>
+        </div>
+      }
     </div>
   }
 

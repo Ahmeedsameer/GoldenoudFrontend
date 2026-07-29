@@ -8,6 +8,8 @@ export interface SafeTransactionBody {
   amount: number;
   reason_id: number;
   note?: string;
+  /** Sub Safes: omit/null = "Entire Safe (Automatic)", exactly today's behavior. */
+  payment_method_id?: number | null;
 }
 
 export interface TransactionFilters {
@@ -18,6 +20,18 @@ export interface TransactionFilters {
   date_to?: string;
   per_page?: number;
   page?: number;
+  payment_method_id?: number;
+}
+
+export interface SafeTransferBody {
+  from_safe_id: number;
+  to_safe_id: number;
+  currency_id: number;
+  amount: number;
+  note?: string;
+  /** Sub Safes: same-branch child-to-child transfer when both are set and from_safe_id === to_safe_id. */
+  from_payment_method_id?: number | null;
+  to_payment_method_id?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -66,11 +80,11 @@ export class SafeService {
     return this.http.get<any>(this.paymentMethods, { params: params as any });
   }
 
-  createPaymentMethod(body: { name: string; type: string; currency_id: number; processing_fee_percent?: number; is_active?: boolean; safe_id?: number | null; shop_ids?: number[] }): Observable<any> {
+  createPaymentMethod(body: { name: string; bank?: string | null; wallet_phone?: string | null; type: string; currency_id: number; processing_fee_percent?: number; is_active?: boolean; safe_id?: number | null; shop_ids?: number[] }): Observable<any> {
     return this.http.post<any>(this.paymentMethods, body);
   }
 
-  updatePaymentMethod(id: number, body: Partial<{ name: string; type: string; currency_id: number; processing_fee_percent: number; is_active: boolean; safe_id: number | null; shop_ids: number[] }>): Observable<any> {
+  updatePaymentMethod(id: number, body: Partial<{ name: string; bank: string | null; wallet_phone: string | null; type: string; currency_id: number; processing_fee_percent: number; is_active: boolean; safe_id: number | null; shop_ids: number[] }>): Observable<any> {
     return this.http.put<any>(`${this.paymentMethods}/${id}`, body);
   }
 
@@ -128,7 +142,7 @@ export class SafeService {
     return this.http.post<any>(`${this.safe}/${safeId}/withdraw`, body);
   }
 
-  transfer(body: { from_safe_id: number; to_safe_id: number; currency_id: number; amount: number; note?: string }): Observable<any> {
+  transfer(body: SafeTransferBody): Observable<any> {
     return this.http.post<any>(`${this.safe}/transfer`, body);
   }
 

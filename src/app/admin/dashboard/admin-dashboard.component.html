@@ -90,6 +90,34 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════
+         TODAY BY PAYMENT TYPE (Multi-Tender Safe)
+    ══════════════════════════════════════════════════════════════ -->
+    @if (todayByPaymentType) {
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400">نقدي اليوم</p>
+          <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ todayByPaymentType.cash | number:'1.0-0' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400">بطاقات اليوم</p>
+          <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ todayByPaymentType.cards | number:'1.0-0' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400">محافظ اليوم</p>
+          <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ todayByPaymentType.wallets | number:'1.0-0' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400">مدفوعات رقمية أخرى</p>
+          <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ todayByPaymentType.digital | number:'1.0-0' }}</p>
+        </div>
+        <div class="col-span-2 sm:col-span-1 bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-4 text-white">
+          <p class="text-xs text-brand-100">إجمالي اليوم</p>
+          <p class="text-xl font-bold mt-1">{{ todayByPaymentType.total | number:'1.0-0' }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════
          CHART + SYSTEM COUNTS
     ══════════════════════════════════════════════════════════════ -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">

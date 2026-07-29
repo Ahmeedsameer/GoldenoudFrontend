@@ -9,7 +9,7 @@ import { ReportToolbarComponent } from '../../../shared/components/common/report
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 import { PaymentMethodReportService } from '../../../services/payment-method-report.service';
 
-type TabKey = 'payment-methods' | 'card-fees' | 'bank-charges' | 'branch-payments' | 'currency';
+type TabKey = 'payment-methods' | 'card-fees' | 'bank-charges' | 'branch-payments' | 'currency' | 'safe-balance' | 'child-transfers';
 
 interface ReportTab { key: TabKey; label: string; exportPath: string; columns: { key: string; label: string }[]; }
 
@@ -34,6 +34,13 @@ const TABS: ReportTab[] = [
     { key: 'code', label: 'العملة' }, { key: 'payment_count', label: 'عدد العمليات' }, { key: 'gross_amount', label: 'إجمالي المدفوع' },
     { key: 'fee_amount', label: 'الرسوم' }, { key: 'net_amount', label: 'الصافي' }, { key: 'wallet_balance', label: 'الرصيد الحالي في الخزائن' },
   ] },
+  { key: 'safe-balance', label: 'رصيد الخزنة حسب وسيلة الدفع', exportPath: '/admin/reports/payment-methods/safe-balance', columns: [
+    { key: 'branch', label: 'الفرع' }, { key: 'safe', label: 'الخزنة' }, { key: 'method', label: 'وسيلة الدفع' }, { key: 'balance', label: 'الرصيد' },
+  ] },
+  { key: 'child-transfers', label: 'التحويلات بين وسائل الدفع', exportPath: '/admin/reports/payment-methods/child-transfers', columns: [
+    { key: 'date', label: 'التاريخ' }, { key: 'branch', label: 'الفرع' }, { key: 'from_method', label: 'من وسيلة' },
+    { key: 'to_method', label: 'إلى وسيلة' }, { key: 'currency', label: 'العملة' }, { key: 'amount', label: 'المبلغ' }, { key: 'admin', label: 'بواسطة' },
+  ] },
 ];
 
 /** Payment Method Report / Card Fees Report / Bank Charges Report — one shared shell, mirrors SupplierReportsComponent's tab/table pattern. */
@@ -56,6 +63,8 @@ export class PaymentMethodReportsComponent implements OnInit {
   errorMsg = '';
   rows: any[] = [];
   totalFees: number | null = null;
+  /** Net Card Revenue — Bank Cards module, bank-charges tab only. */
+  totalNetRevenue: number | null = null;
 
   get exportParams(): Record<string, any> {
     const p: Record<string, any> = {};
@@ -78,19 +87,22 @@ export class PaymentMethodReportsComponent implements OnInit {
     const handlers: Record<TabKey, () => void> = {
       'payment-methods': () => this.service.getPaymentMethods(params).subscribe(this.observer((d) => d.rows)),
       'card-fees': () => this.service.getCardFees(params).subscribe(this.observer((d) => d.rows, (d) => d.total_fees)),
-      'bank-charges': () => this.service.getBankCharges(params).subscribe(this.observer((d) => d.rows, (d) => d.total_fees)),
+      'bank-charges': () => this.service.getBankCharges(params).subscribe(this.observer((d) => d.rows, (d) => d.total_fees, (d) => d.total_net_revenue)),
       'branch-payments': () => this.service.getBranchPayments(params).subscribe(this.observer((d) => this.flattenBranches(d.branches))),
       'currency': () => this.service.getCurrencyReport(params).subscribe(this.observer((d) => d.rows)),
+      'safe-balance': () => this.service.getSafeBalance(params).subscribe(this.observer((d) => d.rows)),
+      'child-transfers': () => this.service.getChildTransfers(params).subscribe(this.observer((d) => d.rows)),
     };
     handlers[this.activeTab.key]();
   }
 
-  private observer(rowsFn: (data: any) => any[], totalFeesFn?: (data: any) => number) {
+  private observer(rowsFn: (data: any) => any[], totalFeesFn?: (data: any) => number, totalNetRevenueFn?: (data: any) => number) {
     return {
       next: (res: any) => {
         const data = res?.data;
         this.rows = rowsFn(data) || [];
         this.totalFees = totalFeesFn ? totalFeesFn(data) : null;
+        this.totalNetRevenue = totalNetRevenueFn ? totalNetRevenueFn(data) : null;
         this.rowsLoading = false;
       },
       error: () => { this.rowsLoading = false; this.rows = []; this.errorMsg = 'فشل تحميل التقرير'; },

@@ -47,6 +47,10 @@ export class PaymentMethodManagementComponent implements OnInit {
 
   form: FormGroup = this.fb.group({
     name: ['', Validators.required],
+    /** Bank Cards module — issuing bank (CIB, QNB, Banque Misr, HSBC, ...), only meaningful for card types. */
+    bank: [''],
+    /** Wallet's phone number — only meaningful when type === 'mobile_wallet'. */
+    wallet_phone: [''],
     type: ['cash', Validators.required],
     currency_id: [null, Validators.required],
     processing_fee_percent: [0],
@@ -57,6 +61,10 @@ export class PaymentMethodManagementComponent implements OnInit {
 
   get isCardType(): boolean {
     return CARD_PAYMENT_TYPES.includes(this.form.get('type')?.value);
+  }
+
+  get isWalletType(): boolean {
+    return this.form.get('type')?.value === 'mobile_wallet';
   }
 
   ngOnInit(): void {
@@ -94,7 +102,7 @@ export class PaymentMethodManagementComponent implements OnInit {
     this.modalMode = 'create';
     this.editTarget = null;
     this.modalError = '';
-    this.form.reset({ name: '', type: 'cash', currency_id: this.currencies[0]?.id ?? null, processing_fee_percent: 0, is_active: true, safe_id: null, shop_ids: [] });
+    this.form.reset({ name: '', bank: '', wallet_phone: '', type: 'cash', currency_id: this.currencies[0]?.id ?? null, processing_fee_percent: 0, is_active: true, safe_id: null, shop_ids: [] });
     this.showModal = true;
   }
 
@@ -103,7 +111,7 @@ export class PaymentMethodManagementComponent implements OnInit {
     this.editTarget = m;
     this.modalError = '';
     this.form.patchValue({
-      name: m.name, type: m.type, currency_id: m.currency_id,
+      name: m.name, bank: m.bank ?? '', wallet_phone: m.wallet_phone ?? '', type: m.type, currency_id: m.currency_id,
       processing_fee_percent: m.processing_fee_percent, is_active: m.is_active,
       safe_id: m.safe_id ?? null, shop_ids: (m.shops || []).map((s) => s.id),
     });

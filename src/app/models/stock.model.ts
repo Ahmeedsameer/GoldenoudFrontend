@@ -143,6 +143,7 @@ export interface SupplierLedgerInvoice {
   id: number; invoice_number: string; date: string;
   items_subtotal: number; discount: number; tax: number;
   total_amount: number; paid_amount: number; remaining_amount: number; payment_status: PaymentStatus;
+  products: string[];
 }
 
 export interface SupplierLedgerPayment {

@@ -74,6 +74,7 @@ import { TransferCreateComponent } from './admin/branch-operations/transfers/tra
 import { TransferDetailComponent } from './admin/branch-operations/transfers/transfer-detail/transfer-detail.component';
 import { StockRequestListComponent } from './admin/branch-operations/stock-requests/stock-request-list/stock-request-list.component';
 import { StockRequestCreateComponent } from './admin/branch-operations/stock-requests/stock-request-create/stock-request-create.component';
+import { RequiredMaterialsComponent } from './admin/branch-operations/required-materials/required-materials.component';
 import { BranchDashboardComponent } from './admin/branch-operations/branch-dashboard/branch-dashboard.component';
 import { LogisticsDashboardComponent } from './admin/branch-operations/logistics-dashboard/logistics-dashboard.component';
 import { WasteListComponent } from './admin/branch-operations/waste/waste-list.component';
@@ -222,6 +223,7 @@ export const routes: Routes = [
       { path: 'reports/inventory-ledger', component: InventoryLedgerComponent },
       { path: 'reports/batches', component: BatchTraceabilityComponent },
       { path: 'reports/inventory-audit', component: InventoryAuditReportComponent },
+      { path: 'reports/required-materials', component: RequiredMaterialsComponent },
       { path: 'branch-operations/dashboard',          component: BranchDashboardComponent },
       { path: 'branch-operations/logistics-dashboard', component: LogisticsDashboardComponent },
       { path: 'branch-operations/transfers',         component: TransferListComponent },
@@ -283,6 +285,7 @@ export const routes: Routes = [
       { path: 'branch-operations/transfers/:id',     component: TransferDetailComponent },
       { path: 'branch-operations/stock-requests',        component: StockRequestListComponent },
       { path: 'branch-operations/stock-requests/create', component: StockRequestCreateComponent },
+      { path: 'branch-operations/required-materials',    component: RequiredMaterialsComponent },
       { path: 'branch-operations/waste',             component: WasteListComponent },
       // ── Purchase invoices — view + cancel only (create/edit/delete stay admin-only) ──
       { path: 'stock/supplies',           component: SuppliesListComponent },

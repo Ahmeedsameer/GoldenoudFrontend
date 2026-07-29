@@ -14,6 +14,11 @@ export interface ReconciliationEntry {
   currencyId:     number;
   currencyCode:   string;
   currencySymbol: string;
+  /** Sub Safes: one row per child safe (payment method) within a currency —
+   *  null payment_method_id means the "أخرى (يدوي)" bucket, settled as a
+   *  plain currency-level adjustment (backward compatible). */
+  paymentMethodId: number | null;
+  methodLabel:     string;
   systemBalance:  number;
   countedAmount:  number | null;
 }
@@ -41,10 +46,14 @@ export class SafeReconciliationComponent implements OnInit {
   selectedWithdrawReasonId: number | null = null;
   note = '';
 
-  // ── Payment method breakdown (today, own shop) ─────────────────────
+  // ── Payment method breakdown (today, own shop), grouped by currency ─
   // No real "shift/session" concept exists in this codebase — this is a
   // same-day snapshot alongside the reconciliation, not a period-close action.
-  paymentMethodRows: { method: number; label: string; amount_egp: number; payment_count: number }[] = [];
+  paymentMethodsByCurrency: {
+    currency: { id: number; code: string; symbol: string };
+    total: number;
+    methods: { method: number; label: string; amount: number; payment_count: number }[];
+  }[] = [];
   paymentMethodsLoading = false;
 
   // ── Lifecycle ─────────────────────────────────────────────────────
@@ -56,7 +65,7 @@ export class SafeReconciliationComponent implements OnInit {
   loadPaymentMethodBreakdown(): void {
     this.paymentMethodsLoading = true;
     this.safeService.getPaymentMethodsBreakdown().subscribe({
-      next: (res) => { this.paymentMethodRows = res?.data?.methods || []; this.paymentMethodsLoading = false; },
+      next: (res) => { this.paymentMethodsByCurrency = res?.data?.by_currency || []; this.paymentMethodsLoading = false; },
       error: () => { this.paymentMethodsLoading = false; },
     });
   }
@@ -74,16 +83,26 @@ export class SafeReconciliationComponent implements OnInit {
         // Only physical safes are reconciled
         const physical = safes.filter(s => s.safe_type?.kind === 'physical');
 
+        // Sub Safes: one row per (safe, currency, payment method) — reuses
+        // balances_by_method exactly as already derived for the Safe screens.
         this.entries = physical.flatMap(safe =>
-          (safe.balances ?? []).map(b => ({
-            safeId:         safe.id,
-            safeName:       safe.safe_type?.name ?? `خزنة ${safe.id}`,
-            currencyId:     b.currency.id,
-            currencyCode:   b.currency.code,
-            currencySymbol: b.currency.symbol,
-            systemBalance:  parseFloat(b.balance as any),
-            countedAmount:  null,
-          }))
+          (safe.balances ?? []).flatMap(b => {
+            const methods = safe.balances_by_method?.[b.currency.id]?.methods ?? [];
+            if (methods.length === 0) {
+              return [{
+                safeId: safe.id, safeName: safe.safe_type?.name ?? `خزنة ${safe.id}`,
+                currencyId: b.currency.id, currencyCode: b.currency.code, currencySymbol: b.currency.symbol,
+                paymentMethodId: null, methodLabel: 'الخزنة بالكامل',
+                systemBalance: parseFloat(b.balance as any), countedAmount: null,
+              }];
+            }
+            return methods.map(m => ({
+              safeId: safe.id, safeName: safe.safe_type?.name ?? `خزنة ${safe.id}`,
+              currencyId: b.currency.id, currencyCode: b.currency.code, currencySymbol: b.currency.symbol,
+              paymentMethodId: m.payment_method_id, methodLabel: m.name,
+              systemBalance: m.balance, countedAmount: null,
+            }));
+          })
         );
 
         this.depositReasons  = depositReasons;
@@ -168,6 +187,7 @@ export class SafeReconciliationComponent implements OnInit {
           amount:      Math.abs(v),
           reason_id:   reasonId,
           note:        this.note || undefined,
+          payment_method_id: e.paymentMethodId,
         };
         return isDeposit
           ? this.safeService.managerDeposit(e.safeId, body)

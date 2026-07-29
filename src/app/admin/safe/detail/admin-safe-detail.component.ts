@@ -5,7 +5,9 @@ import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { SafeService } from '../../../services/safe.service';
-import { Safe, SafeTransaction, TransactionType, Currency, TransactionReason } from '../../../models/safe.model';
+import { Safe, SafeTransaction, TransactionType, Currency, TransactionReason, PaymentMethodBalance } from '../../../models/safe.model';
+import { methodsForCurrency, transactionMethodName } from '../../../models/safe-balance.util';
+import { PaymentMethod } from '../../../models/sales.model';
 import { ListManager } from '../../../services/list-manager';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
@@ -31,6 +33,8 @@ export class AdminSafeDetailComponent implements OnInit {
   depositReasons: TransactionReason[] = [];
   withdrawReasons: TransactionReason[] = [];
   allSafes: Safe[] = [];
+  /** Sub Safes: full method list (admin sees all), for the deposit/withdraw/transfer child-safe pickers. */
+  paymentMethods: PaymentMethod[] = [];
 
   list = new ListManager<SafeTransaction>(
     (params) => this.safeService.getAdminTransactions(this.safeId, params).pipe(map((r) => r.data))
@@ -43,30 +47,51 @@ export class AdminSafeDetailComponent implements OnInit {
   txError = '';
 
   txForm: FormGroup = this.fb.group({
-    currency_id: [null, Validators.required],
-    amount:      [null, [Validators.required, Validators.min(0.01)]],
-    reason_id:   [null, Validators.required],
-    note:        [''],
+    currency_id:        [null, Validators.required],
+    amount:              [null, [Validators.required, Validators.min(0.01)]],
+    reason_id:           [null, Validators.required],
+    note:                [''],
+    // null = "الخزنة بالكامل (تلقائي)" — exactly today's behavior.
+    payment_method_id:   [null],
   });
 
   get activeReasons(): TransactionReason[] {
     return this.txModalMode === 'deposit' ? this.depositReasons : this.withdrawReasons;
   }
 
+  methodsFor(safe: Safe, currencyId: number): PaymentMethodBalance[] {
+    return methodsForCurrency(safe, currencyId);
+  }
+
+  transactionMethodName(tx: SafeTransaction): string {
+    return transactionMethodName(tx);
+  }
+
   // ── Transfer modal ──────────────────────────────────────
+  // Sub Safes: two modes for the SAME backend endpoint — cross-branch (today's
+  // behavior, to_safe_id must differ) vs same-branch child-to-child (to_safe_id
+  // = this safe, but from/to payment methods must both be set and differ).
   showTransferModal = false;
   transferLoading = false;
   transferError = '';
+  transferMode: 'cross-branch' | 'same-branch' = 'cross-branch';
 
   transferForm: FormGroup = this.fb.group({
-    to_safe_id:  [null, Validators.required],
-    currency_id: [null, Validators.required],
-    amount:      [null, [Validators.required, Validators.min(0.01)]],
-    note:        [''],
+    to_safe_id:              [null],
+    currency_id:             [null, Validators.required],
+    amount:                  [null, [Validators.required, Validators.min(0.01)]],
+    note:                    [''],
+    from_payment_method_id:  [null],
+    to_payment_method_id:    [null],
   });
 
   get otherSafes(): Safe[] {
     return this.allSafes.filter(s => s.id !== this.safeId);
+  }
+
+  setTransferMode(mode: 'cross-branch' | 'same-branch'): void {
+    this.transferMode = mode;
+    this.transferForm.patchValue({ to_safe_id: null, from_payment_method_id: null, to_payment_method_id: null });
   }
 
   // ── Alert ───────────────────────────────────────────────
@@ -96,12 +121,14 @@ export class AdminSafeDetailComponent implements OnInit {
       depositReasons:  this.safeService.getReasons({ direction: 'in',  active_only: true }),
       withdrawReasons: this.safeService.getReasons({ direction: 'out', active_only: true }),
       allSafes:        this.safeService.getSafes(),
+      paymentMethods:  this.safeService.getPaymentMethods({ active_only: true }),
     }).subscribe({
       next: (res) => {
         this.currencies      = res.currencies.data;
         this.depositReasons  = res.depositReasons.data;
         this.withdrawReasons = res.withdrawReasons.data;
         this.allSafes        = res.allSafes.data;
+        this.paymentMethods  = res.paymentMethods.data;
       },
     });
   }
@@ -120,18 +147,19 @@ export class AdminSafeDetailComponent implements OnInit {
   setCurrencyFilter(val: string)  { this.list.setFilter('currency_id', val || undefined); }
   setDateFrom(val: string)        { this.list.setFilter('date_from',  val || undefined); }
   setDateTo(val: string)          { this.list.setFilter('date_to',    val || undefined); }
+  setPaymentMethodFilter(val: string) { this.list.setFilter('payment_method_id', val || undefined); }
 
   // ── Deposit / Withdraw modal ─────────────────────────────
   openDeposit() {
     this.txModalMode = 'deposit';
-    this.txForm.reset({ currency_id: null, amount: null, reason_id: null, note: '' });
+    this.txForm.reset({ currency_id: null, amount: null, reason_id: null, note: '', payment_method_id: null });
     this.txError = '';
     this.showTxModal = true;
   }
 
   openWithdraw() {
     this.txModalMode = 'withdraw';
-    this.txForm.reset({ currency_id: null, amount: null, reason_id: null, note: '' });
+    this.txForm.reset({ currency_id: null, amount: null, reason_id: null, note: '', payment_method_id: null });
     this.txError = '';
     this.showTxModal = true;
   }
@@ -142,7 +170,10 @@ export class AdminSafeDetailComponent implements OnInit {
     this.txError = '';
 
     const v = this.txForm.value;
-    const body = { currency_id: +v.currency_id, amount: +v.amount, reason_id: +v.reason_id, note: v.note || undefined };
+    const body = {
+      currency_id: +v.currency_id, amount: +v.amount, reason_id: +v.reason_id, note: v.note || undefined,
+      payment_method_id: v.payment_method_id ? +v.payment_method_id : null,
+    };
     const req$ = this.txModalMode === 'deposit'
       ? this.safeService.adminDeposit(this.safeId, body)
       : this.safeService.adminWithdraw(this.safeId, body);
@@ -165,23 +196,31 @@ export class AdminSafeDetailComponent implements OnInit {
 
   // ── Transfer modal ───────────────────────────────────────
   openTransfer() {
-    this.transferForm.reset({ to_safe_id: null, currency_id: null, amount: null, note: '' });
+    this.transferMode = 'cross-branch';
+    this.transferForm.reset({ to_safe_id: null, currency_id: null, amount: null, note: '', from_payment_method_id: null, to_payment_method_id: null });
     this.transferError = '';
     this.showTransferModal = true;
   }
 
   submitTransfer() {
+    const v = this.transferForm.value;
+    if (this.transferMode === 'cross-branch' && !v.to_safe_id) { this.transferForm.get('to_safe_id')?.markAsTouched(); return; }
+    if (this.transferMode === 'same-branch' && (!v.from_payment_method_id || !v.to_payment_method_id || v.from_payment_method_id === v.to_payment_method_id)) {
+      this.transferError = 'اختر وسيلتي دفع مختلفتين';
+      return;
+    }
     if (this.transferForm.invalid) { this.transferForm.markAllAsTouched(); return; }
     this.transferLoading = true;
     this.transferError = '';
 
-    const v = this.transferForm.value;
     this.safeService.transfer({
       from_safe_id: this.safeId,
-      to_safe_id:   +v.to_safe_id,
+      to_safe_id:   this.transferMode === 'same-branch' ? this.safeId : +v.to_safe_id,
       currency_id:  +v.currency_id,
       amount:       +v.amount,
       note:         v.note || undefined,
+      from_payment_method_id: v.from_payment_method_id ? +v.from_payment_method_id : null,
+      to_payment_method_id:   v.to_payment_method_id ? +v.to_payment_method_id : null,
     }).subscribe({
       next: (res) => {
         this.transferLoading = false;

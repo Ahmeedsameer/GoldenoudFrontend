@@ -67,7 +67,7 @@
             <table class="db-tbl">
               <thead>
                 <tr>
-                  <th>رقم الفاتورة</th><th>التاريخ</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th></th>
+                  <th>رقم الفاتورة</th><th>التاريخ</th><th>المنتجات</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th></th>
                 </tr>
               </thead>
               <tbody>
@@ -75,6 +75,15 @@
                   <tr>
                     <td class="font-mono" style="color:#9A7B1A">{{ inv.invoice_number }}</td>
                     <td style="color:#9CA3AF">{{ inv.date | date:'d MMM yyyy' }}</td>
+                    <td style="color:#374151; max-width: 220px;">
+                      @if (inv.products?.length) {
+                        <span class="truncate block" [title]="inv.products.join('، ')">
+                          {{ inv.products[0] }}@if (inv.products.length > 1) {<span style="color:#9CA3AF"> +{{ inv.products.length - 1 }}</span>}
+                        </span>
+                      } @else {
+                        <span style="color:#9CA3AF">—</span>
+                      }
+                    </td>
                     <td class="font-mono" style="color:#6B7280">{{ inv.total_amount | number:'1.0-2' }}</td>
                     <td class="font-mono" style="color:#6B7280">{{ inv.paid_amount | number:'1.0-2' }}</td>
                     <td class="font-mono" style="color:#6B7280">{{ inv.remaining_amount | number:'1.0-2' }}</td>
@@ -94,7 +103,7 @@
                   </tr>
                 }
                 @if (!ledger.invoices.length) {
-                  <tr><td colspan="7" class="text-center text-sm text-gray-400 py-6">لا توجد فواتير لهذا المورد</td></tr>
+                  <tr><td colspan="8" class="text-center text-sm text-gray-400 py-6">لا توجد فواتير لهذا المورد</td></tr>
                 }
               </tbody>
             </table>

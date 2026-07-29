@@ -4,6 +4,29 @@ import { map, Observable } from 'rxjs';
 
 const API_BASE = 'http://127.0.0.1:8000/api/branch-operations/transfers';
 const STOCK_REQUEST_API_BASE = 'http://127.0.0.1:8000/api/branch-operations/stock-requests';
+const REQUIRED_MATERIALS_API_BASE = 'http://127.0.0.1:8000/api/branch-operations/required-materials';
+const REQUIRED_MATERIALS_REPORT_API_BASE = 'http://127.0.0.1:8000/api/admin/reports/required-materials';
+
+/** One row in the Branch Required Materials page — see RequiredMaterialsService::forBranch(). */
+export interface RequiredMaterialRow {
+  product_id: number;
+  name: string;
+  category: string | null;
+  branch_qty: number;
+  warehouse_qty: number;
+  minimum_quantity: number | null;
+  last_purchase_price: number | null;
+  is_priced: boolean;
+  can_request: boolean;
+  existing_request: { id: number; status: string; status_label: string } | null;
+}
+
+export interface RequiredMaterialsData {
+  summary: { out_of_stock: number; low_stock: number; needs_pricing: number; pending_requests: number };
+  out_of_stock: RequiredMaterialRow[];
+  low_stock: RequiredMaterialRow[];
+  needs_pricing: RequiredMaterialRow[];
+}
 
 export type TransferStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'preparing' | 'shipped' | 'received' | 'closed';
 export type TransferPriority = 'low' | 'normal' | 'high' | 'urgent';
@@ -131,5 +154,16 @@ export class TransferRequestService {
    */
   registerReceivingWaste(id: number, entries: { item_id: number; reason: string; notes?: string }[]): Observable<TransferRequest> {
     return this.http.post<any>(`${API_BASE}/${id}/receiving-waste`, { entries }).pipe(map((r) => r.data));
+  }
+
+  // ── Branch Required Materials ────────────────────────────────────────────
+  /** Manager — own branch only (resolved server-side from the authenticated user). */
+  getRequiredMaterials(): Observable<RequiredMaterialsData> {
+    return this.http.get<any>(REQUIRED_MATERIALS_API_BASE).pipe(map((r) => r.data));
+  }
+
+  /** Admin — any branch. PDF/Excel export uses <app-report-toolbar> (ReportExportService), same as every other admin report. */
+  getRequiredMaterialsReport(shopId: number): Observable<RequiredMaterialsData> {
+    return this.http.get<any>(REQUIRED_MATERIALS_REPORT_API_BASE, { params: { shop_id: shopId } }).pipe(map((r) => r.data));
   }
 }

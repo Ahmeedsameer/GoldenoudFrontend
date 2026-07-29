@@ -2,7 +2,8 @@ import { Component, inject, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SafeService } from '../../services/safe.service';
-import { Safe } from '../../models/safe.model';
+import { Safe, PaymentMethodBalance } from '../../models/safe.model';
+import { methodsForCurrency } from '../../models/safe-balance.util';
 import { LoadingComponent } from '../../loading/loading.component';
 
 @Component({
@@ -38,5 +39,9 @@ export class AdminShopSafeComponent implements OnInit {
 
   safeName(safe: Safe): string {
     return `${safe.safe_type?.name}`;
+  }
+
+  methodsFor(safe: Safe, currencyId: number): PaymentMethodBalance[] {
+    return methodsForCurrency(safe, currencyId);
   }
 }

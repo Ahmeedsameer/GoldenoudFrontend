@@ -33,12 +33,24 @@
       <div class="space-y-1 mb-3">
         @if (safe.balances && safe.balances.length > 0) {
           @for (b of safe.balances; track b.currency.id) {
-            <div class="flex justify-between items-center py-1 px-2.5 rounded-lg bg-gray-50 dark:bg-white/[0.03]">
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ b.currency.code }}</span>
-              <span class="text-sm font-bold font-mono"
-                [class]="+b.balance < 0 ? 'text-error-600 dark:text-error-400' : 'text-gray-800 dark:text-white/90'">
-                {{ b.currency.symbol }} {{ +b.balance | number:'1.2-2' }}
-              </span>
+            <div class="rounded-lg bg-gray-50 dark:bg-white/[0.03] overflow-hidden">
+              <div class="flex justify-between items-center py-1 px-2.5">
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{ b.currency.code }}</span>
+                <span class="text-sm font-bold font-mono"
+                  [class]="+b.balance < 0 ? 'text-error-600 dark:text-error-400' : 'text-gray-800 dark:text-white/90'">
+                  {{ b.currency.symbol }} {{ +b.balance | number:'1.2-2' }}
+                </span>
+              </div>
+              @if (methodsFor(safe, b.currency.id).length > 0) {
+                <div class="px-2.5 pb-1.5 space-y-0.5">
+                  @for (m of methodsFor(safe, b.currency.id); track m.payment_method_id) {
+                    <div class="flex justify-between items-center text-[11px] text-gray-400 dark:text-gray-500">
+                      <span>{{ m.name }}</span>
+                      <span class="font-mono">{{ m.balance | number:'1.2-2' }}</span>
+                    </div>
+                  }
+                </div>
+              }
             </div>
           }
         } @else {

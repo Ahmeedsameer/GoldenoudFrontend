@@ -40,6 +40,19 @@ export interface SafeBalance {
   balance: string;
 }
 
+/** One payment method's derived balance within a currency — see SafeService::getBalancesByPaymentMethod(). */
+export interface PaymentMethodBalance {
+  payment_method_id: number | null;
+  name: string;
+  balance: number;
+}
+
+/** Per-currency breakdown of a safe's balance by payment method — keyed by currency_id on Safe.balances_by_method. */
+export interface CurrencyMethodBalance {
+  total: number;
+  methods: PaymentMethodBalance[];
+}
+
 export interface Safe {
   id: number;
   shop_id: number | null;
@@ -48,6 +61,8 @@ export interface Safe {
   shop: { id: number; name: string } | null;
   safe_type: SafeType;
   balances: SafeBalance[];
+  /** Keyed by currency_id — always sums to the matching entry in `balances`. */
+  balances_by_method?: Record<number, CurrencyMethodBalance>;
 }
 
 export interface SafeTransaction {
@@ -64,6 +79,9 @@ export interface SafeTransaction {
   invoice: { id: number; status: string; date: string } | null;
   invoice_id: number | null;
   transfer_id: number | null;
+  /** Sub Safes: the child safe this row belongs to, set directly at write time (new rows). */
+  payment_method: { id: number; name: string; type: string } | null;
+  /** Legacy path — historical rows (before payment_method_id existed) only have this. Prefer `payment_method` first. */
   invoice_payment: { id: number; payment_method: { id: number; name: string; type: string } | null } | null;
 }
 
@@ -78,4 +96,9 @@ export interface SafeTransfer {
   currency: Currency;
   admin: { id: number; name: string };
   created_at: string;
+  /** Sub Safes: both null = ordinary cross-branch/whole-safe transfer (unchanged). */
+  from_payment_method_id?: number | null;
+  to_payment_method_id?: number | null;
+  from_payment_method?: { id: number; name: string } | null;
+  to_payment_method?: { id: number; name: string } | null;
 }

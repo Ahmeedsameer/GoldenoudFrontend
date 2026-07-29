@@ -4,10 +4,13 @@ import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { SafeService } from '../../../services/safe.service';
 import { SafeTransaction, TransactionType, Currency } from '../../../models/safe.model';
+import { transactionMethodName } from '../../../models/safe-balance.util';
 import { ListManager } from '../../../services/list-manager';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { PaginationComponent } from '../../../pagination/pagination.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { SalesService } from '../../../services/sales.service';
+import { PaymentMethod } from '../../../models/sales.model';
 
 @Component({
   selector: 'app-manager-transactions',
@@ -16,10 +19,12 @@ import { DatePickerComponent } from '../../../shared/components/form/date-picker
 })
 export class ManagerTransactionsComponent implements OnInit {
   private safeService = inject(SafeService);
+  private salesService = inject(SalesService);
   private route = inject(ActivatedRoute);
 
   safeId!: number;
   currencies: Currency[] = [];
+  paymentMethods: PaymentMethod[] = [];
 
   list = new ListManager<SafeTransaction>(
     (params) => this.safeService.getManagerTransactions(this.safeId, params).pipe(map((r) => r.data))
@@ -43,6 +48,7 @@ export class ManagerTransactionsComponent implements OnInit {
     this.safeId = +this.route.snapshot.params['safeId'];
     this.list.load();
     this.safeService.getManagerCurrencies({ active_only: true }).subscribe({ next: (r) => this.currencies = r.data });
+    this.salesService.getSellerPaymentMethods().subscribe({ next: (methods) => this.paymentMethods = methods });
   }
 
   setTypeFilter(val: string)      { this.list.setFilter('type',        val || undefined); }
@@ -50,6 +56,11 @@ export class ManagerTransactionsComponent implements OnInit {
   setCurrencyFilter(val: string)  { this.list.setFilter('currency_id', val || undefined); }
   setDateFrom(val: string)        { this.list.setFilter('date_from',   val || undefined); }
   setDateTo(val: string)          { this.list.setFilter('date_to',     val || undefined); }
+  setPaymentMethodFilter(val: string) { this.list.setFilter('payment_method_id', val || undefined); }
+
+  transactionMethodName(tx: SafeTransaction): string {
+    return transactionMethodName(tx);
+  }
 
   typeLabel(type: TransactionType): string {
     const map: Record<string, string> = {

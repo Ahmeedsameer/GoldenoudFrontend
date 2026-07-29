@@ -22,23 +22,33 @@ export class AlertComponent {
   @Input() linkHref: string = '#';
   @Input() linkText: string = 'Learn more';
 
+  // The .lux-alert-* backgrounds (styles.css) are always a light tint, in both
+  // light and dark app themes — so the text must always be dark, not theme-reactive.
   get variantClasses() {
     return {
       success: {
         container: 'lux-alert lux-alert-success',
-        icon: 'lux-alert-icon-success'
+        icon: 'lux-alert-icon-success',
+        title: 'text-success-800',
+        text: 'text-success-700',
       },
       error: {
         container: 'lux-alert lux-alert-error',
-        icon: 'lux-alert-icon-error'
+        icon: 'lux-alert-icon-error',
+        title: 'text-error-800',
+        text: 'text-error-700',
       },
       warning: {
         container: 'lux-alert lux-alert-warning',
-        icon: 'lux-alert-icon-warning'
+        icon: 'lux-alert-icon-warning',
+        title: 'text-warning-800',
+        text: 'text-warning-700',
       },
       info: {
         container: 'lux-alert lux-alert-info',
-        icon: 'lux-alert-icon-info'
+        icon: 'lux-alert-icon-info',
+        title: 'text-blue-light-800',
+        text: 'text-blue-light-700',
       }
     }[this.variant];
   }

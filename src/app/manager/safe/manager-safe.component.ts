@@ -3,10 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SafeService } from '../../services/safe.service';
-import { Safe, Currency, TransactionReason } from '../../models/safe.model';
+import { Safe, Currency, TransactionReason, PaymentMethodBalance } from '../../models/safe.model';
+import { methodsForCurrency } from '../../models/safe-balance.util';
 import { LoadingComponent } from '../../loading/loading.component';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
+import { SalesService } from '../../services/sales.service';
+import { PaymentMethod } from '../../models/sales.model';
 
 @Component({
   selector: 'app-manager-safe',
@@ -15,6 +18,7 @@ import { AlertComponent } from '../../shared/components/ui/alert/alert.component
 })
 export class ManagerSafeComponent implements OnInit {
   private safeService = inject(SafeService);
+  private salesService = inject(SalesService);
   private fb = inject(FormBuilder);
 
   safes: Safe[] = [];
@@ -23,6 +27,8 @@ export class ManagerSafeComponent implements OnInit {
   currencies: Currency[] = [];
   depositReasons: TransactionReason[] = [];
   withdrawReasons: TransactionReason[] = [];
+  /** Sub Safes: the child-safe picker options for the deposit/withdraw modal. */
+  paymentMethods: PaymentMethod[] = [];
 
   // ── Modal ────────────────────────────────────────────────
   showModal = false;
@@ -32,14 +38,20 @@ export class ManagerSafeComponent implements OnInit {
   modalError = '';
 
   form: FormGroup = this.fb.group({
-    currency_id: [null, Validators.required],
-    amount:      [null, [Validators.required, Validators.min(0.01)]],
-    reason_id:   [null, Validators.required],
-    note:        [''],
+    currency_id:        [null, Validators.required],
+    amount:              [null, [Validators.required, Validators.min(0.01)]],
+    reason_id:           [null, Validators.required],
+    note:                [''],
+    // null = "الخزنة بالكامل (تلقائي)" — exactly today's behavior.
+    payment_method_id:   [null],
   });
 
   get activeReasons(): TransactionReason[] {
     return this.modalMode === 'deposit' ? this.depositReasons : this.withdrawReasons;
+  }
+
+  methodsFor(safe: Safe, currencyId: number): PaymentMethodBalance[] {
+    return methodsForCurrency(safe, currencyId);
   }
 
   // ── Alert ────────────────────────────────────────────────
@@ -51,6 +63,7 @@ export class ManagerSafeComponent implements OnInit {
     this.safeService.getManagerCurrencies({ active_only: true }).subscribe({ next: (r) => this.currencies = r.data });
     this.safeService.getManagerReasons({ direction: 'in',  active_only: true }).subscribe({ next: (r) => this.depositReasons  = r.data });
     this.safeService.getManagerReasons({ direction: 'out', active_only: true }).subscribe({ next: (r) => this.withdrawReasons = r.data });
+    this.salesService.getSellerPaymentMethods().subscribe({ next: (methods) => this.paymentMethods = methods });
   }
 
   load() {
@@ -65,7 +78,7 @@ export class ManagerSafeComponent implements OnInit {
     this.activeSafe = safe;
     this.modalMode = 'deposit';
     this.modalError = '';
-    this.form.reset({ currency_id: null, amount: null, reason_id: null, note: '' });
+    this.form.reset({ currency_id: null, amount: null, reason_id: null, note: '', payment_method_id: null });
     this.showModal = true;
   }
 
@@ -73,7 +86,7 @@ export class ManagerSafeComponent implements OnInit {
     this.activeSafe = safe;
     this.modalMode = 'withdraw';
     this.modalError = '';
-    this.form.reset({ currency_id: null, amount: null, reason_id: null, note: '' });
+    this.form.reset({ currency_id: null, amount: null, reason_id: null, note: '', payment_method_id: null });
     this.showModal = true;
   }
 
@@ -83,7 +96,10 @@ export class ManagerSafeComponent implements OnInit {
     this.modalError = '';
 
     const v = this.form.value;
-    const body = { currency_id: +v.currency_id, amount: +v.amount, reason_id: +v.reason_id, note: v.note || undefined };
+    const body = {
+      currency_id: +v.currency_id, amount: +v.amount, reason_id: +v.reason_id, note: v.note || undefined,
+      payment_method_id: v.payment_method_id ? +v.payment_method_id : null,
+    };
     const req$ = this.modalMode === 'deposit'
       ? this.safeService.managerDeposit(this.activeSafe.id, body)
       : this.safeService.managerWithdraw(this.activeSafe.id, body);

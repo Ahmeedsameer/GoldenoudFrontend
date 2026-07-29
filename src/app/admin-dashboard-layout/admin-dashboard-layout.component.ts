@@ -100,6 +100,7 @@ export class AdminDashboardLayoutComponent {
         { name: "دفتر حساب المخزون", path: "/dashboard/reports/inventory-ledger" },
         { name: "تتبّع دفعات المخزون (FIFO)", path: "/dashboard/reports/batches" },
         { name: "تقرير التدقيق على المخزون", path: "/dashboard/reports/inventory-audit" },
+        { name: "المواد المطلوبة", path: "/dashboard/reports/required-materials" },
       ],
     },
 

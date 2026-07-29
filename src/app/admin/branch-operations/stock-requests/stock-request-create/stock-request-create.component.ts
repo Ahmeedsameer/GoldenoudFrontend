@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingComponent } from '../../../../loading/loading.component';
 import { AlertComponent } from '../../../../shared/components/ui/alert/alert.component';
 import { TransferRequestService, TransferPriority } from '../../../../services/transfer-request.service';
@@ -28,6 +28,7 @@ export class StockRequestCreateComponent implements OnInit {
   private svc = inject(TransferRequestService);
   private productSvc = inject(ProductService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   loading = false;
   saving = false;
@@ -47,6 +48,13 @@ export class StockRequestCreateComponent implements OnInit {
       next: (res) => {
         this.transferableProducts = (res.data || []).map((p: any) => ({ id: p.id, name: p.name, sku: p.sku }));
         this.loading = false;
+
+        // Deep-linked from Branch Required Materials ("طلب من المخزن الرئيسي") —
+        // preselect the product, quantity stays empty, priority stays 'normal'.
+        const productId = Number(this.route.snapshot.queryParamMap.get('product_id'));
+        if (productId && this.transferableProducts.some((p) => p.id === productId)) {
+          this.items = [{ product_id: productId, requested_quantity: null }];
+        }
       },
       error: () => { this.loading = false; },
     });

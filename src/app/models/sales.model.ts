@@ -110,6 +110,10 @@ export const CARD_PAYMENT_TYPES: PaymentMethodType[] = ['visa', 'mastercard', 'b
 export interface PaymentMethod {
   id: number;
   name: string;
+  /** Bank Cards module — issuing bank (CIB, QNB, Banque Misr, HSBC, ...), only meaningful for card types. */
+  bank?: string | null;
+  /** Wallet's phone number — only meaningful for type === 'mobile_wallet'. */
+  wallet_phone?: string | null;
   type: PaymentMethodType;
   currency_id: number;
   processing_fee_percent: number;

@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { LoadingComponent } from '../../loading/loading.component';
+import { PaymentMethodReportService } from '../../services/payment-method-report.service';
 
 interface DashboardToday {
   revenue:       number;
@@ -67,6 +68,20 @@ interface DashboardData {
   safe_balances:    DashboardSafeBalance[];
 }
 
+/** Today's totals grouped by payment type — cash / cards / wallets / other digital.
+ *  Reuses AdminPaymentMethodReportController::paymentMethods() with date_from=date_to=today
+ *  (already normalized to EGP per its own query) — no new backend aggregation. */
+interface TodayByPaymentType {
+  cash: number;
+  cards: number;
+  wallets: number;
+  digital: number;
+  total: number;
+}
+
+const CARD_TYPES = ['visa', 'mastercard', 'bank_card'];
+const WALLET_TYPES = ['mobile_wallet'];
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -75,10 +90,13 @@ interface DashboardData {
 })
 export class AdminDashboardComponent implements OnInit {
   private http = inject(HttpClient);
+  private paymentMethodReportService = inject(PaymentMethodReportService);
 
   loading  = true;
   errorMsg = '';
   data:    DashboardData | null = null;
+
+  todayByPaymentType: TodayByPaymentType | null = null;
 
   // ── Chart ─────────────────────────────────────────────────────────
   trendSeries:  any[] = [];
@@ -114,6 +132,19 @@ export class AdminDashboardComponent implements OnInit {
       error: () => {
         this.loading  = false;
         this.errorMsg = 'فشل تحميل بيانات لوحة التحكم.';
+      },
+    });
+
+    const today = new Date().toISOString().slice(0, 10);
+    this.paymentMethodReportService.getPaymentMethods({ date_from: today, date_to: today }).subscribe({
+      next: (res) => {
+        const rows: { type: string; gross_amount: number }[] = res?.data?.rows ?? [];
+        const sumBy = (types: string[]) => rows.filter(r => types.includes(r.type)).reduce((s, r) => s + (+r.gross_amount || 0), 0);
+        const cash    = sumBy(['cash']);
+        const cards   = sumBy(CARD_TYPES);
+        const wallets = sumBy(WALLET_TYPES);
+        const digital = sumBy(['bank_transfer', 'other']);
+        this.todayByPaymentType = { cash, cards, wallets, digital, total: cash + cards + wallets + digital };
       },
     });
   }

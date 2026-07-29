@@ -28,4 +28,14 @@ export class PaymentMethodReportService {
   getCurrencyReport(params?: Record<string, any>): Observable<any> {
     return this.http.get<any>(`${API_BASE}/currency`, { params });
   }
+
+  /** Current safe balance broken down by currency + payment method — reuses SafeService::getBalancesByPaymentMethod(). */
+  getSafeBalance(params?: Record<string, any>): Observable<any> {
+    return this.http.get<any>(`${API_BASE}/safe-balance`, { params });
+  }
+
+  /** Every transfer between two child safes (payment methods), same-branch or cross-branch. */
+  getChildTransfers(params?: Record<string, any>): Observable<any> {
+    return this.http.get<any>(`${API_BASE}/child-transfers`, { params });
+  }
 }

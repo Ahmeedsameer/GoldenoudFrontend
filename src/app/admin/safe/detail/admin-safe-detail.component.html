@@ -32,12 +32,22 @@
         @if (safe.balances && safe.balances.length > 0) {
           <div class="flex flex-wrap gap-3">
             @for (b of safe.balances; track b.currency.id) {
-              <div class="rounded-xl bg-white/15 px-4 py-2.5">
+              <div class="rounded-xl bg-white/15 px-4 py-2.5 min-w-[10rem]">
                 <p class="text-brand-200 text-xs">{{ b.currency.name }}</p>
                 <p class="text-xl font-bold font-mono mt-0.5"
                   [class]="+(b.balance) < 0 ? 'text-red-300' : 'text-white'">
                   {{ b.currency.symbol }} {{ +b.balance | number:'1.2-2' }}
                 </p>
+                @if (methodsFor(safe, b.currency.id).length > 0) {
+                  <div class="mt-2 pt-2 border-t border-white/20 space-y-0.5">
+                    @for (m of methodsFor(safe, b.currency.id); track m.payment_method_id) {
+                      <div class="flex items-center justify-between text-[11px] text-brand-100">
+                        <span>{{ m.name }}</span>
+                        <span class="font-mono">{{ b.currency.symbol }} {{ m.balance | number:'1.2-2' }}</span>
+                      </div>
+                    }
+                  </div>
+                }
               </div>
             }
           </div>
@@ -104,6 +114,14 @@
 
       <app-date-picker id="admin-safe-date-from" [value]="list.filters['date_from']" (valueChange)="setDateFrom($event)"></app-date-picker>
       <app-date-picker id="admin-safe-date-to" [value]="list.filters['date_to']" (valueChange)="setDateTo($event)"></app-date-picker>
+
+      <select (change)="setPaymentMethodFilter($any($event.target).value)"
+        class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+        <option value="">كل وسائل الدفع</option>
+        @for (m of paymentMethods; track m.id) {
+          <option [value]="m.id">{{ m.name }}</option>
+        }
+      </select>
     </div>
   </div>
 
@@ -152,7 +170,7 @@
                 {{ tx.direction === 'in' ? '+' : '−' }}{{ tx.amount | number:'1.2-2' }}
               </span>
             </td>
-            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tx.invoice_payment?.payment_method?.name || '—' }}</td>
+            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ transactionMethodName(tx) }}</td>
             <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tx.reason?.name || '—' }}</td>
             <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tx.user?.name || '—' }}</td>
             <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-[160px]">
@@ -209,6 +227,18 @@
             @for (c of currencies; track c.id) { <option [value]="c.id">{{ c.name }} ({{ c.symbol }})</option> }
           </select>
           @if (txfInvalid('currency_id')) { <p class="mt-1 text-xs text-error-500">العملة مطلوبة</p> }
+        </div>
+
+        <!-- Child safe (payment method) — "Entire Safe (Automatic)" default = today's behavior -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            {{ txModalMode === 'deposit' ? 'إيداع في' : 'سحب من' }}
+          </label>
+          <select formControlName="payment_method_id"
+            class="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            <option [ngValue]="null">الخزنة بالكامل (تلقائي)</option>
+            @for (m of paymentMethods; track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
+          </select>
         </div>
 
         <!-- Amount -->
@@ -268,6 +298,20 @@
       </div>
     }
 
+    <!-- Transfer mode: cross-branch (existing) vs same-branch child-to-child (new) -->
+    <div class="inline-flex rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden mb-5">
+      <button type="button" (click)="setTransferMode('cross-branch')"
+        class="px-3 py-1.5 text-xs font-medium transition-colors"
+        [class]="transferMode === 'cross-branch' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'">
+        تحويل بين خزنتين
+      </button>
+      <button type="button" (click)="setTransferMode('same-branch')"
+        class="px-3 py-1.5 text-xs font-medium transition-colors"
+        [class]="transferMode === 'same-branch' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'">
+        تحويل بين وسائل الدفع بنفس الخزنة
+      </button>
+    </div>
+
     <form [formGroup]="transferForm" (ngSubmit)="submitTransfer()">
       <div class="space-y-4">
 
@@ -279,17 +323,39 @@
           </div>
         </div>
 
-        <!-- To safe -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">إلى خزنة <span class="text-error-500">*</span></label>
-          <select formControlName="to_safe_id"
-            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            [class]="tfInvalid('to_safe_id') ? 'border-error-400' : 'border-gray-300 dark:border-gray-700 dark:bg-gray-800'">
-            <option value="" disabled selected>اختر الخزنة...</option>
-            @for (s of otherSafes; track s.id) { <option [value]="s.id">{{ safeName(s) }}</option> }
-          </select>
-          @if (tfInvalid('to_safe_id')) { <p class="mt-1 text-xs text-error-500">خزنة الوجهة مطلوبة</p> }
-        </div>
+        @if (transferMode === 'same-branch') {
+          <!-- From payment method -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">من وسيلة الدفع <span class="text-error-500">*</span></label>
+            <select formControlName="from_payment_method_id"
+              class="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+              <option [ngValue]="null" disabled selected>اختر وسيلة الدفع...</option>
+              @for (m of paymentMethods; track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
+            </select>
+          </div>
+
+          <!-- To payment method -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">إلى وسيلة الدفع <span class="text-error-500">*</span></label>
+            <select formControlName="to_payment_method_id"
+              class="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+              <option [ngValue]="null" disabled selected>اختر وسيلة الدفع...</option>
+              @for (m of paymentMethods; track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
+            </select>
+          </div>
+        } @else {
+          <!-- To safe -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">إلى خزنة <span class="text-error-500">*</span></label>
+            <select formControlName="to_safe_id"
+              class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              [class]="tfInvalid('to_safe_id') ? 'border-error-400' : 'border-gray-300 dark:border-gray-700 dark:bg-gray-800'">
+              <option value="" disabled selected>اختر الخزنة...</option>
+              @for (s of otherSafes; track s.id) { <option [value]="s.id">{{ safeName(s) }}</option> }
+            </select>
+            @if (tfInvalid('to_safe_id')) { <p class="mt-1 text-xs text-error-500">خزنة الوجهة مطلوبة</p> }
+          </div>
+        }
 
         <!-- Currency -->
         <div>

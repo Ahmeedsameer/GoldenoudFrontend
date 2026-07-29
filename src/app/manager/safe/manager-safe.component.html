@@ -28,16 +28,28 @@
         </div>
       </div>
 
-      <!-- Balances -->
+      <!-- Balances (per currency, broken down by payment method) -->
       <div class="space-y-2 mb-5">
         @if (safe.balances && safe.balances.length > 0) {
           @for (b of safe.balances; track b.currency.id) {
-            <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 dark:bg-white/[0.03]">
-              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ b.currency.name }}</span>
-              <span class="text-base font-bold font-mono"
-                [class]="+b.balance < 0 ? 'text-error-600 dark:text-error-400' : 'text-gray-800 dark:text-white/90'">
-                {{ b.currency.symbol }} {{ +b.balance | number:'1.2-2' }}
-              </span>
+            <div class="rounded-xl bg-gray-50 dark:bg-white/[0.03] overflow-hidden">
+              <div class="flex items-center justify-between px-3 py-2">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ b.currency.name }}</span>
+                <span class="text-base font-bold font-mono"
+                  [class]="+b.balance < 0 ? 'text-error-600 dark:text-error-400' : 'text-gray-800 dark:text-white/90'">
+                  {{ b.currency.symbol }} {{ +b.balance | number:'1.2-2' }}
+                </span>
+              </div>
+              @if (methodsFor(safe, b.currency.id).length > 0) {
+                <div class="px-3 pb-2 space-y-1 border-t border-gray-200/60 dark:border-white/[0.05] pt-2">
+                  @for (m of methodsFor(safe, b.currency.id); track m.payment_method_id) {
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-gray-400 dark:text-gray-500">{{ m.name }}</span>
+                      <span class="font-mono text-gray-600 dark:text-gray-300">{{ b.currency.symbol }} {{ m.balance | number:'1.2-2' }}</span>
+                    </div>
+                  }
+                </div>
+              }
             </div>
           }
         } @else {
@@ -110,6 +122,18 @@
             @for (c of currencies; track c.id) { <option [value]="c.id">{{ c.name }} ({{ c.symbol }})</option> }
           </select>
           @if (isInvalid('currency_id')) { <p class="mt-1 text-xs text-error-500">العملة مطلوبة</p> }
+        </div>
+
+        <!-- Child safe (payment method) — "Entire Safe (Automatic)" default = today's behavior -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            {{ modalMode === 'deposit' ? 'إيداع في' : 'سحب من' }}
+          </label>
+          <select formControlName="payment_method_id"
+            class="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            <option [ngValue]="null">الخزنة بالكامل (تلقائي)</option>
+            @for (m of paymentMethods; track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
+          </select>
         </div>
 
         <!-- Amount -->

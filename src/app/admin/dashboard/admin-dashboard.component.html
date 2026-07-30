@@ -274,7 +274,7 @@
         <p class="text-sm text-gray-400 text-center py-6">لا توجد خزن مسجلة</p>
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-          @for (safe of safeBalances; track safe.shop_name) {
+          @for (safe of safeBalances; track safe.shop_name + safe.type_name) {
             <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 transition-colors">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ safe.shop_name }}</span>

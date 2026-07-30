@@ -55,9 +55,6 @@ export class LoginComponent {
   
   }
   onSignIn(){
-    console.log('Email:', this.email);
-    console.log("password :", this.password);
-    
     if (!this.email.trim() || !this.password.trim()) {
       this.errorMessage = 'يرجى إدخال البريد الإلكتروني وكلمة المرور.';
       return;
@@ -101,7 +98,5 @@ export class LoginComponent {
 
   setChecked(value: any){
     // this.isChecked = value;
-    console.log(value);
-    
   }
 }

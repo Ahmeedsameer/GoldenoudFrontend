@@ -35,12 +35,16 @@
           الفئة <span class="text-error-500">*</span>
         </label>
         <select formControlName="category_id"
-          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800">
+          class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:border-gray-700"
+          [class]="form.get('category_id')?.invalid && form.get('category_id')?.touched ? 'border-error-400' : 'border-gray-300'">
           <option value="">— اختر فئة —</option>
           @for (cat of categories; track cat.id) {
             <option [value]="cat.id">{{ cat.name }}</option>
           }
         </select>
+        @if (form.get('category_id')?.invalid && form.get('category_id')?.touched) {
+          <p class="mt-1 text-xs text-error-500">الفئة مطلوبة</p>
+        }
       </div>
 
       <div>
@@ -67,14 +71,22 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">حد التحذير</label>
         <input type="number" formControlName="warning_quantity" min="0" step="0.001" placeholder="مثال: 20"
-          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+          class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:border-gray-700"
+          [class]="form.get('warning_quantity')?.invalid && form.get('warning_quantity')?.touched ? 'border-error-400' : 'border-gray-300'" />
+        @if (form.get('warning_quantity')?.invalid && form.get('warning_quantity')?.touched) {
+          <p class="mt-1 text-xs text-error-500">{{ form.get('warning_quantity')?.getError('serverError') || 'يجب أن تكون القيمة صفراً أو أكبر' }}</p>
+        }
         <p class="text-[11px] text-gray-400 mt-1">يُورَّث من الفئة تلقائياً إن تُرك فارغاً.</p>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحد الحرِج</label>
         <input type="number" formControlName="critical_quantity" min="0" step="0.001" placeholder="مثال: 5"
-          class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+          class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:border-gray-700"
+          [class]="form.get('critical_quantity')?.invalid && form.get('critical_quantity')?.touched ? 'border-error-400' : 'border-gray-300'" />
+        @if (form.get('critical_quantity')?.invalid && form.get('critical_quantity')?.touched) {
+          <p class="mt-1 text-xs text-error-500">{{ form.get('critical_quantity')?.getError('serverError') || 'يجب أن تكون القيمة صفراً أو أكبر' }}</p>
+        }
       </div>
 
     </div>

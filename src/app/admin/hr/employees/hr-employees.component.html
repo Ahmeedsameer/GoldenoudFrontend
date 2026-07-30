@@ -167,6 +167,9 @@
             [class]="form.get('role')?.invalid && form.get('role')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'">
             @for (r of roleOptions; track r.value) { <option [value]="r.value">{{ r.label }}</option> }
           </select>
+          @if (form.get('role')?.invalid && form.get('role')?.touched) {
+            <p class="mt-1 text-xs text-error-500">يجب اختيار الدور</p>
+          }
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الحالة</label>

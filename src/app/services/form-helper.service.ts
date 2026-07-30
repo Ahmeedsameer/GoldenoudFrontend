@@ -24,11 +24,8 @@ export class FormHelperService {
       
       Object.keys(backendErrors).forEach(field => {
         const formControl = form.get(field);
-        console.log(`Processing backend error for field: ${field}, error: ${backendErrors[field][0]}`);
-        
+
         if (formControl) {
-          console.log(`Setting server error for field: ${field}, message: ${backendErrors[field][0]}`);
-          
           formControl.setErrors({ serverError: backendErrors[field][0] });
           formControl.markAsTouched();
         }

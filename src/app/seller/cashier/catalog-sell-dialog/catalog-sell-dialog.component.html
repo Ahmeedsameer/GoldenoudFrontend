@@ -138,6 +138,11 @@
               <p class="text-sm text-error-600 dark:text-error-400 text-center">يجب تسعير هذا الزيت والزجاجة أولاً من إدارة الأسعار.</p>
             </div>
           }
+          @if (pricing.stock_ok && materialsPriced && (!selectedAlcohol || !alcoholQty || +alcoholQty <= 0)) {
+            <div class="p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+              <p class="text-sm text-error-600 dark:text-error-400 text-center">يجب اختيار الكحول وتحديد كميته لإتمام الإضافة للفاتورة.</p>
+            </div>
+          }
           @if (autoPrice != null) {
             <!-- Read-only — resolved automatically from Pricing Management (Oil +
                  Bottle real price). Not editable here; the cashier can still change

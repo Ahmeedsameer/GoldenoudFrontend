@@ -58,13 +58,11 @@ export class CreateNewUserComponent {
     this.userManagmentService.createUser(this.userForm.value).subscribe(
      { 
       next:(Response)=>{
-        console.log(Response);
         this.alert = this.formHelperService.showSuccess('تم إنشاء المستخدم بنجاح!');
         this.userForm.reset();
         this.loading = false;
       },
       error:(err)=> {
-        console.log(err);
         this.alert = this.formHelperService.handleBackendErrors(err, this.userForm);
         this.loading = false;
     }

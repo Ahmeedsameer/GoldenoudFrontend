@@ -113,18 +113,26 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">النوع <span class="text-error-500">*</span></label>
           <select formControlName="type"
-            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2"
+            [class]="isInvalid('type')
+              ? 'border-error-400 focus:ring-error-500/20'
+              : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700'">
             @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
           </select>
+          @if (isInvalid('type')) { <p class="mt-1 text-xs text-error-500">النوع مطلوب</p> }
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">العملة <span class="text-error-500">*</span></label>
           <select formControlName="currency_id"
-            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2"
+            [class]="isInvalid('currency_id')
+              ? 'border-error-400 focus:ring-error-500/20'
+              : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700'">
             <option [ngValue]="null" disabled>اختر العملة</option>
             @for (c of currencies; track c.id) { <option [ngValue]="c.id">{{ c.code }}</option> }
           </select>
+          @if (isInvalid('currency_id')) { <p class="mt-1 text-xs text-error-500">العملة مطلوبة</p> }
         </div>
 
         @if (isWalletType) {

@@ -95,7 +95,7 @@
 
   <!-- Submit -->
   <div class="flex gap-3">
-    <app-button (btnClick)="onSubmit()" size="md">إنشاء المستخدم</app-button>
+    <app-button (btnClick)="onSubmit()" [disabled]="loading" size="md">إنشاء المستخدم</app-button>
   </div>
 
 </app-component-card>

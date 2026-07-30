@@ -119,6 +119,9 @@
             [class]="isInvalid('symbol')
               ? 'border-error-400 focus:border-error-400 focus:ring-error-500/20'
               : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+          @if (isInvalid('symbol')) {
+            <p class="mt-1 text-xs text-error-500">الرمز مطلوب</p>
+          }
         </div>
 
         <!-- Rate -->

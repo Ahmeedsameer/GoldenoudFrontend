@@ -91,10 +91,14 @@
           </label>
           @if (modalMode === 'create') {
             <select formControlName="kind"
-              class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+              class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2"
+              [class]="isInvalid('kind')
+                ? 'border-error-400 focus:ring-error-500/20'
+                : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700'">
               <option value="physical">نقدي</option>
               <option value="virtual">إلكتروني</option>
             </select>
+            @if (isInvalid('kind')) { <p class="mt-1 text-xs text-error-500">النوع مطلوب</p> }
           } @else {
             <div>
               <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium" [class]="kindClass(editTarget?.kind || '')">

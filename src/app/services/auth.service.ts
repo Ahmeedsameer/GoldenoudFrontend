@@ -58,8 +58,6 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-   console.log("isAuthenticated called, token expired:", this.isTokenExpired());
-   
     return !(this.isTokenExpired()) ;
   }
 

@@ -97,17 +97,27 @@
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الموظف <span class="text-error-500">*</span></label>
-          <select formControlName="user_id" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <select formControlName="user_id"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
+            [class]="form.get('user_id')?.invalid && form.get('user_id')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'">
             <option [ngValue]="null" disabled>اختر الموظف</option>
             @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
           </select>
+          @if (form.get('user_id')?.invalid && form.get('user_id')?.touched) {
+            <p class="mt-1 text-xs text-error-500">يجب اختيار الموظف</p>
+          }
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الفرع المؤقت <span class="text-error-500">*</span></label>
-          <select formControlName="temporary_branch_id" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <select formControlName="temporary_branch_id"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
+            [class]="form.get('temporary_branch_id')?.invalid && form.get('temporary_branch_id')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'">
             <option [ngValue]="null" disabled>اختر الفرع المؤقت</option>
             @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
           </select>
+          @if (form.get('temporary_branch_id')?.invalid && form.get('temporary_branch_id')?.touched) {
+            <p class="mt-1 text-xs text-error-500">يجب اختيار الفرع المؤقت</p>
+          }
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -115,18 +125,24 @@
             <app-date-picker
               id="transfer-start-date"
               [value]="form.get('start_date')?.value"
-              (valueChange)="form.get('start_date')?.setValue($event)"
+              (valueChange)="form.get('start_date')?.setValue($event); form.get('start_date')?.markAsTouched()"
               placeholder="اختر تاريخ البداية"
             ></app-date-picker>
+            @if (form.get('start_date')?.invalid && form.get('start_date')?.touched) {
+              <p class="mt-1 text-xs text-error-500">تاريخ البداية مطلوب</p>
+            }
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">تاريخ النهاية <span class="text-error-500">*</span></label>
             <app-date-picker
               id="transfer-end-date"
               [value]="form.get('end_date')?.value"
-              (valueChange)="form.get('end_date')?.setValue($event)"
+              (valueChange)="form.get('end_date')?.setValue($event); form.get('end_date')?.markAsTouched()"
               placeholder="اختر تاريخ النهاية"
             ></app-date-picker>
+            @if (form.get('end_date')?.invalid && form.get('end_date')?.touched) {
+              <p class="mt-1 text-xs text-error-500">تاريخ النهاية مطلوب</p>
+            }
           </div>
         </div>
         <div>

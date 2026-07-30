@@ -35,10 +35,7 @@ export class ListManager<T> {
     rowResponse => extractPagination<T>(rowResponse)
     )).subscribe({
       next: (res: PaginationResult<T>) => {
-        this.result = res; 
-
-        console.log(res);
-        
+        this.result = res;
         this.loading = false;
       },
       error: (err) => {

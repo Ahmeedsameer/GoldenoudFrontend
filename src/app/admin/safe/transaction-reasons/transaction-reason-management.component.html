@@ -89,11 +89,15 @@
             الاتجاه <span class="text-error-500">*</span>
           </label>
           <select formControlName="direction"
-            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2"
+            [class]="isInvalid('direction')
+              ? 'border-error-400 focus:ring-error-500/20'
+              : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700'">
             <option value="in">إيداع فقط</option>
             <option value="out">سحب فقط</option>
             <option value="both">كلاهما</option>
           </select>
+          @if (isInvalid('direction')) { <p class="mt-1 text-xs text-error-500">الاتجاه مطلوب</p> }
         </div>
 
         <div class="flex items-center gap-3">

@@ -112,6 +112,7 @@
             آجل
           </button>
         </div>
+        <app-form-error [control]="headerForm.get('payment_method')!"></app-form-error>
       </div>
 
       @if (isImmediate) {
@@ -253,7 +254,8 @@
                   (blur)="closeProductDropdown(i)"
                   placeholder="ابحث عن منتج..."
                   autocomplete="off"
-                  class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                  class="h-10 w-full rounded-lg border bg-white px-3 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90"
+                  [class]="items.at(i).get('product_id')?.invalid && items.at(i).get('product_id')?.touched ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700'"
                 />
                 @if (showProductDropdown[i]) {
                   <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
@@ -274,6 +276,7 @@
                   </ul>
                 }
               </div>
+              <app-form-error [control]="items.at(i).get('product_id')!"></app-form-error>
             </div>
             <!-- Quantity -->
             <div class="w-28">
@@ -284,8 +287,10 @@
                 min="0.001"
                 step="0.001"
                 placeholder="0"
-                class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                class="h-10 w-full rounded-lg border bg-white px-3 text-sm text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90"
+                [class]="items.at(i).get('quantity')?.invalid && items.at(i).get('quantity')?.touched ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700'"
               />
+              <app-form-error [control]="items.at(i).get('quantity')!"></app-form-error>
             </div>
             <!-- Unit — dynamic per Product Type: Raw Materials offer g/kg or ml/l,
                  Packaging/Ready Products are always "piece" (no choice to make). -->
@@ -294,12 +299,14 @@
               @if (hasUnitChoice(i)) {
                 <select
                   formControlName="unit"
-                  class="h-10 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                  class="h-10 w-full rounded-lg border bg-white px-2 text-sm text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90"
+                  [class]="items.at(i).get('unit')?.invalid && items.at(i).get('unit')?.touched ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700'"
                 >
                   @for (opt of unitOptions(i); track opt.value) {
                     <option [value]="opt.value">{{ opt.label }}</option>
                   }
                 </select>
+                <app-form-error [control]="items.at(i).get('unit')!"></app-form-error>
               } @else {
                 <div class="h-10 flex items-center px-3 rounded-lg border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-gray-800 text-sm text-gray-500 dark:text-gray-400">
                   {{ unitOptions(i)[0]?.label || '—' }}
@@ -315,8 +322,10 @@
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                class="h-10 w-full rounded-lg border bg-white px-3 text-sm text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90"
+                [class]="items.at(i).get('unit_price')?.invalid && items.at(i).get('unit_price')?.touched ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700'"
               />
+              <app-form-error [control]="items.at(i).get('unit_price')!"></app-form-error>
             </div>
             <!-- Capacity (ml) — Packaging only; read-only once the product already has one recorded -->
             @if (selectedCategory === 'PACKAGING') {

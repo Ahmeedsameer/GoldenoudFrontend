@@ -1,7 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 
-const API_BASE = 'http://127.0.0.1:8000/api';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}`;
 
 /**
  * The one place every report's Export/Print buttons go through — no report

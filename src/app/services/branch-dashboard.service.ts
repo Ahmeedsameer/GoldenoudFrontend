@@ -3,7 +3,9 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { TransferRequest } from './transfer-request.service';
 
-const API_BASE = 'http://127.0.0.1:8000/api/branch-operations';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}/branch-operations`;
 
 export interface DailyCount { date: string; count: number; }
 export interface DailyValue { date: string; value: number; }

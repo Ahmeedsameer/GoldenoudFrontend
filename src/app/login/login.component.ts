@@ -24,6 +24,7 @@ import { CompanySettingsService } from '../services/company-settings.service';
 export class LoginComponent {
   companySettings = inject(CompanySettingsService);
   company$ = this.companySettings.settings$;
+  currentYear = new Date().getFullYear();
 
   email: string = '';
   showPassword: boolean = false;

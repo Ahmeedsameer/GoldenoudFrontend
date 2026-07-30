@@ -193,12 +193,23 @@
 
       <div class="space-y-3 mb-5">
         @for (item of items.controls; track $index; let i = $index) {
+          @if (!isHiddenMaterialRow(i)) {
           <div [formGroup]="$any(item)"
             class="flex flex-wrap gap-3 items-end p-4 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
 
             <!-- Product -->
             <div class="flex-1 min-w-[200px]">
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">المنتج <span class="text-error-500">*</span></label>
+              @if (manufacturedName(i)) {
+                <!-- Manufactured perfume — locked identity, oil/alcohol hidden behind it -->
+                <div class="h-10 flex items-center gap-2 px-3 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-500/30 dark:bg-purple-500/10">
+                  <svg class="w-3.5 h-3.5 text-purple-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
+                  </svg>
+                  <span class="text-sm font-medium text-purple-700 dark:text-purple-400">{{ manufacturedName(i) }}</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300">مُصنَّع</span>
+                </div>
+              } @else {
               <div class="relative">
                 <input type="text" [value]="productQueries[i]"
                   (input)="onProductInput(i, $any($event.target).value)" (blur)="closeProductDropdown(i)"
@@ -216,11 +227,18 @@
                   </ul>
                 }
               </div>
+              }
             </div>
 
             <!-- Quantity -->
             <div class="w-28">
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الكمية <span class="text-error-500">*</span></label>
+              @if (manufacturedName(i)) {
+                <!-- Locked — set via Manufacturing Quantity in the Product Builder, not editable here -->
+                <div class="h-10 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-sm font-mono font-bold text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+                  {{ manufacturedQty(i) }}
+                </div>
+              } @else {
               <input type="number" formControlName="quantity" min="0.001" step="0.001" placeholder="0"
                 class="h-10 w-full rounded-lg border bg-white px-3 text-sm text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90"
                 [class]="exceedsStock(i)
@@ -231,13 +249,28 @@
                   المتاح {{ stockAvailable(i) }} {{ itemUnit(i) }} فقط
                 </p>
               }
+              }
             </div>
 
             <!-- Unit price — editable by hand (prefilled from the product price) -->
             <div class="w-44">
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">سعر الوحدة</label>
 
-              @if (selectedGoods[i] && pricingMode === 'auto') {
+              @if (manufacturedName(i)) {
+                <!-- Manufactured perfume: default = real Oil + Bottle price (Pricing
+                     Management), freely editable exactly like any other product —
+                     under the hood this only ever adjusts the hidden Bottle row. -->
+                <div class="relative">
+                  <input type="number" min="0" step="0.01" placeholder="0.00"
+                    [ngModel]="manufacturedUnitPrice(i)" [ngModelOptions]="{standalone: true}"
+                    (ngModelChange)="setManufacturedUnitPrice(i, $event)"
+                    class="h-10 w-full rounded-lg border bg-white ps-3 pe-9 text-sm font-mono font-bold text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90 border-success-300 focus:border-success-500 focus:ring-success-500/20 dark:border-success-500/40" />
+                  <span class="absolute inset-y-0 end-3 flex items-center text-[11px] text-gray-400 pointer-events-none">/ {{ itemUnit(i) }}</span>
+                </div>
+                <p class="mt-1 text-xs text-success-600 dark:text-success-400 font-medium">
+                  {{ manufacturedQty(i) }} × {{ manufacturedUnitPrice(i) | number:'1.2-2' }} = <span class="font-bold">{{ manufacturedLineTotal(i) | number:'1.2-2' }} ج.م</span>
+                </p>
+              } @else if (selectedGoods[i] && pricingMode === 'auto') {
                 <!-- Editable unit price → line total = quantity × price (no distribution) -->
                 <div class="relative">
                   <input type="number" formControlName="price" min="0" step="0.01" placeholder="0.00"
@@ -305,13 +338,14 @@
               }
             </div>
 
-            <!-- Remove -->
-            <button type="button" (click)="removeItem(i)" [disabled]="items.length === 1"
+            <!-- Remove (removes the whole manufacturing operation together, if grouped) -->
+            <button type="button" (click)="removeComposedRow(i)" [disabled]="visibleItemCount === 1"
               class="h-10 w-10 flex items-center justify-center rounded-lg border border-error-200 text-error-400 hover:bg-error-50 hover:text-error-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors dark:border-error-500/30 dark:hover:bg-error-500/10">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
 
           </div>
+          }
         }
       </div>
 
@@ -326,7 +360,7 @@
       <!-- Summary row -->
       <div class="flex flex-wrap justify-between items-center pt-4 border-t border-gray-100 dark:border-white/[0.05] gap-4">
         <span class="text-sm text-gray-500 dark:text-gray-400">
-          عدد الأصناف: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ items.length }}</span>
+          عدد الأصناف: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ visibleItemCount }}</span>
         </span>
         <div class="flex items-center gap-4 px-5 py-3 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
           <div class="text-right">
@@ -341,7 +375,7 @@
 
       <!-- Live cost summary (cashier/admin only — never printed, never seen by the customer) -->
       @if (cartItemCount > 0) {
-        <div class="mt-4 grid grid-cols-3 gap-3">
+        <div class="mt-4 grid grid-cols-4 gap-3">
           <div class="rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-3 text-center">
             <span class="block text-xs text-gray-400 mb-1">إجمالي الأصناف</span>
             <span class="font-mono font-bold text-gray-800 dark:text-white/90">{{ cartItemsTotal | number:'1.2-2' }}</span>
@@ -360,6 +394,15 @@
               [class]="(expectedProfit >= 0 ? 'text-success-700 dark:text-success-400' : 'text-error-700 dark:text-error-400')"
               [class.opacity-50]="cartCostLoading">
               {{ expectedProfit | number:'1.2-2' }}
+            </span>
+          </div>
+          <div class="rounded-xl border p-3 text-center"
+            [class]="(marginPercent ?? 0) >= 0 ? 'border-success-200 dark:border-success-500/20 bg-success-50 dark:bg-success-500/10' : 'border-error-200 dark:border-error-500/20 bg-error-50 dark:bg-error-500/10'">
+            <span class="block text-xs mb-1" [class]="(marginPercent ?? 0) >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">الهامش %</span>
+            <span class="font-mono font-bold transition-opacity"
+              [class]="((marginPercent ?? 0) >= 0 ? 'text-success-700 dark:text-success-400' : 'text-error-700 dark:text-error-400')"
+              [class.opacity-50]="cartCostLoading">
+              {{ marginPercent != null ? (marginPercent | number:'1.1-1') + '%' : '—' }}
             </span>
           </div>
         </div>

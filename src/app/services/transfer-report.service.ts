@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
-const API_BASE = 'http://127.0.0.1:8000/api/branch-operations/reports/transfers';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}/branch-operations/reports/transfers`;
 
 export interface TransferReportSummary {
   period: { from: string; to: string };

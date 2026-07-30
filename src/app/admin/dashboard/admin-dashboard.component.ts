@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { LoadingComponent } from '../../loading/loading.component';
 import { PaymentMethodReportService } from '../../services/payment-method-report.service';
+import { environment } from '../../../environments/environment';
 
 interface DashboardToday {
   revenue:       number;
@@ -123,7 +124,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.http.get<any>('http://127.0.0.1:8000/api/admin/dashboard').subscribe({
+    this.http.get<any>(`${environment.apiBaseUrl}/admin/dashboard`).subscribe({
       next: (res) => {
         this.data    = res.data as DashboardData;
         this.loading = false;

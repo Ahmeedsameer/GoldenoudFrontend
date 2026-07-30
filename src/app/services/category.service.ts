@@ -1,14 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { retry } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CategoryService {
   private httpClient:HttpClient = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api/categories';
-  private productTypesUrl = 'http://localhost:8000/api/product-types';
+  private apiUrl = environment.apiUrl.categories;
+  private productTypesUrl = `${environment.apiBaseUrl}/product-types`;
 
   /** Product Types drive which category fields are visible/required. */
   public getProductTypes() {

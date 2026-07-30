@@ -71,6 +71,7 @@ export class AdminDashboardLayoutComponent {
         { name: "لوحة عمليات الفرع", path: "/dashboard/branch-operations/dashboard" },
         { name: "طلبات النقل بين الفروع", path: "/dashboard/branch-operations/transfers" },
         { name: "طلبات المخزون من المخزن الرئيسي", path: "/dashboard/branch-operations/stock-requests" },
+        { name: "حالة المواد بالفروع", path: "/dashboard/branch-operations/global-material-status" },
         { name: "إدارة الهالك", path: "/dashboard/branch-operations/waste" },
         { name: "جلسات جرد المخزون", path: "/dashboard/branch-operations/counts" },
         { name: "تسويات المخزون", path: "/dashboard/branch-operations/adjustments" },

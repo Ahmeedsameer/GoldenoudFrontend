@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-const API_BASE = 'http://127.0.0.1:8000/api/admin/reports/payment-methods';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}/admin/reports/payment-methods`;
 
 /** Payment Methods module reports — Payment Method Report, Card Fees Report, Bank Charges Report. */
 @Injectable({ providedIn: 'root' })

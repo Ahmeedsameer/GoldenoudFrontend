@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LoadingComponent } from '../../../../loading/loading.component';
 import { AlertComponent } from '../../../../shared/components/ui/alert/alert.component';
 import { TransferRequestService, TransferPriority } from '../../../../services/transfer-request.service';
@@ -24,6 +24,7 @@ export class TransferCreateComponent implements OnInit {
   private productSvc = inject(ProductService);
   private auth = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   loading = false;
   saving = false;
@@ -100,16 +101,35 @@ export class TransferCreateComponent implements OnInit {
 
   ngOnInit(): void {
     this.loading = true;
+
+    // Deep-linked from Global Branch Material Status ("نقل مخزون") — preselect
+    // source/destination branches and the product; the admin only picks quantity.
+    const qp = this.route.snapshot.queryParamMap;
+    const sourceParam = Number(qp.get('source_shop_id')) || null;
+    const destParam = Number(qp.get('destination_shop_id')) || null;
+    const productParam = Number(qp.get('product_id')) || null;
+
     this.shopSvc.getShops({ per_page: 200 }).subscribe({
       next: (res) => {
         this.shops = (res.data || []).map((s: any) => ({ id: s.id, name: s.name }));
-        if (this.isManager && this.myShopId) { this.destinationShopId = this.myShopId; }
+        if (this.isManager && this.myShopId) {
+          this.destinationShopId = this.myShopId;
+        } else if (sourceParam || destParam) {
+          if (sourceParam) this.sourceShopId = sourceParam;
+          if (destParam) this.destinationShopId = destParam;
+          this.onSourceShopChange();
+        }
       },
     });
     this.productSvc.getProducts({ per_page: 500, exclude_type: 'COMPOUND' }).subscribe({
       next: (res) => {
         this.transferableProducts = (res.data || []).map((p: any) => ({ id: p.id, name: p.name, sku: p.sku }));
         this.loading = false;
+
+        if (productParam && this.transferableProducts.some((p) => p.id === productParam)) {
+          this.items = [{ product_id: productParam, requested_quantity: null, available: null }];
+          this.onSourceShopChange();
+        }
       },
       error: () => { this.loading = false; },
     });

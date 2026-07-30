@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
-import { environment } from '../enviroment';
+import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
 /**

@@ -3,7 +3,9 @@ import { inject, Injectable } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { BehaviorSubject, catchError, of, tap } from 'rxjs';
 
-const API_BASE = 'http://localhost:8000/api';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}`;
 
 export interface CompanySettings {
   id: number;
@@ -19,7 +21,7 @@ export interface CompanySettings {
 
 const DEFAULTS: CompanySettings = {
   id: 0,
-  name: 'Alpha Business',
+  name: 'Golden Perfume',
   logo_path: null,
   logo_url: null,
   email: null,

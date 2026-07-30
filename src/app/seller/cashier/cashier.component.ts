@@ -113,12 +113,21 @@ export class CashierComponent implements OnInit, OnDestroy {
   selectedGoods:       (GoodsSearchResult | null)[]   = [];
   private productSearchSubjects: Subject<string>[]    = [];
 
+  /** Client-only bookkeeping for manufactured-perfume rows (never sent to the
+   *  backend) — parallel to selectedGoods/productQueries. compositionKeys[i]
+   *  is the shared token for the 3 real rows (oil/alcohol/bottle) of ONE
+   *  manufacturing operation; parentNames[i] is the perfume's own name, used
+   *  to relabel the visible (bottle) row. See isHiddenMaterialRow()/
+   *  compositionGroup() below for how these collapse 3 rows into 1 in the UI. */
+  compositionKeys: (string | null)[] = [];
+  parentNames:     (string | null)[] = [];
+
   // ── Payments FormArray (for physical safe) ──────────────
   payments: FormArray = this.fb.array([]);
 
   /** Shared by every path that drops a resolved line onto the invoice —
    *  the catalog's direct-add (Ready Product) and the Product Builder's
-   *  oil+bottle pair (Compound Product). */
+   *  oil+bottle+alcohol trio (Compound Product). */
   private addComposedLine(r: any) {
     // Synthetic goods object so the invoice line carries stock / unit / price.
     const goods: any = {
@@ -141,6 +150,8 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.items.at(idx).get('parent_product_id')?.setValue(r.parent_product_id ?? null);
     this.items.at(idx).get('role')?.setValue(r.role ?? null);
     this.selectedGoods[idx] = goods;
+    this.compositionKeys[idx] = r.composition_key ?? null;
+    this.parentNames[idx] = r.parent_name ?? null;
     this.syncComputedTotal();
   }
 
@@ -217,13 +228,20 @@ export class CashierComponent implements OnInit, OnDestroy {
 
   closeBuilder() { this.builderProduct = null; }
 
-  /** Emitted by <app-catalog-sell-dialog> once the seller confirms oil+bottle. */
+  /** Emitted by <app-catalog-sell-dialog> once the seller confirms oil+bottle.
+   *  The 3 real rows (oil/alcohol/bottle) share line.composition_key so the
+   *  cart can collapse them into ONE visible manufactured-perfume row (see
+   *  isHiddenMaterialRow()/compositionGroup() below) — captured here, before
+   *  builderProduct is cleared, since that's the only place the perfume's own
+   *  name is known. */
   onCatalogCompositionAdded(lines: ComposedLine[]) {
+    const perfumeName = this.builderProduct?.name ?? '';
     for (const line of lines) {
       this.addComposedLine({
         product_id: line.product_id, name: line.name, sku: line.sku, unit: line.unit,
         quantity: line.quantity, price: line.price, stock: line.stock,
         parent_product_id: line.parent_product_id, role: line.role,
+        composition_key: line.composition_key, parent_name: perfumeName,
       });
     }
     this.builderProduct = null;
@@ -286,9 +304,121 @@ export class CashierComponent implements OnInit, OnDestroy {
   /** Whether a row has a usable unit price. Alcohol is the sole exception:
    *  its price is deliberately always 0 (operational material, never charged
    *  to the customer — see catalog-sell-dialog's addToInvoice), so a zero
-   *  price there is valid/configured, not missing. */
+   *  price there is valid/configured, not missing. Oil and Bottle always
+   *  carry their real configured price and must be > 0. */
   itemConfigured(i: number): boolean {
     return this.lineUnitPrice(i) > 0 || this.lineRole(i) === 'alcohol';
+  }
+
+  // ── Manufactured-perfume row collapsing ──────────────────────────────────
+  // The Product Builder still emits 3 real rows (oil/alcohol/bottle) — FIFO,
+  // the stock guard and the invoice engine all need them exactly as before.
+  // These helpers only change what the CASHIER SEES: oil/alcohol rows are
+  // hidden, and the bottle row is relabeled/re-priced to represent "the
+  // finished perfume" as one logical line, per parent_product_id via a
+  // shared composition_key (see catalog-sell-dialog's addToInvoice()).
+
+  /** All row indices belonging to the same manufacturing operation as `i`. */
+  private compositionGroupIndices(i: number): number[] {
+    const key = this.compositionKeys[i];
+    if (!key) return [i];
+    const idxs: number[] = [];
+    this.compositionKeys.forEach((k, idx) => { if (k === key) idxs.push(idx); });
+    return idxs;
+  }
+
+  private compositionGroup(i: number): { oilIdx: number | null; alcoholIdx: number | null; bottleIdx: number } | null {
+    if (!this.compositionKeys[i]) return null;
+    const idxs = this.compositionGroupIndices(i);
+    const oilIdx = idxs.find((idx) => this.lineRole(idx) === 'oil') ?? null;
+    const alcoholIdx = idxs.find((idx) => this.lineRole(idx) === 'alcohol') ?? null;
+    const bottleIdx = idxs.find((idx) => this.lineRole(idx) === 'bottle');
+    return bottleIdx === undefined ? null : { oilIdx, alcoholIdx, bottleIdx };
+  }
+
+  /** Oil/Alcohol rows of a manufactured perfume are never rendered — only
+   *  the Bottle row (relabeled as the perfume) is shown to the cashier. */
+  isHiddenMaterialRow(i: number): boolean {
+    if (!this.compositionKeys[i]) return false;
+    const role = this.lineRole(i);
+    return role === 'oil' || role === 'alcohol';
+  }
+
+  /** The perfume's own name, for the one visible row of a manufacturing
+   *  operation — null for every ordinary (non-manufactured) row. */
+  manufacturedName(i: number): string | null {
+    return this.compositionKeys[i] ? this.parentNames[i] : null;
+  }
+
+  /** Manufacturing Quantity for this operation (the Bottle row's own quantity). */
+  manufacturedQty(i: number): number {
+    const g = this.compositionGroup(i);
+    const idx = g ? g.bottleIdx : i;
+    return +(this.items.at(idx)?.get('quantity')?.value) || 0;
+  }
+
+  /** Total revenue for the whole manufacturing operation — Oil's real price
+   *  (fixed) + Bottle's price (real by default, freely editable) — Alcohol
+   *  never contributes (always 0). Falls back to the row's own lineTotal for
+   *  an ordinary (non-grouped) row. */
+  manufacturedLineTotal(i: number): number {
+    const g = this.compositionGroup(i);
+    if (!g) return this.lineTotal(i);
+    const oilRevenue = g.oilIdx != null ? this.lineTotal(g.oilIdx) : 0;
+    return oilRevenue + this.lineTotal(g.bottleIdx);
+  }
+
+  /** The perfume's effective "selling price" shown on its one visible row —
+   *  auto-resolved from Pricing Management by default (Oil's real price
+   *  contribution + Bottle's real price), and freely editable afterward. */
+  manufacturedUnitPrice(i: number): number {
+    const qty = this.manufacturedQty(i);
+    return qty > 0 ? +(this.manufacturedLineTotal(i) / qty).toFixed(2) : 0;
+  }
+
+  /** Cashier edits the perfume's visible price — exactly like editing any
+   *  other product's price. Under the hood this can only ever adjust the
+   *  hidden Bottle row's price; Oil's real configured price is never
+   *  touched, so "Oil must keep its real price" holds even after an edit. */
+  setManufacturedUnitPrice(i: number, newUnitPrice: number): void {
+    const g = this.compositionGroup(i);
+    if (!g) return;
+    const qty = this.manufacturedQty(i);
+    if (qty <= 0) return;
+    const oilRevenue = g.oilIdx != null ? this.lineTotal(g.oilIdx) : 0;
+    const newBottlePrice = Math.max(0, ((+newUnitPrice || 0) * qty - oilRevenue) / qty);
+    this.items.at(g.bottleIdx)?.get('price')?.setValue(+newBottlePrice.toFixed(2));
+  }
+
+  /** Number of rows the cashier actually SEES — hidden oil/alcohol rows of a
+   *  manufactured perfume don't count (used for "عدد الأصناف"). */
+  get visibleItemCount(): number {
+    return this.items.controls.filter((_, i) => !this.isHiddenMaterialRow(i)).length;
+  }
+
+  /** Removes a whole manufacturing operation (all 3 rows) in one action when
+   *  `i` belongs to one; otherwise identical to removing a single ordinary row. */
+  removeComposedRow(i: number): void {
+    if (!this.compositionKeys[i]) { this.removeItem(i); return; }
+    const idxs = this.compositionGroupIndices(i).sort((a, b) => b - a);
+    for (const idx of idxs) {
+      this.items.removeAt(idx);
+      this.productQueries.splice(idx, 1);
+      this.productResults.splice(idx, 1);
+      this.showProductDropdown.splice(idx, 1);
+      this.selectedGoods.splice(idx, 1);
+      this.compositionKeys.splice(idx, 1);
+      this.parentNames.splice(idx, 1);
+      this.productSearchSubjects.splice(idx, 1)[0]?.complete();
+    }
+    if (this.items.length === 0) { this.addItem(); }
+    this.syncComputedTotal();
+  }
+
+  /** Profit as a % of the invoice's items total — "الهامش %" tile. */
+  get marginPercent(): number | null {
+    if (this.cartItemsTotal <= 0) return null;
+    return +((this.expectedProfit / this.cartItemsTotal) * 100).toFixed(1);
   }
 
   /** The selling unit for a row (g / pcs) — comes from the Product Type. */
@@ -358,9 +488,13 @@ export class CashierComponent implements OnInit, OnDestroy {
       .map((it: any) => ({ product_id: +it.product_id, quantity: +it.quantity }));
   }
 
-  /** Items total (before cost) − the same figure shown as "إجمالي الفاتورة". */
+  /** Items total (before cost) − the same figure shown as "إجمالي الفاتورة".
+   *  In Global-Total mode the per-item prices are only an estimate (the real
+   *  split happens server-side at save), so the real revenue figure to show
+   *  here — and to base "الربح المتوقع" on — is the manually entered total,
+   *  not the stale per-item price sum. */
   get cartItemsTotal(): number {
-    return this.computedTotal;
+    return this.useNewEngine ? this.computedTotal : this.totalAmount;
   }
 
   get cartItemCount(): number {
@@ -518,6 +652,8 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.productResults.push([]);
     this.showProductDropdown.push(false);
     this.selectedGoods.push(null);
+    this.compositionKeys.push(null);
+    this.parentNames.push(null);
 
     const subject = new Subject<string>();
     this.productSearchSubjects.push(subject);
@@ -539,6 +675,8 @@ export class CashierComponent implements OnInit, OnDestroy {
       this.productResults.splice(index, 1);
       this.showProductDropdown.splice(index, 1);
       this.selectedGoods.splice(index, 1);
+      this.compositionKeys.splice(index, 1);
+      this.parentNames.splice(index, 1);
       this.productSearchSubjects.splice(index, 1)[0].complete();
       this.syncComputedTotal();
     }
@@ -903,6 +1041,8 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.productResults = [];
     this.showProductDropdown = [];
     this.selectedGoods = [];
+    this.compositionKeys = [];
+    this.parentNames = [];
     this.productSearchSubjects = [];
     this.cartCost = 0;
     this.addItem();

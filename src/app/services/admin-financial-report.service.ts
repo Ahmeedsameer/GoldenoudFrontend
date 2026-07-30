@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map } from 'rxjs';
 
-const BASE = 'http://127.0.0.1:8000/api/admin/reports/financial';
+import { environment } from '../../environments/environment';
+
+const BASE = `${environment.apiBaseUrl}/admin/reports/financial`;
 
 export type ReportPeriod = 'today' | 'week' | 'month' | 'year';
 

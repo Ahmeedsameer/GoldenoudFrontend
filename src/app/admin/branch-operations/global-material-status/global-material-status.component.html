@@ -1,0 +1,217 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="p-4 md:p-6" dir="rtl">
+
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">حالة المواد بالفروع</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">مركز قيادة المخزون على مستوى الشركة — مبني بالكامل على بيانات المخزون والتسعير والطلبات الحالية.</p>
+    </div>
+    <app-report-toolbar [exportPath]="'/admin/reports/branch-material-status'" [params]="{ view: tab }" fileName="حالة-المواد-بالفروع" [showRefresh]="true" (refresh)="load()"></app-report-toolbar>
+  </div>
+
+  @if (errorMsg) { <div class="mb-5"><app-alert variant="error" [message]="errorMsg"></app-alert></div> }
+
+  <!-- Summary cards (By Branch data feeds these regardless of active tab) -->
+  @if (byBranchData) {
+    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">فروع بها نقص</p>
+        <p class="text-xl font-bold text-error-600 dark:text-error-400 mt-1">{{ byBranchData.summary.branches_with_shortages }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">إجمالي المواد الناقصة</p>
+        <p class="text-xl font-bold text-error-600 dark:text-error-400 mt-1">{{ byBranchData.summary.total_missing_materials }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">طلبات معلقة</p>
+        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ byBranchData.summary.pending_requests }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">مستلم اليوم</p>
+        <p class="text-xl font-bold text-success-600 dark:text-success-400 mt-1">{{ byBranchData.summary.delivered_today }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">بانتظار التسعير</p>
+        <p class="text-xl font-bold text-blue-600 dark:text-blue-400 mt-1">{{ byBranchData.summary.materials_awaiting_pricing }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">فروع تحتاج انتباه</p>
+        <p class="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">{{ byBranchData.summary.branches_needing_attention }}</p>
+      </div>
+    </div>
+
+    <!-- Smart alerts -->
+    @if (byBranchData.alerts.never_requested_zero_stock.length > 0 || byBranchData.alerts.too_many_pending.length > 0) {
+      <div class="rounded-2xl border border-amber-200 dark:border-amber-500/25 bg-amber-50 dark:bg-amber-500/10 p-4 mb-6 text-sm">
+        <p class="font-semibold text-amber-800 dark:text-amber-300 mb-2">تنبيهات ذكية</p>
+        <ul class="space-y-1 text-amber-700 dark:text-amber-400">
+          @if (byBranchData.alerts.never_requested_zero_stock.length > 0) {
+            <li>• {{ byBranchData.alerts.never_requested_zero_stock.length }} صنف بدون مخزون ولم يُطلب مطلقاً</li>
+          }
+          @if (byBranchData.alerts.priced_but_ignored.length > 0) {
+            <li>• {{ byBranchData.alerts.priced_but_ignored.length }} صنف مُسعّر لكن لم يُطلب رغم نفاده</li>
+          }
+          @for (b of byBranchData.alerts.too_many_pending; track b.shop_id) {
+            <li>• فرع {{ b.shop_name }} لديه {{ b.count }} طلبات معلقة</li>
+          }
+        </ul>
+      </div>
+    }
+  }
+
+  <!-- Tabs -->
+  <div class="inline-flex rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden mb-5">
+    <button type="button" (click)="setTab('by-branch')"
+      class="px-4 py-2 text-sm font-medium transition-colors"
+      [class]="tab === 'by-branch' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'">
+      حسب الفرع
+    </button>
+    <button type="button" (click)="setTab('by-material')"
+      class="px-4 py-2 text-sm font-medium transition-colors"
+      [class]="tab === 'by-material' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'">
+      حسب المادة
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap items-center gap-2 mb-5">
+    <button type="button" (click)="setFilter('all')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" [class]="filter === 'all' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">الكل</button>
+    <button type="button" (click)="setFilter('out_of_stock')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" [class]="filter === 'out_of_stock' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">نفد المخزون فقط</button>
+    <button type="button" (click)="setFilter('low_stock')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" [class]="filter === 'low_stock' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">مخزون منخفض فقط</button>
+    <button type="button" (click)="setFilter('needs_pricing')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" [class]="filter === 'needs_pricing' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">يحتاج تسعير فقط</button>
+
+    <input type="text" [(ngModel)]="search" placeholder="بحث عن منتج..."
+      class="h-9 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+
+    @if (tab === 'by-branch' && byBranchData) {
+      <select [(ngModel)]="branchFilter" class="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent dark:bg-gray-900 px-3 text-sm text-gray-700 dark:text-gray-300">
+        <option [ngValue]="null">كل الفروع</option>
+        @for (b of byBranchData.branches; track b.shop_id) { <option [ngValue]="b.shop_id">{{ b.shop_name }}</option> }
+      </select>
+    }
+    @if (tab === 'by-material') {
+      <select [(ngModel)]="categoryFilter" class="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent dark:bg-gray-900 px-3 text-sm text-gray-700 dark:text-gray-300">
+        <option value="">كل الفئات</option>
+        @for (c of categories; track c) { <option [value]="c">{{ c }}</option> }
+      </select>
+      <select [(ngModel)]="supplierFilter" class="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent dark:bg-gray-900 px-3 text-sm text-gray-700 dark:text-gray-300">
+        <option value="">كل الموردين</option>
+        @for (s of suppliers; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+    }
+  </div>
+
+  <!-- ══ By Branch ══════════════════════════════════════════ -->
+  @if (tab === 'by-branch' && byBranchData) {
+    @for (branch of filteredBranches; track branch.shop_id) {
+      <div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] overflow-hidden mb-5">
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
+          <h3 class="text-base font-bold text-gray-800 dark:text-white/90">{{ branch.shop_name }}</h3>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="px-2 py-1 rounded-full bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400">نفد المخزون ({{ branch.summary.out_of_stock }})</span>
+            <span class="px-2 py-1 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">مخزون منخفض ({{ branch.summary.low_stock }})</span>
+            <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400">يحتاج تسعير ({{ branch.summary.needs_pricing }})</span>
+            <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-white/[0.05] dark:text-gray-300">طلبات معلقة ({{ branch.summary.pending_requests }})</span>
+            <span class="px-2 py-1 rounded-full bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400">مستلم اليوم ({{ branch.summary.received_today }})</span>
+          </div>
+        </div>
+
+        @for (group of visibleGroups(); track group) {
+          @if (rowsFor(branch, group).length > 0) {
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+                  @for (row of rowsFor(branch, group); track row.product_id) {
+                    <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                      <td class="px-4 py-2.5 text-sm font-medium text-gray-800 dark:text-white/90">{{ row.name }}</td>
+                      <td class="px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400">{{ row.category || '—' }}</td>
+                      <td class="px-4 py-2.5 text-sm font-mono text-gray-700 dark:text-gray-300">{{ row.branch_qty | number:'1.0-3' }}</td>
+                      <td class="px-4 py-2.5 text-sm font-mono text-gray-500 dark:text-gray-400">مخزن: {{ row.warehouse_qty | number:'1.0-3' }}</td>
+                      <td class="px-4 py-2.5">
+                        @if (group === 'out_of_stock') { <span class="px-2 py-0.5 rounded-full text-xs bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400">نفد المخزون</span> }
+                        @else if (group === 'low_stock') { <span class="px-2 py-0.5 rounded-full text-xs bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">مخزون منخفض</span> }
+                        @else { <span class="px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400">يحتاج تسعير</span> }
+                      </td>
+                      <td class="px-4 py-2.5">
+                        @if (!row.is_priced) {
+                          <span class="text-xs text-gray-400">لا يمكن الطلب قبل استكمال التسعير</span>
+                        } @else if (row.existing_request) {
+                          <button type="button" (click)="goToRequest(row)" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400 hover:bg-blue-100">
+                            طلب حالي: {{ row.existing_request.status_label }}
+                          </button>
+                        } @else if (group !== 'needs_pricing') {
+                          <button type="button" (click)="requestFromWarehouse(row, branch.shop_id)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors">
+                            طلب مادة
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+      </div>
+    }
+  }
+
+  <!-- ══ By Material ════════════════════════════════════════ -->
+  @if (tab === 'by-material') {
+    <div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-gray-50 dark:bg-white/[0.02]">
+            <tr>
+              <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">المنتج</th>
+              <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">الفئة</th>
+              <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">المورد</th>
+              <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">آخر سعر شراء</th>
+              <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">الأرصدة حسب الفرع</th>
+              <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+            @for (row of filteredMaterials; track row.product_id) {
+              <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                <td class="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">
+                  {{ row.name }}
+                  @if (!row.is_priced) { <span class="block text-xs text-blue-500">يحتاج تسعير</span> }
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ row.category || '—' }}</td>
+                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ row.supplier?.name || '—' }}</td>
+                <td class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{{ row.last_purchase_price != null ? (row.last_purchase_price | number:'1.2-2') : '—' }}</td>
+                <td class="px-4 py-3">
+                  <div class="flex flex-wrap gap-2">
+                    @for (b of row.branches; track b.shop_id) {
+                      <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs" [class]="statusClass(b.status)">
+                        {{ b.shop_name }}: {{ b.qty | number:'1.0-3' }}
+                      </span>
+                    }
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  @if (row.surplus_branch) {
+                    @for (b of row.branches; track b.shop_id) {
+                      @if (b.status !== 'available') {
+                        <button type="button" (click)="transferStock(row, b.shop_id)"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-brand-300 text-brand-600 hover:bg-brand-50 dark:border-brand-500/40 dark:text-brand-400 transition-colors mb-1">
+                          نقل من {{ row.surplus_branch.shop_name }} → {{ b.shop_name }}
+                        </button>
+                      }
+                    }
+                  }
+                </td>
+              </tr>
+            }
+            @if (!loading && filteredMaterials.length === 0) {
+              <tr><td colspan="6" class="px-5 py-16 text-center text-sm text-gray-400">لا توجد مواد تحتاج انتباهك حالياً</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+</div>

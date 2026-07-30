@@ -71,7 +71,7 @@ export class InvoiceReceiptComponent {
       return `
       <tr>
         <td class="name">${line.name}${detail ? `<br><span class="sub">${detail}</span>` : ''}</td>
-        <td class="num">${line.composed ? '1' : line.quantity.toLocaleString('ar-EG', { maximumFractionDigits: 3 }) + ' ' + (line.unit ?? '')}</td>
+        <td class="num">${line.quantity.toLocaleString('ar-EG', { maximumFractionDigits: 3 })}${line.unit ? ' ' + line.unit : ''}</td>
         <td class="num">${line.price.toFixed(2)}</td>
         <td class="num bold">${line.lineTotal.toFixed(2)}</td>
       </tr>`;

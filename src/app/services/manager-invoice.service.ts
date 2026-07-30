@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-const API_BASE = 'http://localhost:8000/api/manager/invoices';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}/manager/invoices`;
 
 /** Branch-wide invoice visibility + cancel for a manager — every sale made in
  *  their shop, not just their own (see ManagerInvoiceController). */

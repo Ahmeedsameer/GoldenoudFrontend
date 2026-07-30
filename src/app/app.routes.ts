@@ -77,6 +77,7 @@ import { StockRequestCreateComponent } from './admin/branch-operations/stock-req
 import { RequiredMaterialsComponent } from './admin/branch-operations/required-materials/required-materials.component';
 import { BranchDashboardComponent } from './admin/branch-operations/branch-dashboard/branch-dashboard.component';
 import { LogisticsDashboardComponent } from './admin/branch-operations/logistics-dashboard/logistics-dashboard.component';
+import { GlobalMaterialStatusComponent } from './admin/branch-operations/global-material-status/global-material-status.component';
 import { WasteListComponent } from './admin/branch-operations/waste/waste-list.component';
 import { AdjustmentListComponent } from './admin/branch-operations/adjustments/adjustment-list.component';
 import { CountListComponent } from './admin/branch-operations/counts/count-list/count-list.component';
@@ -226,6 +227,7 @@ export const routes: Routes = [
       { path: 'reports/required-materials', component: RequiredMaterialsComponent },
       { path: 'branch-operations/dashboard',          component: BranchDashboardComponent },
       { path: 'branch-operations/logistics-dashboard', component: LogisticsDashboardComponent },
+      { path: 'branch-operations/global-material-status', component: GlobalMaterialStatusComponent },
       { path: 'branch-operations/transfers',         component: TransferListComponent },
       { path: 'branch-operations/transfers/create',  component: TransferCreateComponent },
       { path: 'branch-operations/transfers/:id',     component: TransferDetailComponent },

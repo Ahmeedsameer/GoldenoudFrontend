@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-const API_BASE = 'http://localhost:8000/api/admin/invoices';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}/admin/invoices`;
 
 @Injectable({ providedIn: 'root' })
 export class AdminInvoiceService {

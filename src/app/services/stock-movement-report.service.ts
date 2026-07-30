@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
-const API_BASE = 'http://127.0.0.1:8000/api/branch-operations/reports/stock-movement';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}/branch-operations/reports/stock-movement`;
 
 export interface StockMovementRow {
   date: string; type: string; type_label: string; reference_number: string;

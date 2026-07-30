@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
-const API_BASE = 'http://127.0.0.1:8000/api/branch-operations/reports/inventory-audit';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}/branch-operations/reports/inventory-audit`;
 
 export interface InventoryAuditRow {
   date: string; user: string | null; shop_name: string; product_name: string; sku: string;

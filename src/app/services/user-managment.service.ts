@@ -1,13 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, retry, tap, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserManagmentService {
   private httpClient:HttpClient = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api/user-managment';
+  private apiUrl = `${environment.apiBaseUrl}/user-managment`;
 
 
   public createUser(userData: any) {

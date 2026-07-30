@@ -2,10 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
-const API_BASE = 'http://127.0.0.1:8000/api/branch-operations/transfers';
-const STOCK_REQUEST_API_BASE = 'http://127.0.0.1:8000/api/branch-operations/stock-requests';
-const REQUIRED_MATERIALS_API_BASE = 'http://127.0.0.1:8000/api/branch-operations/required-materials';
-const REQUIRED_MATERIALS_REPORT_API_BASE = 'http://127.0.0.1:8000/api/admin/reports/required-materials';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}/branch-operations/transfers`;
+const STOCK_REQUEST_API_BASE = `${environment.apiBaseUrl}/branch-operations/stock-requests`;
+const REQUIRED_MATERIALS_API_BASE = `${environment.apiBaseUrl}/branch-operations/required-materials`;
+const REQUIRED_MATERIALS_REPORT_API_BASE = `${environment.apiBaseUrl}/admin/reports/required-materials`;
+const GLOBAL_STATUS_API_BASE = `${environment.apiBaseUrl}/admin/inventory/branch-material-status`;
 
 /** One row in the Branch Required Materials page — see RequiredMaterialsService::forBranch(). */
 export interface RequiredMaterialRow {
@@ -26,6 +29,44 @@ export interface RequiredMaterialsData {
   out_of_stock: RequiredMaterialRow[];
   low_stock: RequiredMaterialRow[];
   needs_pricing: RequiredMaterialRow[];
+}
+
+/** Global Branch Material Status (admin) — By Branch tab: one entry per branch. */
+export interface BranchMaterialStatus {
+  shop_id: number;
+  shop_name: string;
+  summary: {
+    out_of_stock: number; low_stock: number; needs_pricing: number;
+    pending_requests: number; received_today: number; in_transit: number;
+  };
+  out_of_stock: RequiredMaterialRow[];
+  low_stock: RequiredMaterialRow[];
+  needs_pricing: RequiredMaterialRow[];
+}
+
+export interface GlobalMaterialStatusByBranch {
+  summary: {
+    branches_with_shortages: number; total_missing_materials: number; pending_requests: number;
+    delivered_today: number; materials_awaiting_pricing: number; branches_needing_attention: number;
+  };
+  branches: BranchMaterialStatus[];
+  alerts: {
+    never_requested_zero_stock: { shop_id: number; shop_name: string; product_id: number; name: string }[];
+    priced_but_ignored: { shop_id: number; shop_name: string; product_id: number; name: string }[];
+    too_many_pending: { shop_id: number; shop_name: string; count: number }[];
+  };
+}
+
+/** Global Branch Material Status (admin) — By Material tab: one row per product, across all branches. */
+export interface MaterialAcrossBranches {
+  product_id: number;
+  name: string;
+  category: string | null;
+  is_priced: boolean;
+  last_purchase_price: number | null;
+  supplier: { id: number; name: string } | null;
+  branches: { shop_id: number; shop_name: string; qty: number; status: 'available' | 'low_stock' | 'out_of_stock'; minimum_quantity: number | null }[];
+  surplus_branch: { shop_id: number; shop_name: string; qty: number } | null;
 }
 
 export type TransferStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'preparing' | 'shipped' | 'received' | 'closed';
@@ -165,5 +206,14 @@ export class TransferRequestService {
   /** Admin — any branch. PDF/Excel export uses <app-report-toolbar> (ReportExportService), same as every other admin report. */
   getRequiredMaterialsReport(shopId: number): Observable<RequiredMaterialsData> {
     return this.http.get<any>(REQUIRED_MATERIALS_REPORT_API_BASE, { params: { shop_id: shopId } }).pipe(map((r) => r.data));
+  }
+
+  // ── Global Branch Material Status (admin, cross-branch) ──────────────────
+  getGlobalStatusByBranch(): Observable<GlobalMaterialStatusByBranch> {
+    return this.http.get<any>(`${GLOBAL_STATUS_API_BASE}/by-branch`).pipe(map((r) => r.data));
+  }
+
+  getGlobalStatusByMaterial(): Observable<{ rows: MaterialAcrossBranches[] }> {
+    return this.http.get<any>(`${GLOBAL_STATUS_API_BASE}/by-material`).pipe(map((r) => r.data));
   }
 }

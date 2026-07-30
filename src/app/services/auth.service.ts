@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, tap, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 
 const AUTH_TOKEN = 'AUTH_TOKEN';
@@ -15,7 +16,7 @@ const USER = 'User';
 export class AuthService {
   private httpClient: HttpClient = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = 'http://localhost:8000/api/auth';
+  private apiUrl = environment.apiUrl.auth;
   private storage : Storage = sessionStorage;
 
   private userSubject : BehaviorSubject<any | null> = new BehaviorSubject<any | null>(this.getUser());

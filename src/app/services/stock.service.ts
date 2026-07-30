@@ -14,7 +14,9 @@ import {
   UpdateSupplyRequest,
 } from '../models/stock.model';
 
-const API_BASE = 'http://127.0.0.1:8000/api';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}`;
 
 @Injectable({
   providedIn: 'root',
@@ -164,7 +166,7 @@ export class StockService {
       .get<any>(`${this.shopsUrl}`, { params: { status: 'active', per_page: 100 } })
       .pipe(
         retry(2),
-        map((res) => (res.data || []) as { id: number; name: string }[])
+        map((res) => (res.data || []) as { id: number; name: string; is_warehouse: boolean }[])
       );
   }
 

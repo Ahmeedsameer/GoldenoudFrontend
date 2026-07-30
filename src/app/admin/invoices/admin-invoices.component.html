@@ -86,6 +86,31 @@
         <div><span class="block text-xs text-gray-400">صافي الربح</span><span class="font-mono font-bold" [class]="inv.net_profit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">{{ inv.net_profit | number:'1.2-2' }}</span></div>
       </div>
 
+      <!-- Payment methods (split payments) -->
+      @if (inv.payments && inv.payments.length > 0) {
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
+          <span class="block text-xs text-gray-400 mb-2">طرق الدفع</span>
+          <div class="flex flex-wrap gap-2">
+            @for (p of inv.payments; track p.id) {
+              <div class="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] px-3 py-1.5">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400">
+                  {{ paymentMethodLabel(p.payment_method) }}
+                </span>
+                <span class="font-mono text-sm text-gray-800 dark:text-white/90">
+                  {{ p.amount | number:'1.2-2' }} {{ p.currency?.code || '' }}
+                </span>
+                @if (p.processing_fee_amount > 0) {
+                  <span class="text-xs text-error-500">(رسوم {{ p.processing_fee_amount | number:'1.2-2' }})</span>
+                }
+                @if (p.transaction_number) {
+                  <span class="text-xs text-gray-500 dark:text-gray-400">#{{ p.transaction_number }}</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Items -->
       <div class="px-5 pb-3 overflow-x-auto">
         <table class="w-full text-sm">

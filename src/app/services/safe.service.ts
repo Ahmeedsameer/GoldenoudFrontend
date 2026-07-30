@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../enviroment';
+import { environment } from '../../environments/environment';
 
 export interface SafeTransactionBody {
   currency_id: number;
@@ -44,7 +44,7 @@ export class SafeService {
   private transactionReasons = environment.apiUrl.transactionReasons;
   private safeManagement     = environment.apiUrl.safeManagement;
   private paymentMethods     = environment.apiUrl.paymentMethods;
-  private managerBase        = 'http://127.0.0.1:8000/api/manager';
+  private managerBase        = environment.apiUrl.managerBase;
 
   // ── Currencies ────────────────────────────────────────────────────────────────
 

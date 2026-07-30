@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, retry } from 'rxjs';
 
-const API_BASE = 'http://127.0.0.1:8000/api';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}`;
 
 export interface EmployeePayload {
   name: string;

@@ -64,6 +64,17 @@ export function buildInvoiceDisplayLines(items: any[], showComposition = true): 
     const parentName = groupItems[0]?.parent_product?.name ?? groupItems[0]?.parentProduct?.name ?? '—';
     const total = groupItems.reduce((s, i) => s + (+i.quantity * +i.price), 0);
     const cost = groupItems.reduce((s, i) => s + +(i.line_cost ?? 0), 0);
+    // The group's quantity is the Bottle line's own quantity (= Manufacturing
+    // Quantity — Oil/Alcohol quantities are per-bottle amounts already scaled
+    // up, not a unit count). The group's effective unit price is the WHOLE
+    // operation's revenue (Oil's real price + Bottle's real/edited price —
+    // Alcohol always contributes 0) divided back down per bottle, not just
+    // Bottle's own price — Oil keeps its own real configured price and is
+    // never folded entirely into Bottle's line. Falls back to the old
+    // sum-based figures for any legacy data with no bottle line present.
+    const quantity = bottle ? +bottle.quantity : 1;
+    const price = bottle && quantity > 0 ? +(total / quantity).toFixed(2) : total;
+    const lineTotal = total;
 
     lines.push({
       composed: true,
@@ -71,11 +82,11 @@ export function buildInvoiceDisplayLines(items: any[], showComposition = true): 
       bottleName: showComposition ? bottle?.product?.name : undefined,
       oilGrams: showComposition && oil ? +oil.quantity : undefined,
       oilUnit: oil?.product?.scalar ?? 'g',
-      quantity: 1,
-      price: total,
-      lineTotal: total,
+      quantity,
+      price,
+      lineTotal,
       cost,
-      profit: +(total - cost).toFixed(2),
+      profit: +(lineTotal - cost).toFixed(2),
     });
   }
 

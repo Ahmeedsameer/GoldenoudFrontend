@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AdminInvoiceService } from '../../services/admin-invoice.service';
 import { LoadingComponent } from '../../loading/loading.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
+import { PAYMENT_METHOD_TYPE_LABELS, PaymentMethodType } from '../../models/sales.model';
 
 @Component({
   selector: 'app-admin-invoices',
@@ -109,6 +110,12 @@ export class AdminInvoicesComponent implements OnInit {
 
   hasViolation(inv: any): boolean {
     return (inv.items ?? []).some((it: any) => this.isBelowMin(it));
+  }
+
+  /** Arabic label for a payment's method type — same lookup used on the invoice detail page. */
+  paymentMethodLabel(method: string | undefined): string {
+    if (!method) return '—';
+    return PAYMENT_METHOD_TYPE_LABELS[method as PaymentMethodType] ?? method;
   }
 
   // ── Actions ─────────────────────────────────────────────

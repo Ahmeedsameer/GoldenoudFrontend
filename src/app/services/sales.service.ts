@@ -3,7 +3,9 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable, retry } from 'rxjs';
 import { CreateInvoiceRequest, Customer, GoodsSearchResult, Invoice, PaymentMethod, SalesCategory } from '../models/sales.model';
 
-const API_BASE = 'http://127.0.0.1:8000/api';
+import { environment } from '../../environments/environment';
+
+const API_BASE = `${environment.apiBaseUrl}`;
 
 @Injectable({
   providedIn: 'root',
@@ -53,6 +55,8 @@ export class SalesService {
   calculateCompoundPrice(params: {
     catalog_product_id: number; oil_product_id: number; oil_qty: number; bottle_product_id: number;
     alcohol_product_id?: number; alcohol_qty?: number;
+    /** Manufacturing Quantity — how many identical bottles this operation produces. Defaults to 1 server-side. */
+    quantity?: number;
   }): Observable<{
     oil_unit_price: number; oil_cost: number; oil_stock: number;
     bottle_unit_price: number; bottle_cost: number; bottle_stock: number; bottle_capacity_ml: number | null;

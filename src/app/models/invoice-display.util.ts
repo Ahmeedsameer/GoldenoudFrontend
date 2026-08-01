@@ -48,7 +48,10 @@ export function buildInvoiceDisplayLines(items: any[], showComposition = true): 
     const cost = +(item.line_cost ?? 0);
     return {
       composed: false,
-      name: item.product?.name ?? '',
+      // Frozen at sale time — never the product's current (possibly renamed)
+      // name. Falls back to the live relation only for a legacy row sold
+      // before this snapshot existed.
+      name: item.product_name ?? item.product?.name ?? '',
       quantity: +item.quantity,
       unit: item.product?.scalar,
       price: +item.price,
@@ -61,7 +64,10 @@ export function buildInvoiceDisplayLines(items: any[], showComposition = true): 
   for (const [, groupItems] of groups) {
     const bottle = groupItems.find((i) => i.role === 'bottle');
     const oil = groupItems.find((i) => i.role === 'oil');
-    const parentName = groupItems[0]?.parent_product?.name ?? groupItems[0]?.parentProduct?.name ?? '—';
+    // Frozen at sale time — never the catalog product's current (possibly
+    // renamed) name. Falls back to the live relation only for a legacy row
+    // sold before this snapshot existed.
+    const parentName = groupItems[0]?.parent_product_name ?? groupItems[0]?.parent_product?.name ?? groupItems[0]?.parentProduct?.name ?? '—';
     const total = groupItems.reduce((s, i) => s + (+i.quantity * +i.price), 0);
     const cost = groupItems.reduce((s, i) => s + +(i.line_cost ?? 0), 0);
     // The group's quantity is the Bottle line's own quantity (= Manufacturing
@@ -79,7 +85,7 @@ export function buildInvoiceDisplayLines(items: any[], showComposition = true): 
     lines.push({
       composed: true,
       name: parentName,
-      bottleName: showComposition ? bottle?.product?.name : undefined,
+      bottleName: showComposition ? (bottle?.product_name ?? bottle?.product?.name) : undefined,
       oilGrams: showComposition && oil ? +oil.quantity : undefined,
       oilUnit: oil?.product?.scalar ?? 'g',
       quantity,

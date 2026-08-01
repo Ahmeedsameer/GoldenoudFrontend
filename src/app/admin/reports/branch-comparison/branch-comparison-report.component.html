@@ -71,7 +71,7 @@
 
     @if (revenueSeries.length && data.branches.length) {
       <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الإيرادات والربح التقديري لكل فرع</h2>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الإيرادات والربح الفعلي لكل فرع</h2>
         <apx-chart [series]="revenueSeries" [chart]="revenueOptions.chart" [colors]="revenueOptions.colors"
           [plotOptions]="revenueOptions.plotOptions" [dataLabels]="revenueOptions.dataLabels"
           [xaxis]="revenueOptions.xaxis" [yaxis]="revenueOptions.yaxis" [grid]="revenueOptions.grid" [legend]="revenueOptions.legend" />
@@ -83,8 +83,8 @@
         <table class="db-tbl">
           <thead>
             <tr>
-              <th>الفرع</th><th>عدد الفواتير</th><th>الإيرادات</th><th>التكلفة التقديرية</th>
-              <th>الربح التقديري</th><th>هامش الربح</th><th>أفضل بائع</th><th>الزيت الأكثر استخداماً</th><th>الزجاجة الأكثر استخداماً</th>
+              <th>الفرع</th><th>عدد الفواتير</th><th>الإيرادات</th><th>التكلفة الفعلية</th>
+              <th>الربح الفعلي</th><th>هامش الربح</th><th>أفضل بائع</th><th>الزيت الأكثر استخداماً</th><th>الزجاجة الأكثر استخداماً</th>
             </tr>
           </thead>
           <tbody>

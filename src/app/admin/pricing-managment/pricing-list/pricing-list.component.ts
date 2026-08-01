@@ -78,9 +78,32 @@ export class PricingListComponent implements OnInit {
   }
 
   statusLabel(status: PricingRow['status']): string {
-    if (status === 'needs_review') return '🟡 يحتاج مراجعة سعر';
-    if (status === 'no_price') return 'بلا سعر';
-    return 'محدَّث';
+    switch (status) {
+      case 'needs_review': return '🟡 يحتاج مراجعة سعر';
+      case 'no_price': return 'بلا سعر';
+      case 'waiting_for_first_supply': return 'بانتظار أول توريد';
+      case 'needs_initial_pricing': return 'يحتاج تسعير أولي';
+      case 'priced': return 'مُسعَّر';
+      case 'pricing_update_required': return 'يحتاج تحديث تسعير';
+      case 'inactive': return 'غير نشط';
+      default: return 'محدَّث';
+    }
+  }
+
+  /** Badge color classes for the 5 batch-pricing statuses + legacy ones. */
+  statusClass(status: PricingRow['status']): string {
+    switch (status) {
+      case 'needs_review':
+      case 'needs_initial_pricing':
+      case 'pricing_update_required':
+        return 'bg-[#FEF3C7] text-[#92400E]';
+      case 'no_price':
+      case 'waiting_for_first_supply':
+      case 'inactive':
+        return 'bg-[#F3F4F6] text-[#6B7280]';
+      default:
+        return 'bg-[#D1FAE5] text-[#065F46]';
+    }
   }
 
   // ── "Update Prices" — preview, pick a subset, then explicit confirm ──────

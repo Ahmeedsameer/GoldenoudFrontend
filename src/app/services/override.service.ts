@@ -52,18 +52,23 @@ export class OverrideService {
   }
 
   // ── Manager endpoints ─────────────────────────────────────────────────────
+  // Backed by the same pending-invoices mechanism the Admin uses under
+  // /admin/invoices — scoped server-side to the manager's own shop.
 
-  /** List all override requests for the manager's shop. */
-  getPendingRequests(): Observable<OverrideRequestSummary[]> {
+  /** List pending invoices (sold below category minimum) for the manager's own shop. */
+  getPendingRequests(): Observable<any[]> {
     return this.http
-      .get<any>(`${API_BASE}/manager/override-requests`)
-      .pipe(map((res) => (res.data ?? []) as OverrideRequestSummary[]));
+      .get<any>(`${API_BASE}/manager/override-requests`, { params: { per_page: 50 } })
+      .pipe(map((res) => {
+        const data = res?.data;
+        return Array.isArray(data) ? data : (data?.data ?? []);
+      }));
   }
 
-  /** Approve or reject a request. */
-  respond(id: string, action: 'approved' | 'rejected', note = ''): Observable<{ message: string }> {
+  /** Approve (approved) or reject (cancelled) a pending invoice. */
+  respond(id: number, status: 'approved' | 'cancelled'): Observable<{ message: string }> {
     return this.http
-      .put<any>(`${API_BASE}/manager/override-requests/${id}`, { action, note })
+      .put<any>(`${API_BASE}/manager/override-requests/${id}`, { status })
       .pipe(map((res) => res as { message: string }));
   }
 }

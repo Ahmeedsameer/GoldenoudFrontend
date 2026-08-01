@@ -153,7 +153,12 @@
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الهاتف</label>
-          <input type="text" formControlName="phone" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+          <input type="text" formControlName="phone"
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
+            [class]="form.get('phone')?.invalid && form.get('phone')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'" />
+          @if (form.get('phone')?.invalid && form.get('phone')?.touched) {
+            <p class="mt-1 text-xs text-error-500">{{ form.get('phone')?.getError('serverError') || 'رقم الهاتف غير صالح' }}</p>
+          }
         </div>
       </div>
 

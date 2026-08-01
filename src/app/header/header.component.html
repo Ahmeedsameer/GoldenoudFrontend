@@ -22,7 +22,7 @@
 
     <!-- ── Mobile brand ───────────────────────────────────── -->
     @let company = (company$ | async);
-    <a routerLink="/" class="xl:hidden nh-mob-brand">
+    <a routerLink="/dashboard" class="xl:hidden nh-mob-brand">
       <span class="nh-mob-gem">
         @if (company?.logo_url) {
           <img [src]="company!.logo_url" alt="" class="nh-mob-logo-img" />
@@ -40,7 +40,7 @@
     <!-- ── Breadcrumb trail (desktop) ─────────────────────── -->
     <nav class="hidden xl:flex nh-crumbs" aria-label="Breadcrumb">
 
-      <a routerLink="/" class="nh-crumb-home">
+      <a routerLink="/dashboard" class="nh-crumb-home">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
           <path d="M3 12l9-9 9 9M5 10v10a2 2 0 0 0 2 2h3v-6h4v6h3a2 2 0 0 0 2-2V10"
             stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -48,52 +48,10 @@
         الرئيسية
       </a>
 
-      <span class="nh-crumb-sep">/</span>
-
-      <span class="nh-crumb-active">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/>
-          <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/>
-          <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/>
-          <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/>
-        </svg>
-        لوحة التحكم
-      </span>
-
     </nav>
 
     <!-- ── Spacer ─────────────────────────────────────────── -->
     <div class="flex-1"></div>
-
-    <!-- ── COMMAND PALETTE PILL (NEW) ─────────────────────── -->
-    <button
-      type="button"
-      class="nh-cmd-pill"
-      (click)="searchInput?.nativeElement?.focus()"
-      aria-label="Open command palette"
-    >
-      <svg class="nh-cmd-icon" width="14" height="14" viewBox="0 0 20 20" fill="none">
-        <path fill-rule="evenodd" clip-rule="evenodd"
-          d="M3.04 9.37a6.33 6.33 0 1 1 12.67 0 6.33 6.33 0 0 1-12.67 0ZM9.37 1.54a7.83 7.83 0 1 0 4.99 13.88l2.82 2.82a.75.75 0 0 0 1.06-1.06l-2.82-2.82A7.83 7.83 0 0 0 9.37 1.54Z"
-          fill="currentColor"/>
-      </svg>
-      <span class="nh-cmd-text">بحث في أي شيء...</span>
-      <span class="nh-cmd-kbd">⌘ K</span>
-    </button>
-
-    <!-- ── Mobile search trigger ──────────────────────────── -->
-    <button
-      type="button"
-      class="nh-icon-btn xl:hidden"
-      (click)="toggleApplicationMenu()"
-      aria-label="Search"
-    >
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-        <path fill-rule="evenodd" clip-rule="evenodd"
-          d="M3.04 9.37a6.33 6.33 0 1 1 12.67 0 6.33 6.33 0 0 1-12.67 0ZM9.37 1.54a7.83 7.83 0 1 0 4.99 13.88l2.82 2.82a.75.75 0 0 0 1.06-1.06l-2.82-2.82A7.83 7.83 0 0 0 9.37 1.54Z"
-          fill="currentColor"/>
-      </svg>
-    </button>
 
     <!-- ── Action cluster ─────────────────────────────────── -->
     <div class="nh-cluster">
@@ -109,26 +67,3 @@
   </div>
 
 </header>
-
-<!-- ── Mobile search drawer ───────────────────────────────── -->
-@if (isApplicationMenuOpen) {
-  <div class="xl:hidden nh-mob-drawer">
-    <div class="relative">
-      <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style="color: #9CA3AF;">
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-          <path fill-rule="evenodd" clip-rule="evenodd"
-            d="M3.04 9.37a6.33 6.33 0 1 1 12.67 0 6.33 6.33 0 0 1-12.67 0ZM9.37 1.54a7.83 7.83 0 1 0 4.99 13.88l2.82 2.82a.75.75 0 0 0 1.06-1.06l-2.82-2.82A7.83 7.83 0 0 0 9.37 1.54Z"
-            fill="currentColor"/>
-        </svg>
-      </span>
-      <input
-        #searchInput
-        type="text"
-        placeholder="بحث سريع..."
-        class="nh-mob-search"
-        style="padding-right: 2.25rem; padding-left: 0.75rem;"
-        aria-label="Mobile search"
-      />
-    </div>
-  </div>
-}

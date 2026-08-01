@@ -39,10 +39,11 @@
   <p class="text-xs mb-3" style="color: #9CA3AF;">وضع العرض فقط — تحديث الأسعار وتعديل سعر البيع متاح للمدير العام فقط.</p>
 }
 
-<!-- ── Ready Products — real inventory, real trackable cost ────────────── -->
+<!-- ── Ready Products — batch-aware pricing: every purchase batch has its ── -->
+<!-- own immutable selling price; a product never has just "one" price.   -->
 <div class="mb-3">
   <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">منتجات جاهزة</h2>
-  <p class="text-xs" style="color: #9CA3AF;">مخزون حقيقي بتكلفة شراء فعلية — التكلفة والربح محسوبان من آخر توريد.</p>
+  <p class="text-xs" style="color: #9CA3AF;">كل دفعة توريد لها سعر بيع خاص بها — الأسعار القديمة لا تتغيّر أبداً، والدفعة الجديدة تحتاج تسعير مستقل.</p>
 </div>
 <div class="db-tbl-card mb-8">
   <div class="db-tbl-wrap">
@@ -50,11 +51,11 @@
       <thead>
         <tr>
           <th>المنتج</th>
-          <th class="hidden md:table-cell">التكلفة الحالية</th>
-          <th>سعر البيع</th>
-          <th class="hidden lg:table-cell">الربح المتوقع</th>
-          <th class="hidden lg:table-cell">نسبة الربح</th>
-          <th class="hidden md:table-cell">آخر تحديث</th>
+          <th class="hidden md:table-cell">المخزون الحالي</th>
+          <th>السعر الحالي (FIFO)</th>
+          <th class="hidden lg:table-cell">سعر الدفعة القادمة</th>
+          <th class="hidden lg:table-cell">الدُفعات</th>
+          <th class="hidden md:table-cell">آخر توريد</th>
           <th>الحالة</th>
         </tr>
       </thead>
@@ -69,39 +70,34 @@
             </td>
 
             <td class="hidden md:table-cell font-mono" style="color: #6B7280;">
-              {{ row.current_cost != null ? (row.current_cost | number:'1.2-2') + ' ج.م' : '—' }}
+              {{ row.current_inventory != null ? (row.current_inventory | number:'1.0-3') + ' ' + (row.unit || '') : '—' }}
             </td>
 
             <td class="font-mono font-semibold" style="color: #111827;">
-              {{ row.selling_price != null ? (row.selling_price | number:'1.2-2') + ' ج.م' : '—' }}
+              {{ row.current_fifo_price != null ? (row.current_fifo_price | number:'1.2-2') + ' ج.م' : '—' }}
             </td>
 
-            <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
-              {{ row.estimated_profit != null ? (row.estimated_profit | number:'1.2-2') + ' ج.م' : '—' }}
+            <td class="hidden lg:table-cell font-mono" style="color: #6B7280;">
+              {{ row.next_batch_price != null ? (row.next_batch_price | number:'1.2-2') + ' ج.م' : '—' }}
             </td>
 
-            <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
-              {{ row.profit_percent != null ? (row.profit_percent | number:'1.1-1') + '%' : '—' }}
+            <td class="hidden lg:table-cell font-mono" style="color: #6B7280;">
+              @if (row.batches_total) {
+                {{ row.batches_priced }}/{{ row.batches_total }}
+                @if (row.needs_pricing) {
+                  <span class="inline-flex items-center gap-1 rounded-full text-[10px] font-semibold mr-1" style="background: #FEE2E2; color: #B91C1C; padding: 1px 6px;">تحتاج تسعير</span>
+                }
+              } @else { — }
             </td>
 
             <td class="hidden md:table-cell" style="color: #9CA3AF;">
-              {{ row.last_price_update ? (row.last_price_update | date:'d MMM') : '—' }}
+              {{ row.latest_supply_date ? (row.latest_supply_date | date:'d MMM') : '—' }}
             </td>
 
             <td>
-              @if (row.status === 'needs_review') {
-                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #FEF3C7; color: #92400E; padding: 3px 10px;">
-                  🟡 يحتاج مراجعة
-                </span>
-              } @else if (row.status === 'no_price') {
-                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #F3F4F6; color: #6B7280; padding: 3px 10px;">
-                  بلا سعر
-                </span>
-              } @else {
-                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #D1FAE5; color: #065F46; padding: 3px 10px;">
-                  محدَّث
-                </span>
-              }
+              <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" [ngClass]="statusClass(row.status)" style="padding: 3px 10px;">
+                {{ statusLabel(row.status) }}
+              </span>
             </td>
 
           </tr>
@@ -154,38 +150,38 @@
             </td>
 
             <td class="font-mono font-semibold" style="color: #111827;">
-              @if (row.selling_price != null) {
+              @if (row.pricing_field === 'batch') {
+                {{ row.current_fifo_price != null ? (row.current_fifo_price | number:'1.2-2') + ' ج.م' : '—' }}
+              } @else if (row.selling_price != null) {
                 {{ row.selling_price | number:'1.2-2' }} ج.م
                 @if (row.pricing_field === 'price_per_gram') { /{{ row.unit }} }
               } @else { — }
             </td>
 
             <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
-              {{ row.estimated_profit != null ? (row.estimated_profit | number:'1.2-2') + ' ج.م' : '—' }}
+              @if (row.pricing_field === 'batch') {
+                {{ row.next_batch_price != null ? (row.next_batch_price | number:'1.2-2') + ' ج.م' : '—' }}
+              } @else {
+                {{ row.estimated_profit != null ? (row.estimated_profit | number:'1.2-2') + ' ج.م' : '—' }}
+              }
             </td>
 
             <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
-              {{ row.profit_percent != null ? (row.profit_percent | number:'1.1-1') + '%' : '—' }}
+              @if (row.pricing_field === 'batch') {
+                @if (row.batches_total) { {{ row.batches_priced }}/{{ row.batches_total }} } @else { — }
+              } @else {
+                {{ row.profit_percent != null ? (row.profit_percent | number:'1.1-1') + '%' : '—' }}
+              }
             </td>
 
             <td class="hidden md:table-cell" style="color: #9CA3AF;">
-              {{ row.last_price_update ? (row.last_price_update | date:'d MMM') : '—' }}
+              {{ (row.pricing_field === 'batch' ? row.latest_supply_date : row.last_price_update) ? ((row.pricing_field === 'batch' ? row.latest_supply_date : row.last_price_update) | date:'d MMM') : '—' }}
             </td>
 
             <td>
-              @if (row.status === 'needs_review') {
-                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #FEF3C7; color: #92400E; padding: 3px 10px;">
-                  🟡 يحتاج مراجعة
-                </span>
-              } @else if (row.status === 'no_price') {
-                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #F3F4F6; color: #6B7280; padding: 3px 10px;">
-                  بلا سعر
-                </span>
-              } @else {
-                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #D1FAE5; color: #065F46; padding: 3px 10px;">
-                  محدَّث
-                </span>
-              }
+              <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" [ngClass]="statusClass(row.status)" style="padding: 3px 10px;">
+                {{ statusLabel(row.status) }}
+              </span>
             </td>
 
           </tr>
@@ -204,10 +200,11 @@
   </div>
 </div>
 
-<!-- ── Packaging (bottles, tools, wrapping) — real inventory, priced per piece ── -->
+<!-- ── Packaging (bottles, tools, wrapping) — batch-aware pricing, same as ── -->
+<!-- Ready Products (Product::isBatchPriced() covers both). -->
 <div class="mb-3">
   <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">عبوات وتغليف</h2>
-  <p class="text-xs" style="color: #9CA3AF;">زجاجات وأدوات ومستلزمات تغليف — مخزون حقيقي بتكلفة شراء فعلية.</p>
+  <p class="text-xs" style="color: #9CA3AF;">زجاجات وأدوات ومستلزمات تغليف — كل دفعة توريد لها سعر بيع خاص بها.</p>
 </div>
 <div class="db-tbl-card mb-8">
   <div class="db-tbl-wrap">
@@ -215,11 +212,11 @@
       <thead>
         <tr>
           <th>المنتج</th>
-          <th class="hidden md:table-cell">التكلفة الحالية</th>
-          <th>سعر البيع</th>
-          <th class="hidden lg:table-cell">الربح المتوقع</th>
-          <th class="hidden lg:table-cell">نسبة الربح</th>
-          <th class="hidden md:table-cell">آخر تحديث</th>
+          <th class="hidden md:table-cell">المخزون الحالي</th>
+          <th>السعر الحالي (FIFO)</th>
+          <th class="hidden lg:table-cell">سعر الدفعة القادمة</th>
+          <th class="hidden lg:table-cell">الدُفعات</th>
+          <th class="hidden md:table-cell">آخر توريد</th>
           <th>الحالة</th>
         </tr>
       </thead>
@@ -234,39 +231,34 @@
             </td>
 
             <td class="hidden md:table-cell font-mono" style="color: #6B7280;">
-              {{ row.current_cost != null ? (row.current_cost | number:'1.2-2') + ' ج.م' : '—' }}
+              {{ row.current_inventory != null ? (row.current_inventory | number:'1.0-3') + ' ' + (row.unit || '') : '—' }}
             </td>
 
             <td class="font-mono font-semibold" style="color: #111827;">
-              {{ row.selling_price != null ? (row.selling_price | number:'1.2-2') + ' ج.م' : '—' }}
+              {{ row.current_fifo_price != null ? (row.current_fifo_price | number:'1.2-2') + ' ج.م' : '—' }}
             </td>
 
-            <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
-              {{ row.estimated_profit != null ? (row.estimated_profit | number:'1.2-2') + ' ج.م' : '—' }}
+            <td class="hidden lg:table-cell font-mono" style="color: #6B7280;">
+              {{ row.next_batch_price != null ? (row.next_batch_price | number:'1.2-2') + ' ج.م' : '—' }}
             </td>
 
-            <td class="hidden lg:table-cell font-mono" style="color: #16794F;">
-              {{ row.profit_percent != null ? (row.profit_percent | number:'1.1-1') + '%' : '—' }}
+            <td class="hidden lg:table-cell font-mono" style="color: #6B7280;">
+              @if (row.batches_total) {
+                {{ row.batches_priced }}/{{ row.batches_total }}
+                @if (row.needs_pricing) {
+                  <span class="inline-flex items-center gap-1 rounded-full text-[10px] font-semibold mr-1" style="background: #FEE2E2; color: #B91C1C; padding: 1px 6px;">تحتاج تسعير</span>
+                }
+              } @else { — }
             </td>
 
             <td class="hidden md:table-cell" style="color: #9CA3AF;">
-              {{ row.last_price_update ? (row.last_price_update | date:'d MMM') : '—' }}
+              {{ row.latest_supply_date ? (row.latest_supply_date | date:'d MMM') : '—' }}
             </td>
 
             <td>
-              @if (row.status === 'needs_review') {
-                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #FEF3C7; color: #92400E; padding: 3px 10px;">
-                  🟡 يحتاج مراجعة
-                </span>
-              } @else if (row.status === 'no_price') {
-                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #F3F4F6; color: #6B7280; padding: 3px 10px;">
-                  بلا سعر
-                </span>
-              } @else {
-                <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" style="background: #D1FAE5; color: #065F46; padding: 3px 10px;">
-                  محدَّث
-                </span>
-              }
+              <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" [ngClass]="statusClass(row.status)" style="padding: 3px 10px;">
+                {{ statusLabel(row.status) }}
+              </span>
             </td>
 
           </tr>

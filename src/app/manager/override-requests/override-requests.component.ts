@@ -1,27 +1,24 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { OverrideRequestSummary, OverrideService } from '../../services/override.service';
+import { OverrideService } from '../../services/override.service';
 import { LoadingComponent } from '../../loading/loading.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
 
 @Component({
   selector: 'app-override-requests',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent],
+  imports: [CommonModule, LoadingComponent, AlertComponent],
   templateUrl: './override-requests.component.html',
 })
 export class OverrideRequestsComponent implements OnInit, OnDestroy {
   private overrideService = inject(OverrideService);
 
-  requests: OverrideRequestSummary[] = [];
+  /** Pending invoices (sold below category minimum) for this manager's own shop. */
+  invoices: any[] = [];
   loading = false;
+  actingId: number | null = null;
   alert: { show: boolean; type: 'success' | 'error'; message: string } =
     { show: false, type: 'success', message: '' };
-
-  // Per-request UI state
-  respondingId: string | null   = null;
-  noteInputs: Record<string, string> = {};
 
   private pollingInterval: any = null;
 
@@ -29,7 +26,7 @@ export class OverrideRequestsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.load();
-    // Auto-refresh every 10 s so new requests appear without a page reload
+    // Auto-refresh every 10 s so newly-created pending invoices appear without a page reload
     this.pollingInterval = setInterval(() => this.load(true), 10_000);
   }
 
@@ -43,47 +40,57 @@ export class OverrideRequestsComponent implements OnInit, OnDestroy {
     if (!silent) this.loading = true;
     this.overrideService.getPendingRequests().subscribe({
       next: (data) => {
-        this.requests = data;
+        this.invoices = data;
         if (!silent) this.loading = false;
       },
       error: () => { if (!silent) this.loading = false; },
     });
   }
 
-  get pendingCount(): number {
-    return this.requests.filter(r => r.status === 'pending').length;
+  // ── Helpers ─────────────────────────────────────────────────
+
+  lineTotal(item: any): number {
+    return (+item.quantity || 0) * (+item.price || 0);
+  }
+
+  categoryMin(item: any): number | null {
+    const v = item?.product?.category?.minimum_sell_price;
+    return v == null ? null : +v;
+  }
+
+  isBelowMin(item: any): boolean {
+    const min = this.categoryMin(item);
+    return min != null && (+item.price || 0) < min;
   }
 
   // ── Actions ─────────────────────────────────────────────────
 
-  approve(request: OverrideRequestSummary): void {
-    this.respond(request.id, 'approved', this.noteInputs[request.id] ?? '');
+  approve(inv: any): void {
+    if (!confirm(`هل تريد اعتماد الفاتورة #${inv.id}؟`)) return;
+    this.respond(inv, 'approved');
   }
 
-  reject(request: OverrideRequestSummary): void {
-    if (!this.noteInputs[request.id]?.trim()) {
-      this.alert = { show: true, type: 'error', message: 'يرجى إدخال سبب الرفض قبل المتابعة.' };
-      return;
-    }
-    this.respond(request.id, 'rejected', this.noteInputs[request.id]);
+  reject(inv: any): void {
+    if (!confirm(`هل تريد رفض الفاتورة #${inv.id}؟`)) return;
+    this.respond(inv, 'cancelled');
   }
 
-  private respond(id: string, action: 'approved' | 'rejected', note: string): void {
-    this.respondingId = id;
+  private respond(inv: any, status: 'approved' | 'cancelled'): void {
+    this.actingId = inv.id;
     this.alert = { show: false, type: 'success', message: '' };
 
-    this.overrideService.respond(id, action, note).subscribe({
+    this.overrideService.respond(inv.id, status).subscribe({
       next: (res) => {
-        this.respondingId = null;
+        this.actingId = null;
         this.alert = {
           show: true,
           type: 'success',
-          message: res.message ?? (action === 'approved' ? 'تمت الموافقة بنجاح' : 'تم الرفض بنجاح'),
+          message: res.message ?? (status === 'approved' ? 'تمت الموافقة بنجاح' : 'تم الرفض بنجاح'),
         };
-        this.load(true);
+        this.invoices = this.invoices.filter(i => i.id !== inv.id);
       },
       error: (err) => {
-        this.respondingId = null;
+        this.actingId = null;
         this.alert = {
           show: true,
           type: 'error',
@@ -91,18 +98,5 @@ export class OverrideRequestsComponent implements OnInit, OnDestroy {
         };
       },
     });
-  }
-
-  // ── Helpers ─────────────────────────────────────────────────
-
-  statusLabel(status: string): string {
-    return { pending: 'قيد الانتظار', approved: 'موافق عليه', rejected: 'مرفوض' }[status] ?? status;
-  }
-
-  timeSince(iso: string): string {
-    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-    if (diff < 60)   return `منذ ${diff} ثانية`;
-    if (diff < 3600) return `منذ ${Math.floor(diff / 60)} دقيقة`;
-    return `منذ ${Math.floor(diff / 3600)} ساعة`;
   }
 }

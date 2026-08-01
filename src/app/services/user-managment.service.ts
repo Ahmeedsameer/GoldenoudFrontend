@@ -24,4 +24,19 @@ export class UserManagmentService {
   public getUserById(userId: number) {
     return this.httpClient.get<any>(`${this.apiUrl}/show/${userId}`).pipe(retry(2));
   }
+
+  /** Always updates the AUTHENTICATED admin's own profile — no ID is ever sent. */
+  public updateOwnProfile(data: { name: string; email: string; phone?: string | null }) {
+    return this.httpClient.put<any>(`${this.apiUrl}/profile`, data);
+  }
+
+  /** Changes the AUTHENTICATED admin's own password. */
+  public changeOwnPassword(data: { new_password: string; new_password_confirmation: string }) {
+    return this.httpClient.put<any>(`${this.apiUrl}/change-password`, data);
+  }
+
+  /** Admin resets another user's password — new password only, never reads the old one. */
+  public resetUserPassword(userId: number, data: { new_password: string; new_password_confirmation: string }) {
+    return this.httpClient.put<any>(`${this.apiUrl}/${userId}/reset-password`, data);
+  }
 }

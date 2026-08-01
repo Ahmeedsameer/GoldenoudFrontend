@@ -6,7 +6,10 @@ export interface User{
     email: string;
     password:string|null;
     role: string;
+    phone?: string | null;
+    shop?: { id: number; name: string } | null;
+    created_at?: string | null;
     createdAt:Date | null;
     emailVerifiedAt:Date | null;
-    
+
 }

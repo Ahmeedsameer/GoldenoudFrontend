@@ -61,7 +61,7 @@
           <tbody>
             @for (item of inv.items; track item.id) {
               <tr class="border-b border-gray-50 dark:border-white/[0.03]">
-                <td class="py-2 text-gray-800 dark:text-white/90">{{ item.product?.name || '—' }}</td>
+                <td class="py-2 text-gray-800 dark:text-white/90">{{ item.product_name || item.product?.name || '—' }}</td>
                 <td class="py-2 font-mono text-gray-600 dark:text-gray-300">{{ item.quantity }} <span class="text-xs text-gray-400">{{ item.product?.scalar }}</span></td>
                 <td class="py-2 font-mono text-gray-600 dark:text-gray-300">{{ item.price | number:'1.2-2' }}</td>
                 <td class="py-2 font-mono font-semibold text-gray-800 dark:text-white/90">{{ lineTotal(item) | number:'1.2-2' }}</td>

@@ -40,8 +40,8 @@
     <!-- KPI cards — shared component -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <app-report-kpi-card title="إجمالي الإيرادات" [value]="data.totals.revenue | number:'1.0-0'" suffix="ج.م" color="neutral"></app-report-kpi-card>
-      <app-report-kpi-card title="التكلفة التقديرية" [value]="data.totals.estimated_cost | number:'1.0-0'" suffix="ج.م" color="neutral"></app-report-kpi-card>
-      <app-report-kpi-card title="الربح التقديري" [value]="data.totals.estimated_profit | number:'1.0-0'" suffix="ج.م" color="brand"></app-report-kpi-card>
+      <app-report-kpi-card title="التكلفة الفعلية" [value]="data.totals.estimated_cost | number:'1.0-0'" suffix="ج.م" color="neutral"></app-report-kpi-card>
+      <app-report-kpi-card title="الربح الفعلي" [value]="data.totals.estimated_profit | number:'1.0-0'" suffix="ج.م" color="brand"></app-report-kpi-card>
       <app-report-kpi-card title="هامش الربح" [value]="data.totals.profit_margin_percent != null ? data.totals.profit_margin_percent : '—'" [suffix]="data.totals.profit_margin_percent != null ? '%' : ''" color="success"></app-report-kpi-card>
     </div>
 
@@ -52,7 +52,7 @@
     <div class="db-tbl-card">
       <div class="db-tbl-wrap">
         <table class="db-tbl">
-          <thead><tr><th>الشهر</th><th>الإيرادات</th><th>التكلفة التقديرية</th><th>الربح التقديري</th><th>هامش الربح</th></tr></thead>
+          <thead><tr><th>الشهر</th><th>الإيرادات</th><th>التكلفة الفعلية</th><th>الربح الفعلي</th><th>هامش الربح</th></tr></thead>
           <tbody>
             @for (m of data.months; track m.month) {
               <tr>

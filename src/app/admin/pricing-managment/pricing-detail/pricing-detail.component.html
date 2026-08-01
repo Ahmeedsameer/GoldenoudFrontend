@@ -11,7 +11,145 @@
   </div>
 </div>
 
-@if (detail) {
+@if (detail && isBatchPriced) {
+
+  <!-- Batch-aware pricing summary — what the customer pays TODAY vs. what kicks in NEXT -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <p class="text-xs text-gray-400 mb-1">المخزون الحالي</p>
+      <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+        {{ detail.current_inventory != null ? (detail.current_inventory | number:'1.0-3') + ' ' + (detail.unit || '') : '—' }}
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <p class="text-xs text-gray-400 mb-1">السعر الحالي (FIFO)</p>
+      <p class="text-lg font-bold font-mono" style="color: #9A7B1A;">
+        {{ detail.current_fifo_price != null ? (detail.current_fifo_price | number:'1.2-2') + ' ج.م' : '—' }}
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <p class="text-xs text-gray-400 mb-1">المتبقي من الدفعة الحالية</p>
+      <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+        {{ detail.remaining_in_current_batch != null ? (detail.remaining_in_current_batch | number:'1.0-3') + ' ' + (detail.unit || '') : '—' }}
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <p class="text-xs text-gray-400 mb-1">سعر الدفعة القادمة</p>
+      <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+        {{ detail.next_batch_price != null ? (detail.next_batch_price | number:'1.2-2') + ' ج.م' : '—' }}
+      </p>
+    </div>
+  </div>
+
+  <div class="mb-6 flex items-center gap-2">
+    <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" [ngClass]="statusClass(detail.status)" style="padding: 4px 12px;">
+      {{ statusLabel(detail.status) }}
+    </span>
+    @if (detail.needs_pricing) {
+      <span class="inline-flex items-center gap-1 rounded-full text-xs font-semibold" style="background: #FEE2E2; color: #B91C1C; padding: 4px 12px;">
+        ⚠ توجد دفعة جديدة تحتاج تسعير
+      </span>
+    }
+    <span class="text-xs text-gray-400">{{ detail.batches_priced }}/{{ detail.batches_total }} دفعة مُسعَّرة</span>
+  </div>
+
+  @if (detail.status === 'waiting_for_first_supply') {
+    <!-- No inventory, no batches, no purchase cost — a selling price cannot
+         exist yet. No price field, no save/edit button, no batch table: there
+         is genuinely nothing to price until the first supply arrives. -->
+    <div class="db-tbl-card mb-8">
+      <div style="padding: 2.5rem 1.5rem; text-align: center;">
+        <p class="text-sm font-medium mb-1" style="color: #6B7280;">لم يصل هذا المنتج أول عملية توريد بعد.</p>
+        <p class="text-xs" style="color: #9CA3AF;">لا يمكن تحديد سعر بيع قبل وجود مخزون فعلي — أنشئ عملية توريد أولاً من صفحة التوريدات، وستظهر هنا دفعتها تلقائياً لتسعيرها.</p>
+      </div>
+    </div>
+  } @else {
+    <!-- Every batch, oldest-first — historical batches are immutable; only the newest unpriced batch is editable -->
+    <div class="db-tbl-card mb-8">
+      <div style="padding: 1rem 1.25rem 0.5rem;">
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">دُفعات التوريد</h3>
+        <p class="text-xs" style="color: #9CA3AF;">كل دفعة توريد لها سعر بيع مستقل وثابت — لا يمكن تعديل سعر دفعة تم تسعيرها من قبل.</p>
+      </div>
+      <div class="db-tbl-wrap">
+        <table class="db-tbl">
+          <thead>
+            <tr>
+              <th>تاريخ التوريد</th>
+              <th>تكلفة الشراء</th>
+              <th>سعر البيع</th>
+              <th class="hidden md:table-cell">الكمية الموردة</th>
+              <th>المتبقي</th>
+              <th class="hidden lg:table-cell">تم التسعير بواسطة</th>
+              <th>الحالة</th>
+              @if (isAdmin) { <th></th> }
+            </tr>
+          </thead>
+          <tbody>
+            @for (batch of detail.batches; track batch.id) {
+              <tr>
+                <td style="color: #6B7280;">{{ batch.supply_date ? (batch.supply_date | date:'d MMM yyyy') : '—' }}</td>
+                <td class="font-mono" style="color: #6B7280;">{{ batch.purchase_cost | number:'1.2-2' }} ج.م</td>
+                <td class="font-mono font-semibold" style="color: #111827;">
+                  {{ batch.selling_price != null ? (batch.selling_price | number:'1.2-2') + ' ج.م' : '—' }}
+                </td>
+                <td class="hidden md:table-cell font-mono" style="color: #6B7280;">{{ batch.quantity_received | number:'1.0-3' }}</td>
+                <td class="font-mono" style="color: #6B7280;">{{ batch.remaining_quantity | number:'1.0-3' }}</td>
+                <td class="hidden lg:table-cell" style="color: #9CA3AF;">{{ batch.priced_by || '—' }}</td>
+                <td>
+                  <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" [ngClass]="batchStatusClass(batch.status)" style="padding: 3px 10px;">
+                    {{ batchStatusLabel(batch.status) }}
+                  </span>
+                </td>
+                @if (isAdmin) {
+                  <td>
+                    @if (!batch.is_archived) {
+                      @if (!batch.is_priced) {
+                        @if (pricingBatchId === batch.id) {
+                          <div class="flex items-center gap-1.5">
+                            <input type="number" min="0.01" step="0.01" [(ngModel)]="batchPrice" placeholder="السعر"
+                              class="h-8 w-24 rounded-lg border border-gray-300 px-2 text-xs font-mono dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+                            <button type="button" (click)="saveBatchPrice()" [disabled]="batchSaving || !batchPrice || batchPrice <= 0"
+                              class="px-3 h-8 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium disabled:opacity-50">
+                              @if (batchSaving) { ... } @else { حفظ }
+                            </button>
+                            <button type="button" (click)="cancelBatchPricing()"
+                              class="px-2 h-8 rounded-lg border border-gray-300 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-400">إلغاء</button>
+                          </div>
+                        } @else {
+                          <button type="button" (click)="startBatchPricing(batch)" class="lux-btn lux-btn-primary lux-btn-sm">تسعير</button>
+                        }
+                      } @else {
+                        <button type="button" (click)="archiveBatch(batch)" [disabled]="archiving"
+                          class="px-3 h-8 rounded-lg border border-gray-300 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400">
+                          أرشفة
+                        </button>
+                      }
+                    }
+                  </td>
+                }
+              </tr>
+            }
+            @if (!loading && (!detail.batches || detail.batches.length === 0)) {
+              <tr>
+                <td [attr.colspan]="isAdmin ? 8 : 7" style="padding: 2.5rem 1rem; text-align: center; color: #9CA3AF;">لا توجد دُفعات توريد بعد</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  @if (isAdmin && pricingBatchId && batchSaveError) {
+    <p class="text-xs text-error-500 mb-4">{{ batchSaveError }}</p>
+  }
+  @if (isAdmin && archiveError) {
+    <p class="text-xs text-error-500 mb-4">{{ archiveError }}</p>
+  }
+
+}
+
+@if (detail && !isBatchPriced) {
 
   <!-- Summary cards -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -110,61 +248,61 @@
     </div>
   }
 
-  <!-- Price history (admin only) -->
-  @if (isAdmin) {
-    <div class="db-tbl-card">
-      <div style="padding: 1rem 1.25rem 0.5rem;">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">سجل الأسعار</h3>
-      </div>
-      <div class="db-tbl-wrap">
-        <table class="db-tbl">
-          <thead>
-            <tr>
-              <th>التاريخ</th>
-              <th>النوع</th>
-              <th>التكلفة</th>
-              <th>سعر البيع</th>
-              <th>بواسطة</th>
-              <th class="hidden md:table-cell">السبب</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (h of history; track h.id) {
-              <tr>
-                <td style="color: #6B7280;">{{ h.created_at | date:'d MMM yyyy, h:mm a' }}</td>
-                <td style="color: #6B7280;">{{ historyLabel(h.type) }}</td>
-                <td class="font-mono" style="color: #6B7280;">
-                  @if (h.old_cost != null || h.new_cost != null) {
-                    {{ h.old_cost != null ? (h.old_cost | number:'1.2-2') : '—' }} ← {{ h.new_cost != null ? (h.new_cost | number:'1.2-2') : '—' }}
-                  } @else { — }
-                </td>
-                <td class="font-mono" style="color: #6B7280;">
-                  @if (h.old_selling_price != null || h.new_selling_price != null) {
-                    {{ h.old_selling_price != null ? (h.old_selling_price | number:'1.2-2') : '—' }} ← {{ h.new_selling_price != null ? (h.new_selling_price | number:'1.2-2') : '—' }}
-                  } @else { — }
-                </td>
-                <td style="color: #6B7280;">{{ h.updated_by?.name || '—' }}</td>
-                <td class="hidden md:table-cell" style="color: #9CA3AF;">{{ h.reason || '—' }}</td>
-              </tr>
-            }
-            @if (!historyLoading && history.length === 0) {
-              <tr>
-                <td colspan="6" style="padding: 2.5rem 1rem; text-align: center; color: #9CA3AF;">لا يوجد سجل تسعير بعد</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      @if (historyLastPage > 1) {
-        <div class="flex items-center justify-center gap-2 py-3">
-          <button type="button" (click)="loadHistory(historyPage - 1)" [disabled]="historyPage <= 1"
-            class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">السابق</button>
-          <span class="text-xs text-gray-500">{{ historyPage }} / {{ historyLastPage }}</span>
-          <button type="button" (click)="loadHistory(historyPage + 1)" [disabled]="historyPage >= historyLastPage"
-            class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">التالي</button>
-        </div>
-      }
-    </div>
-  }
+}
 
+<!-- Price history (admin only) — every batch pricing + legacy cost/price edit, both kinds of products -->
+@if (detail && isAdmin) {
+  <div class="db-tbl-card">
+    <div style="padding: 1rem 1.25rem 0.5rem;">
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">سجل الأسعار</h3>
+    </div>
+    <div class="db-tbl-wrap">
+      <table class="db-tbl">
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>النوع</th>
+            <th>التكلفة</th>
+            <th>سعر البيع</th>
+            <th>بواسطة</th>
+            <th class="hidden md:table-cell">السبب</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (h of history; track h.id) {
+            <tr>
+              <td style="color: #6B7280;">{{ h.created_at | date:'d MMM yyyy, h:mm a' }}</td>
+              <td style="color: #6B7280;">{{ historyLabel(h.type) }}</td>
+              <td class="font-mono" style="color: #6B7280;">
+                @if (h.old_cost != null || h.new_cost != null) {
+                  {{ h.old_cost != null ? (h.old_cost | number:'1.2-2') : '—' }} ← {{ h.new_cost != null ? (h.new_cost | number:'1.2-2') : '—' }}
+                } @else { — }
+              </td>
+              <td class="font-mono" style="color: #6B7280;">
+                @if (h.old_selling_price != null || h.new_selling_price != null) {
+                  {{ h.old_selling_price != null ? (h.old_selling_price | number:'1.2-2') : '—' }} ← {{ h.new_selling_price != null ? (h.new_selling_price | number:'1.2-2') : '—' }}
+                } @else { — }
+              </td>
+              <td style="color: #6B7280;">{{ h.updated_by?.name || '—' }}</td>
+              <td class="hidden md:table-cell" style="color: #9CA3AF;">{{ h.reason || '—' }}</td>
+            </tr>
+          }
+          @if (!historyLoading && history.length === 0) {
+            <tr>
+              <td colspan="6" style="padding: 2.5rem 1rem; text-align: center; color: #9CA3AF;">لا يوجد سجل تسعير بعد</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (historyLastPage > 1) {
+      <div class="flex items-center justify-center gap-2 py-3">
+        <button type="button" (click)="loadHistory(historyPage - 1)" [disabled]="historyPage <= 1"
+          class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">السابق</button>
+        <span class="text-xs text-gray-500">{{ historyPage }} / {{ historyLastPage }}</span>
+        <button type="button" (click)="loadHistory(historyPage + 1)" [disabled]="historyPage >= historyLastPage"
+          class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">التالي</button>
+      </div>
+    }
+  </div>
 }

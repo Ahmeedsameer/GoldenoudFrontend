@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ManagerInvoiceService } from '../../services/manager-invoice.service';
 import { LoadingComponent } from '../../loading/loading.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
+import { SearchBarComponent } from '../../shared/components/common/search-bar/search-bar.component';
 
 /**
  * Branch-wide sales invoices for a manager — every seller's sale in their
@@ -14,7 +15,7 @@ import { AlertComponent } from '../../shared/components/ui/alert/alert.component
 @Component({
   selector: 'app-manager-invoices',
   standalone: true,
-  imports: [CommonModule, LoadingComponent, AlertComponent],
+  imports: [CommonModule, LoadingComponent, AlertComponent, SearchBarComponent],
   templateUrl: './manager-invoices.component.html',
 })
 export class ManagerInvoicesComponent implements OnInit {
@@ -23,6 +24,7 @@ export class ManagerInvoicesComponent implements OnInit {
   loading = false;
   invoices: any[] = [];
   status: 'approved' | 'pending' | 'cancelled' = 'approved';
+  search = '';
   actingId: number | null = null;
   alert: { show: boolean; type: 'success' | 'error' | ''; message: string } = { show: false, type: '', message: '' };
 
@@ -42,10 +44,17 @@ export class ManagerInvoicesComponent implements OnInit {
     this.load();
   }
 
+  setSearch(value: string) {
+    this.search = value;
+    this.load();
+  }
+
   load() {
     this.loading = true;
     this.alert = { show: false, type: '', message: '' };
-    this.service.getInvoices({ status: this.status, per_page: 50 }).subscribe({
+    const params: any = { status: this.status, per_page: 50 };
+    if (this.search) params.search = this.search;
+    this.service.getInvoices(params).subscribe({
       next: (res) => {
         const data = res?.data;
         this.invoices = Array.isArray(data) ? data : (data?.data ?? []);

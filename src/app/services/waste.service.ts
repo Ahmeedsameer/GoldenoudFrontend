@@ -22,7 +22,7 @@ export interface WasteRecord {
 
 export interface WasteRecordPage { data: WasteRecord[]; current_page: number; last_page: number; total: number; per_page: number; }
 
-export interface WasteFilters { shop_id?: number; reason?: string; from?: string; to?: string; page?: number; per_page?: number; }
+export interface WasteFilters { shop_id?: number; reason?: string; from?: string; to?: string; search?: string; page?: number; per_page?: number; }
 
 @Injectable({ providedIn: 'root' })
 export class WasteService {

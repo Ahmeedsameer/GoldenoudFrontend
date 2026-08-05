@@ -72,7 +72,10 @@ export class LoginComponent {
       error: (error) => {
         this.loading = false;
         const status = error?.status;
-        if (status === 401 || status === 422) {
+        if (error?.error?.error_code === 'on_leave') {
+          // Leave Lock — a real, specific reason, not a wrong-password guess.
+          this.errorMessage = error.error.error;
+        } else if (status === 401 || status === 422) {
           this.errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
         } else if (status === 0) {
           this.errorMessage = 'تعذّر الاتصال بالخادم. تأكد من تشغيل الخادم وحاول مجدداً.';

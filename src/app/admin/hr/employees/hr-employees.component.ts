@@ -9,10 +9,11 @@ import { PaginationComponent } from '../../../pagination/pagination.component';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-hr-employees',
-  imports: [CommonModule, ReactiveFormsModule, PaginationComponent, LoadingComponent, ModalComponent, DatePickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, PaginationComponent, LoadingComponent, ModalComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './hr-employees.component.html',
 })
 export class HrEmployeesComponent implements OnInit {
@@ -152,8 +153,107 @@ export class HrEmployeesComponent implements OnInit {
   toggleStatus(emp: any) {
     this.hr.toggleStatus(emp.id).subscribe({
       next: () => this.list.load(),
-      error: () => {},
+      error: (err) => {
+        alert(err?.error?.message || err?.error?.errors?.status?.[0] || 'تعذّر تنفيذ العملية.');
+      },
     });
+  }
+
+  // ── End Employment (resignation / termination) ─────────────
+  showEndEmployment = false;
+  /** 'form' → pick type/date; 'preview' → read-only breakdown for review
+   *  (nothing saved yet); 'done' → confirmed, showing the persisted result
+   *  and the "deactivate account?" prompt. */
+  endEmploymentStep: 'form' | 'preview' | 'done' = 'form';
+  endEmploymentEmployee: any = null;
+  endEmploymentType: 'resigned' | 'terminated' = 'resigned';
+  endEmploymentDate = '';
+  endEmploymentLoading = false;
+  endEmploymentError = '';
+  /** Settlement breakdown — same shape whether it came from the read-only
+   *  preview call or the confirmed endEmployment() call. */
+  endEmploymentBreakdown: {
+    basic_salary: number; days_in_month: number; worked_days: number; daily_rate: number;
+    salary_earned: number; personal_commission: number; branch_bonus: number;
+    bonus_total: number; penalty_total: number; total_deductions: number;
+    advance_balance: number; final_settlement: number;
+    /** Only present after confirmEndEmployment() — the persisted Settlement document. */
+    settlement?: { id: number; settlement_number: string };
+  } | null = null;
+
+  openEndEmployment(emp: any) {
+    this.endEmploymentEmployee = emp;
+    this.endEmploymentStep = 'form';
+    this.endEmploymentType = 'resigned';
+    this.endEmploymentDate = new Date().toISOString().substring(0, 10);
+    this.endEmploymentError = '';
+    this.endEmploymentBreakdown = null;
+    this.showEndEmployment = true;
+  }
+
+  /** Step 1 → 2: calculate the breakdown for review — nothing is saved yet. */
+  previewEndEmployment() {
+    if (!this.endEmploymentDate) {
+      this.endEmploymentError = 'يرجى اختيار تاريخ ترك العمل.';
+      return;
+    }
+    this.endEmploymentLoading = true;
+    this.endEmploymentError = '';
+    this.hr.previewEndEmployment(this.endEmploymentEmployee.id, {
+      type: this.endEmploymentType,
+      leaving_date: this.endEmploymentDate,
+    }).subscribe({
+      next: (res) => {
+        this.endEmploymentLoading = false;
+        this.endEmploymentBreakdown = res?.data ?? res;
+        this.endEmploymentStep = 'preview';
+      },
+      error: (err) => {
+        this.endEmploymentLoading = false;
+        this.endEmploymentError = err?.error?.message || 'تعذّر حساب المستحقات.';
+      },
+    });
+  }
+
+  backToForm() {
+    this.endEmploymentStep = 'form';
+    this.endEmploymentError = '';
+  }
+
+  /** Step 2 → 3: admin has reviewed the breakdown, now actually persist it. */
+  confirmEndEmployment() {
+    this.endEmploymentLoading = true;
+    this.endEmploymentError = '';
+    this.hr.endEmployment(this.endEmploymentEmployee.id, {
+      type: this.endEmploymentType,
+      leaving_date: this.endEmploymentDate,
+    }).subscribe({
+      next: (res) => {
+        this.endEmploymentLoading = false;
+        this.endEmploymentBreakdown = res?.data ?? res;
+        this.endEmploymentStep = 'done';
+        this.list.load();
+      },
+      error: (err) => {
+        this.endEmploymentLoading = false;
+        this.endEmploymentError = err?.error?.message || 'تعذّر إنهاء خدمة الموظف.';
+        this.endEmploymentStep = 'form';
+      },
+    });
+  }
+
+  /** "هل تريد أيضاً تعطيل حساب الدخول؟" — [نعم] reuses the exact same
+   *  toggleStatus() the status badge itself calls; no duplicated logic. */
+  confirmDeactivateAfterLeaving(deactivate: boolean) {
+    const emp = this.endEmploymentEmployee;
+    this.showEndEmployment = false;
+    if (deactivate && emp) {
+      this.toggleStatus(emp);
+    }
+  }
+
+  employmentStatusLabel(status: string): string {
+    return { working: 'على رأس العمل', resigned: 'مستقيل', terminated: 'منتهية خدمته' }[status] || status;
   }
 
   // ── Employment timeline (Phase 10) ─────────────────────────
@@ -170,6 +270,7 @@ export class HrEmployeesComponent implements OnInit {
     'transfer.completed': 'انتهاء نقل', 'transfer.cancelled': 'إلغاء نقل',
     'leave.created': 'طلب إجازة', 'leave.approved': 'اعتماد إجازة', 'leave.rejected': 'رفض إجازة',
     'leave.cancelled': 'إلغاء إجازة', 'leave.ended_early': 'إنهاء إجازة مبكرًا',
+    'employee.resigned': 'تسجيل استقالة', 'employee.terminated': 'إنهاء خدمة',
     'bonus.created': 'منح مكافأة', 'bonus.updated': 'تعديل مكافأة', 'bonus.deleted': 'حذف مكافأة',
     'penalty.created': 'تسجيل خصم', 'penalty.updated': 'تعديل خصم', 'penalty.deleted': 'حذف خصم',
     'payroll.generated': 'توليد كشف راتب', 'payroll.locked': 'قفل كشف راتب', 'payroll.unlocked': 'فتح قفل كشف راتب',

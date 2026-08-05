@@ -88,6 +88,11 @@
       </div>
 
       <!-- Detail table -->
+      <div class="flex justify-end">
+        <div class="w-64">
+          <app-search-bar placeholder="بحث بالمنتج أو الكود أو المرجع..." (searchChange)="setSearch($event)"></app-search-bar>
+        </div>
+      </div>
       <div class="db-tbl-card">
         <div class="db-tbl-wrap">
           <table class="db-tbl">
@@ -100,7 +105,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (r of report.rows; track $index) {
+              @for (r of filteredRows; track $index) {
                 <tr>
                   <td style="color:#9CA3AF">{{ r.date }}</td>
                   <td style="color:#6B7280">{{ r.type_label }}</td>
@@ -116,7 +121,7 @@
               }
             </tbody>
           </table>
-          @if (!report.rows.length) { <app-report-empty-state message="لا توجد حركات مخزون لهذه الفلاتر"></app-report-empty-state> }
+          @if (!filteredRows.length) { <app-report-empty-state [message]="report.rows.length ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد حركات مخزون لهذه الفلاتر'"></app-report-empty-state> }
         </div>
       </div>
 

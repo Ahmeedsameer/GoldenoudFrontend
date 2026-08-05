@@ -14,6 +14,8 @@ import { TableDropdownComponent } from '../../../shared/components/common/table-
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { ProductScalarPipe } from '../../../pips/product-scalar.pipe';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-product-list',
@@ -29,6 +31,7 @@ import { ProductScalarPipe } from '../../../pips/product-scalar.pipe';
     ModalComponent,
     AlertComponent,
     ProductScalarPipe,
+    SearchBarComponent,
   ],
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.css',
@@ -39,6 +42,9 @@ export class ProductListComponent implements OnInit {
   private formHelperService = inject(FormHelperService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private authService = inject(AuthService);
+
+  get isAdmin(): boolean { return this.authService.isAdmin(); }
 
   list = new ListManager<any>((params) => this.productService.getProducts(params));
 
@@ -75,8 +81,20 @@ export class ProductListComponent implements OnInit {
     this.list.setFilter('product_type', value);
   }
 
-  showDeleteModal = false;
-  deletingProduct: any = null;
+  showArchiveModal = false;
+  archivingProduct: any = null;
+
+  /** Admin-only "Archived Products" view — flips the backend's ?archived=
+   *  filter (see ProductController::index()). Always sent explicitly as
+   *  1/0, never left undefined, since Angular's HttpParams doesn't tolerate
+   *  undefined-valued params cleanly. */
+  showingArchived = false;
+  restoringId: number | null = null;
+
+  toggleArchivedView(): void {
+    this.showingArchived = !this.showingArchived;
+    this.list.setFilter('archived', this.showingArchived ? 1 : 0);
+  }
 
   // ── Recipe (BOM) editor state ───────────────────────────
   showRecipeModal = false;
@@ -91,7 +109,7 @@ export class ProductListComponent implements OnInit {
 
   // ── Form state ──────────────────────────────────────────
   formLoading = false;
-  deleteLoading = false;
+  archiveLoading = false;
   formError = '';
   selectedFile: File | null = null;
   currentImageUrl: string | null = null;
@@ -295,28 +313,46 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  // ── Delete ──────────────────────────────────────────────
+  // ── Archive / Restore ────────────────────────────────────
+  // Products are never physically deleted — archiving just hides them from
+  // every browse/search/pick surface while every historical record (old
+  // invoices, supplies, FIFO batches, reports, counts) keeps working
+  // unchanged, since those load the product via its own relation, not this
+  // list's filtered query. Admin-only (see ProductController routes).
 
-  openDelete(product: any) {
-    this.deletingProduct = product;
-    this.showDeleteModal = true;
+  openArchive(product: any) {
+    this.archivingProduct = product;
+    this.showArchiveModal = true;
   }
 
-  onDelete() {
-    if (!this.deletingProduct) return;
-    this.deleteLoading = true;
+  onArchive() {
+    if (!this.archivingProduct) return;
+    this.archiveLoading = true;
 
-    this.productService.deleteProduct(this.deletingProduct.id).subscribe({
+    this.productService.archiveProduct(this.archivingProduct.id).subscribe({
       next: () => {
-        this.deleteLoading = false;
-        this.showDeleteModal = false;
-        this.deletingProduct = null;
+        this.archiveLoading = false;
+        this.showArchiveModal = false;
+        this.archivingProduct = null;
         this.list.load();
       },
       error: (err) => {
-        this.deleteLoading = false;
-        // Keep modal open so user sees the failure (could add a toast here)
-        console.error('Delete failed', err);
+        this.archiveLoading = false;
+        console.error('Archive failed', err);
+      },
+    });
+  }
+
+  onRestore(product: any) {
+    this.restoringId = product.id;
+    this.productService.restoreProduct(product.id).subscribe({
+      next: () => {
+        this.restoringId = null;
+        this.list.load();
+      },
+      error: (err) => {
+        this.restoringId = null;
+        console.error('Restore failed', err);
       },
     });
   }

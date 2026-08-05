@@ -8,21 +8,32 @@
   <div class="flex flex-wrap items-center gap-2">
 
     <!-- Search -->
-    <div class="relative">
-      <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style="color: #9CA3AF;">
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-        </svg>
-      </span>
-      <input
-        type="text"
-        placeholder="بحث بالاسم..."
-        class="crud-search"
-        style="padding-right: 2.125rem; padding-left: 0.75rem;"
-        (change)="setNameFilter($event.target.value)"
-      />
+    <div class="w-52">
+      <app-search-bar placeholder="بحث بالاسم أو الإيميل..." (searchChange)="setNameFilter($event)"></app-search-bar>
     </div>
 
+    <!-- Status filter -->
+    <select
+      [ngModel]="statusFilter" (ngModelChange)="setStatusFilter($event)"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:bg-white/[0.03] dark:text-gray-300 dark:border-gray-700"
+    >
+      <option value="all">الكل</option>
+      <option value="active">نشط</option>
+      <option value="inactive">معطّل</option>
+    </select>
+
+  </div>
+</div>
+
+<!-- Summary cards -->
+<div class="grid grid-cols-2 sm:grid-cols-2 gap-4 mb-5">
+  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+    <p class="text-xs text-gray-400 mb-1">الحسابات النشطة</p>
+    <p class="text-2xl font-bold text-success-600 dark:text-success-400">{{ activeCount }}</p>
+  </div>
+  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+    <p class="text-xs text-gray-400 mb-1">الحسابات المعطّلة</p>
+    <p class="text-2xl font-bold text-gray-500 dark:text-gray-400">{{ inactiveCount }}</p>
   </div>
 </div>
 
@@ -35,6 +46,7 @@
           <th>المستخدم</th>
           <th>البريد الإلكتروني</th>
           <th>الدور</th>
+          <th>الحالة</th>
           <th>تاريخ الإنشاء</th>
           <th style="text-align: center;">الإجراءات</th>
         </tr>
@@ -60,6 +72,16 @@
               <app-badge color="primary">{{ user.role | userRole }}</app-badge>
             </td>
 
+            <!-- Status badge -->
+            <td>
+              <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                [class]="user.status === 'inactive'
+                  ? 'bg-gray-100 text-gray-500 dark:bg-white/[0.05] dark:text-gray-400'
+                  : 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400'">
+                {{ user.status === 'inactive' ? 'معطّل' : 'نشط' }}
+              </span>
+            </td>
+
             <!-- Date -->
             <td style="color: #9CA3AF; font-size: 0.8125rem; white-space: nowrap;">
               {{ user.created_at | date:'mediumDate' }}
@@ -78,6 +100,11 @@
                   </svg>
                   عرض
                 </a>
+                <button type="button" (click)="toggleStatus(user)"
+                  class="crud-action"
+                  [class]="user.status === 'inactive' ? 'crud-action-view' : 'crud-action-delete'">
+                  {{ user.status === 'inactive' ? 'تفعيل الحساب' : 'إلغاء تفعيل الحساب' }}
+                </button>
               </div>
             </td>
 
@@ -87,7 +114,7 @@
         <!-- Empty state -->
         @if (!list.loading && list.result.data.length === 0) {
           <tr>
-            <td colspan="5" style="padding: 4rem 1rem; text-align: center;">
+            <td colspan="6" style="padding: 4rem 1rem; text-align: center;">
               <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
                 <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: #D1CEC5;">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>

@@ -1,0 +1,40 @@
+@if (error) {
+  <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+    <p class="text-sm text-error-600 dark:text-error-400">{{ error }}</p>
+  </div>
+}
+
+<div class="grid grid-cols-1 gap-3 mb-5">
+  <div>
+    <app-label>الاسم <span class="text-error-500">*</span></app-label>
+    <input type="text" [ngModel]="model.name" (ngModelChange)="update('name', $event)" [ngModelOptions]="{standalone: true}"
+      class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+  </div>
+  @if (showPhone) {
+    <div>
+      <app-label>رقم الهاتف <span class="text-error-500">*</span></app-label>
+      <input type="text" [ngModel]="model.phone" (ngModelChange)="update('phone', $event)" [ngModelOptions]="{standalone: true}"
+        class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+    </div>
+  }
+  <div>
+    <app-label>البريد الإلكتروني (اختياري)</app-label>
+    <input type="email" [ngModel]="model.email" (ngModelChange)="update('email', $event)" [ngModelOptions]="{standalone: true}"
+      class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+  </div>
+  <div>
+    <app-label>العنوان (اختياري)</app-label>
+    <input type="text" [ngModel]="model.address" (ngModelChange)="update('address', $event)" [ngModelOptions]="{standalone: true}"
+      class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+  </div>
+</div>
+
+<div class="flex gap-3">
+  <button type="button" (click)="save.emit()" [disabled]="loading"
+    class="flex-1 h-10 rounded-lg font-medium text-sm text-white transition-colors"
+    [class]="loading ? 'bg-brand-400 cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600'">
+    @if (loading) { جارِ الحفظ... } @else { {{ submitLabel }} }
+  </button>
+  <button type="button" (click)="cancel.emit()" [disabled]="loading"
+    class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">إلغاء</button>
+</div>

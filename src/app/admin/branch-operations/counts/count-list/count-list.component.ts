@@ -9,6 +9,7 @@ import { InventoryCountService, CountSession } from '../../../../services/invent
 import { ShopService } from '../../../../services/shop.service';
 import { UserManagmentService } from '../../../../services/user-managment.service';
 import { AuthService } from '../../../../services/auth.service';
+import { SearchBarComponent } from '../../../../shared/components/common/search-bar/search-bar.component';
 
 const STATUS_LABELS: Record<string, string> = { counting: 'جاري الجرد', review: 'قيد المراجعة', approved: 'تمت الموافقة', completed: 'مكتمل' };
 const STATUS_CLASSES: Record<string, string> = {
@@ -21,7 +22,7 @@ const STATUS_CLASSES: Record<string, string> = {
 @Component({
   selector: 'app-count-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportEmptyStateComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportEmptyStateComponent, SearchBarComponent],
   templateUrl: './count-list.component.html',
 })
 export class CountListComponent implements OnInit {
@@ -42,6 +43,7 @@ export class CountListComponent implements OnInit {
 
   statusFilter = '';
   shopFilter: number | null = null;
+  search = '';
 
   showForm = false;
   saving = false;
@@ -67,7 +69,7 @@ export class CountListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.svc.list({ status: this.statusFilter || undefined, shop_id: this.shopFilter ?? undefined, page: this.page, per_page: 25 }).subscribe({
+    this.svc.list({ status: this.statusFilter || undefined, shop_id: this.shopFilter ?? undefined, search: this.search || undefined, page: this.page, per_page: 25 }).subscribe({
       next: (page) => {
         this.sessions = page.data;
         this.meta = { current_page: page.current_page, last_page: page.last_page, total: page.total };
@@ -78,6 +80,7 @@ export class CountListComponent implements OnInit {
   }
 
   applyFilters(): void { this.page = 1; this.load(); }
+  setSearch(value: string): void { this.search = value; this.applyFilters(); }
   nextPage(): void { if (this.meta && this.page < this.meta.last_page) { this.page++; this.load(); } }
   prevPage(): void { if (this.page > 1) { this.page--; this.load(); } }
 

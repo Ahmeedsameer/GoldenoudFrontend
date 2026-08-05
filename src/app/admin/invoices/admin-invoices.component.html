@@ -56,7 +56,10 @@
       <!-- Header -->
       <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
         <div class="flex items-center gap-3">
-          <span class="text-base font-bold text-gray-800 dark:text-white/90">فاتورة #{{ inv.id }}</span>
+          <a [routerLink]="['/dashboard/invoices', inv.id]"
+             class="text-base font-bold text-gray-800 dark:text-white/90 hover:text-brand-500 transition-colors">
+            فاتورة #{{ inv.id }}
+          </a>
           <span class="text-xs text-gray-400">{{ inv.date | date:'mediumDate' }}</span>
           @if (hasViolation(inv)) {
             <span class="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400">

@@ -54,6 +54,19 @@ export class HrService {
     return this.http.put<any>(`${this.base}/employees/${id}/toggle-status`, {});
   }
 
+  /** Read-only Final Settlement breakdown — persists nothing, lets the admin
+   *  review before calling endEmployment() below. */
+  previewEndEmployment(id: number, payload: { type: 'resigned' | 'terminated'; leaving_date: string }): Observable<any> {
+    return this.http.post<any>(`${this.base}/employees/${id}/end-employment/preview`, payload);
+  }
+
+  /** Resignation/termination — updates employment_status, saves the leaving date,
+   *  and computes the Final Settlement. Does not touch the account's active/inactive
+   *  status (see toggleStatus above, now unblocked once this has run). */
+  endEmployment(id: number, payload: { type: 'resigned' | 'terminated'; leaving_date: string }): Observable<any> {
+    return this.http.put<any>(`${this.base}/employees/${id}/end-employment`, payload);
+  }
+
   // ── Employee transfers ─────────────────────────────────────
   getTransfers(params: any): Observable<any> {
     return this.http
@@ -121,7 +134,7 @@ export class HrService {
 
   // ── Payroll ────────────────────────────────────────────────
   getPayrolls(params: any): Observable<any> {
-    return this.http.get<any>(`${this.base}/payrolls`, { params }).pipe(retry(2), map((res) => res?.data ?? res));
+    return this.http.get<any>(`${this.base}/payrolls`, { params: dropUndefined(params) }).pipe(retry(2), map((res) => res?.data ?? res));
   }
 
   getPayroll(id: number): Observable<any> {
@@ -134,7 +147,33 @@ export class HrService {
 
   lockPayroll(id: number): Observable<any> { return this.http.put<any>(`${this.base}/payrolls/${id}/lock`, {}); }
   unlockPayroll(id: number): Observable<any> { return this.http.put<any>(`${this.base}/payrolls/${id}/unlock`, {}); }
+  /** @deprecated superseded by payPayroll() below — kept only for backward compatibility. */
   markPaidPayroll(id: number): Observable<any> { return this.http.put<any>(`${this.base}/payrolls/${id}/paid`, {}); }
+
+  payPayroll(id: number, safeId: number): Observable<any> {
+    return this.http.put<any>(`${this.base}/payrolls/${id}/pay`, { safe_id: safeId });
+  }
+
+  payAllPayrolls(payload: { safe_id: number; year?: number; month?: number; shop_id?: number; user_id?: number }): Observable<any> {
+    return this.http.post<any>(`${this.base}/payrolls/pay-all`, payload);
+  }
+
+  getPayrollSummary(params: any): Observable<any> {
+    return this.http.get<any>(`${this.base}/payrolls/summary`, { params: dropUndefined(params) }).pipe(map((res) => res?.data ?? res));
+  }
+
+  getPayrollTransactions(id: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/payrolls/${id}/transactions`).pipe(map((res) => res?.data ?? res));
+  }
+
+  // ── Final Settlement documents (read-only, created by endEmployment) ──
+  getSettlements(params: any): Observable<any> {
+    return this.http.get<any>(`${this.base}/settlements`, { params }).pipe(retry(2), map((res) => res?.data ?? res));
+  }
+
+  getSettlement(id: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/settlements/${id}`).pipe(map((res) => res?.data ?? res));
+  }
 
   // ── Deduction settings ─────────────────────────────────────
   getDeductionSettings(): Observable<any> {
@@ -155,6 +194,23 @@ export class HrService {
       params: { ...params, format },
       responseType: 'blob',
     });
+  }
+
+  // ── Payroll + Treasury dedicated reports (use <app-report-toolbar> for export, not exportReport() above) ──
+  getPayrollReport(params: any): Observable<any> {
+    return this.http.get<any>(`${this.base}/reports/payroll`, { params: dropUndefined(params) }).pipe(map((res) => res?.data ?? res));
+  }
+
+  getSalaryPaymentReport(params: any): Observable<any> {
+    return this.http.get<any>(`${this.base}/reports/salary-payments`, { params: dropUndefined(params) }).pipe(map((res) => res?.data ?? res));
+  }
+
+  getAdvanceInstallmentReport(params: any): Observable<any> {
+    return this.http.get<any>(`${this.base}/reports/advance-installments`, { params: dropUndefined(params) }).pipe(map((res) => res?.data ?? res));
+  }
+
+  getLeaveDeductionReport(params: any): Observable<any> {
+    return this.http.get<any>(`${this.base}/reports/leave-deductions`, { params: dropUndefined(params) }).pipe(map((res) => res?.data ?? res));
   }
 
   // ── Weekly Schedule ────────────────────────────────────────
@@ -340,4 +396,22 @@ export class HrService {
   recordAdvanceRepayment(id: number, payload: { amount: number; date: string; safe_id: number; notes?: string | null }): Observable<any> {
     return this.http.post<any>(`${this.base}/advances/${id}/repayments`, payload);
   }
+
+  /** Changes where FUTURE installments (and the repayment form's default) land — never touches past repayments. */
+  changeAdvanceDefaultSafe(id: number, safeId: number): Observable<any> {
+    return this.http.put<any>(`${this.base}/advances/${id}/default-safe`, { safe_id: safeId });
+  }
+
+  getAdvanceTransactions(id: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/advances/${id}/transactions`).pipe(map((res) => res?.data ?? res));
+  }
+}
+
+/** HttpClient serializes `undefined` values as the literal string "undefined"
+ *  rather than omitting the param — strip them so an unset optional filter
+ *  never reaches the backend as a real (non-empty) value. Same helper as
+ *  CustomerService — the exact bug this fixes bit the Payroll dashboard's
+ *  filters (status/shop_id) during this phase's own verification. */
+function dropUndefined(params: Record<string, any>): Record<string, any> {
+  return Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null));
 }

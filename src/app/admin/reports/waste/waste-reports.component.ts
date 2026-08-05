@@ -11,6 +11,8 @@ import { ReportLineChartComponent } from '../../../shared/components/reports/rep
 import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 import { WasteReportService, WasteReportSummary, WasteReportType } from '../../../services/waste-report.service';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
+import { matchesSearch } from '../../../shared/utils/text-search.util';
 
 interface ReportTab { key: WasteReportType; label: string; columns: { key: string; label: string }[]; }
 
@@ -51,7 +53,7 @@ const TABS: ReportTab[] = [
 @Component({
   selector: 'app-waste-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportLineChartComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportLineChartComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './waste-reports.component.html',
 })
 export class WasteReportsComponent implements OnInit {
@@ -72,6 +74,15 @@ export class WasteReportsComponent implements OnInit {
 
   trendCategories: string[] = [];
   trendSeries: { name: string; data: number[] }[] = [];
+
+  search = '';
+  setSearch(value: string): void { this.search = value; }
+
+  /** Client-side — every tab's rows are already fully loaded via svc.data(). */
+  get filteredRows(): any[] {
+    if (!this.search) return this.rows;
+    return this.rows.filter((r) => this.activeTab.columns.some((c) => matchesSearch(this.search, r[c.key])));
+  }
 
   get exportPath(): string { return `/branch-operations/reports/waste/${this.activeTab.key}/export`; }
   get exportParams(): Record<string, any> { return { from: this.from || undefined, to: this.to || undefined }; }

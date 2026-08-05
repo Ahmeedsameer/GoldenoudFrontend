@@ -14,16 +14,103 @@
   </div>
 }
 
+<!-- Customer card -->
+<div class="mb-5">
+  <app-component-card title="بيانات العميل">
+    <div class="relative">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <app-label>رقم الهاتف</app-label>
+          <input type="text" [value]="customerQuery"
+            (input)="onPhoneInput($any($event.target).value)" (blur)="closeCustomerDropdown()"
+            placeholder="05xxxxxxxx — ابحث بالهاتف أو الاسم" autocomplete="off"
+            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700" />
+        </div>
+        <div>
+          <app-label>اسم العميل</app-label>
+          <input type="text" [value]="form.get('name')?.value"
+            (input)="onNameInput($any($event.target).value)" (blur)="closeCustomerDropdown()"
+            placeholder="اسم العميل — ابحث بالاسم أو الهاتف" autocomplete="off"
+            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700" />
+        </div>
+      </div>
+
+      @if (showCustomerDropdown && (customerResults.length > 0 || customerSearchedNoResults)) {
+        <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden dark:bg-gray-900 dark:border-gray-700">
+          @for (c of customerResults; track c.phone) {
+            <li (mousedown)="selectCustomer(c)" class="px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+              <span class="font-medium text-gray-800 dark:text-white/90">{{ c.name }}</span>
+              <span class="text-gray-400 font-mono text-xs mr-2">{{ c.phone }}</span>
+            </li>
+          }
+          @if (customerSearchedNoResults) {
+            <li (mousedown)="openQuickAddCustomer()"
+              class="px-4 py-2.5 text-sm cursor-pointer text-brand-600 dark:text-brand-400 font-medium hover:bg-brand-50 dark:hover:bg-brand-500/10 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              إضافة عميل جديد
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </app-component-card>
+</div>
+
+<!-- Quick-add customer — cashier can create a customer without leaving this page -->
+<app-modal [isOpen]="showQuickAddCustomer" (close)="showQuickAddCustomer = false" className="max-w-md m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">إضافة عميل جديد</h2>
+      <button type="button" (click)="showQuickAddCustomer = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <app-customer-form
+      [model]="quickAddCustomer" (modelChange)="quickAddCustomer = $event"
+      [loading]="quickAddCustomerLoading" [error]="quickAddCustomerError"
+      submitLabel="حفظ العميل"
+      (save)="submitQuickAddCustomer()" (cancel)="showQuickAddCustomer = false">
+    </app-customer-form>
+  </div>
+</app-modal>
+
+<!-- ─── Barcode scanner — always visible, always focused so the cashier can
+     keep scanning without touching the mouse. A USB/BT scanner types the
+     code then sends Enter; (keyup.enter) handles that exactly like a
+     manually-typed code + Enter key. -->
+<div class="mb-5">
+  <div class="relative">
+    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 5v14M7 5v14M11 5v10M15 5v14M18 5v10M21 5v14"/>
+      </svg>
+    </span>
+    <!-- Never [disabled] — a disabled input silently drops keystrokes, which
+         would defeat rapid-fire scanning: the field must stay accepting
+         input even while a previous scan's lookup is still in flight, since
+         those get queued (see processBarcodeQueue()), never blocked at the
+         DOM level. -->
+    <input #barcodeInput type="text" [(ngModel)]="barcodeValue" [ngModelOptions]="{standalone: true}"
+      (keydown.enter)="onBarcodeScan()"
+      placeholder="امسح الباركود أو اكتبه ثم اضغط Enter…" autocomplete="off"
+      class="w-full h-12 pr-10 pl-4 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:border-brand-400 focus:ring-1 focus:ring-brand-400" />
+  </div>
+</div>
+
 <!-- ─── Sales Catalog — always visible, the primary view of this screen ───
      Clicking a Ready Product adds it directly. Clicking a Compound Product
      (a perfume) opens the Product Builder immediately — no intermediate
      step, no button to "reveal" the catalog first. -->
 <div class="mb-5">
   <app-component-card title="كتالوج المبيعات" desc="اضغط على منتج لإضافته — العطور تفتح صانع المنتج">
+    <div class="mb-3 max-w-xs">
+      <app-search-bar placeholder="بحث بالاسم أو SKU أو الباركود أو الفئة..." (searchChange)="setCatalogSearch($event)"></app-search-bar>
+    </div>
     @if (catalogLoading) {
       <p class="text-sm text-gray-400 text-center py-4">جارٍ التحميل…</p>
     } @else if (catalogItems.length === 0) {
-      <p class="text-sm text-gray-400 text-center py-4">لا توجد منتجات في الكتالوج بعد</p>
+      <p class="text-sm text-gray-400 text-center py-4">{{ catalogSearch ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد منتجات في الكتالوج بعد' }}</p>
     } @else {
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         @for (p of catalogItems; track p.id) {
@@ -77,50 +164,23 @@
 
 <form [formGroup]="form" novalidate>
 
-
-  <!-- Customer card -->
-  <app-component-card title="بيانات العميل">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div>
-        <app-label>رقم الهاتف</app-label>
-        <div class="relative">
-          <input type="text" [value]="customerQuery"
-            (input)="onPhoneInput($any($event.target).value)" (blur)="closeCustomerDropdown()"
-            placeholder="05xxxxxxxx — ابحث بالهاتف" autocomplete="off"
-            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700" />
-          @if (showCustomerDropdown || customerResults.length > 0) {
-            <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden dark:bg-gray-900 dark:border-gray-700">
-              @for (c of customerResults; track c.phone) {
-                <li (mousedown)="selectCustomer(c)" class="px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05]">
-                  <span class="font-medium text-gray-800 dark:text-white/90">{{ c.name }}</span>
-                  <span class="text-gray-400 font-mono text-xs mr-2">{{ c.phone }}</span>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-      </div>
-      <div>
-        <app-label>اسم العميل</app-label>
-        <input type="text" [value]="form.get('name')?.value"
-          (input)="form.get('name')?.setValue($any($event.target).value)" placeholder="اسم العميل"
-          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700" />
-      </div>
-    </div>
-  </app-component-card>
-
   <!-- Invoice header card -->
   <div class="mt-5">
     <app-component-card title="بيانات الفاتورة">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
 
-        <!-- Total amount — deliberately large so the seller can't miss it -->
+        <!-- Total amount — deliberately large so the seller can't miss it.
+             Always computed (Σ qty × price) — never manually typed, in
+             either pricing mode. -->
         <div class="lg:col-span-2">
           <div class="flex items-center justify-between mb-1.5">
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-              @if (useNewEngine) { الإجمالي (محسوب تلقائياً) } @else { إجمالي الفاتورة (ج.م) <span class="text-error-500">*</span> }
+              الإجمالي (محسوب تلقائياً)
             </label>
-            <!-- Pricing mode toggle: automatic per-item vs manual Global Total -->
+            <!-- Pricing mode toggle: "أسعار الأصناف" pre-fills each line's price
+                 from Pricing Management (overridable); "إجمالي يدوي" (Manual Total)
+                 requires the cashier to type every line's price by hand. Both
+                 modes price every line directly and auto-compute the total. -->
             <div class="inline-flex rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden text-[11px]">
               <button type="button" (click)="setPricingMode('auto')"
                 [class]="pricingMode === 'auto' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-500'"
@@ -132,23 +192,11 @@
           </div>
           <div class="relative">
             <input type="number" formControlName="total_amount" min="0.01" step="0.01" placeholder="0.00"
-              [readonly]="useNewEngine"
-              class="h-16 w-full rounded-xl border-2 bg-white px-5 pe-16 text-2xl font-bold text-gray-900 placeholder:text-gray-300 placeholder:font-normal focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 shadow-sm"
-              [class]="useNewEngine
-                ? 'border-success-300 bg-success-50/40 dark:border-success-600 dark:bg-success-500/5'
-                : (form.get('total_amount')?.invalid && form.get('total_amount')?.touched
-                  ? 'border-error-400 focus:border-error-400 focus:ring-error-500/20'
-                  : 'border-brand-300 focus:border-brand-500 focus:ring-brand-500/20 dark:border-brand-600')" />
+              [readonly]="true"
+              class="h-16 w-full rounded-xl border-2 bg-white px-5 pe-16 text-2xl font-bold text-gray-900 placeholder:text-gray-300 placeholder:font-normal focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 shadow-sm border-success-300 bg-success-50/40 dark:border-success-600 dark:bg-success-500/5" />
             <span class="absolute inset-y-0 end-4 flex items-center text-base font-bold text-brand-400 pointer-events-none">ج.م</span>
           </div>
-          @if (!useNewEngine && form.get('total_amount')?.invalid && form.get('total_amount')?.touched) {
-            <p class="mt-1 text-xs text-error-500">إجمالي الفاتورة مطلوب ويجب أن يكون أكبر من صفر</p>
-          }
-          @if (useNewEngine) {
-            <p class="mt-1 text-xs text-success-600 dark:text-success-400">يُحسَب تلقائياً من الأصناف: الكمية × سعر الوحدة</p>
-          } @else {
-            <p class="mt-1 text-xs text-gray-400">وضع الإجمالي اليدوي — يُوزَّع المبلغ على الأصناف الموزونة عند الحفظ</p>
-          }
+          <p class="mt-1 text-xs text-success-600 dark:text-success-400">يُحسَب تلقائياً من الأصناف: الكمية × سعر الوحدة</p>
         </div>
 
 
@@ -258,26 +306,40 @@
 
               @if (manufacturedName(i)) {
                 <!-- Manufactured perfume: default = real Oil + Bottle price (Pricing
-                     Management), freely editable exactly like any other product —
-                     under the hood this only ever adjusts the hidden Bottle row. -->
+                     Management). Editable only in "إجمالي يدوي" (Manual Total) mode —
+                     in "أسعار الأصناف" (auto) mode the configured price is locked, same
+                     as every other product row. Under the hood this only ever adjusts
+                     the hidden Bottle row. -->
                 <div class="relative">
                   <input type="number" min="0" step="0.01" placeholder="0.00"
                     [ngModel]="manufacturedUnitPrice(i)" [ngModelOptions]="{standalone: true}"
                     (ngModelChange)="setManufacturedUnitPrice(i, $event)"
-                    class="h-10 w-full rounded-lg border bg-white ps-3 pe-9 text-sm font-mono font-bold text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90 border-success-300 focus:border-success-500 focus:ring-success-500/20 dark:border-success-500/40" />
+                    [readonly]="pricingMode === 'auto'"
+                    class="h-10 w-full rounded-lg border ps-3 pe-9 text-sm font-mono font-bold focus:outline-hidden focus:ring-3"
+                    [class]="pricingMode === 'auto'
+                      ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed dark:bg-white/[0.03] dark:text-gray-400 dark:border-white/10'
+                      : 'bg-white text-gray-800 dark:bg-gray-800 dark:text-white/90 border-success-300 focus:border-success-500 focus:ring-success-500/20 dark:border-success-500/40'" />
                   <span class="absolute inset-y-0 end-3 flex items-center text-[11px] text-gray-400 pointer-events-none">/ {{ itemUnit(i) }}</span>
                 </div>
                 <p class="mt-1 text-xs text-success-600 dark:text-success-400 font-medium">
                   {{ manufacturedQty(i) }} × {{ manufacturedUnitPrice(i) | number:'1.2-2' }} = <span class="font-bold">{{ manufacturedLineTotal(i) | number:'1.2-2' }} ج.م</span>
                 </p>
-              } @else if (selectedGoods[i] && pricingMode === 'auto') {
-                <!-- Editable unit price → line total = quantity × price (no distribution) -->
+              } @else if (selectedGoods[i]) {
+                <!-- Editable unit price → line total = quantity × price (no distribution).
+                     "إجمالي يدوي" (Manual Total): the cashier types every line's price by
+                     hand, for every product regardless of category. "أسعار الأصناف" (auto):
+                     locked/read-only — pre-filled from the configured price (see
+                     selectProduct()) and never editable, per business requirement that
+                     auto mode always bills at the system's real price. -->
                 <div class="relative">
                   <input type="number" formControlName="price" min="0" step="0.01" placeholder="0.00"
-                    class="h-10 w-full rounded-lg border bg-white ps-3 pe-9 text-sm font-mono font-bold text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90"
-                    [class]="itemConfigured(i)
-                      ? 'border-success-300 focus:border-success-500 focus:ring-success-500/20 dark:border-success-500/40'
-                      : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700'" />
+                    [readonly]="pricingMode === 'auto'"
+                    class="h-10 w-full rounded-lg border ps-3 pe-9 text-sm font-mono font-bold focus:outline-hidden focus:ring-3"
+                    [class]="pricingMode === 'auto'
+                      ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed dark:bg-white/[0.03] dark:text-gray-400 dark:border-white/10'
+                      : (itemConfigured(i)
+                          ? 'bg-white text-gray-800 dark:bg-gray-800 dark:text-white/90 border-success-300 focus:border-success-500 focus:ring-success-500/20 dark:border-success-500/40'
+                          : 'bg-white text-gray-800 dark:bg-gray-800 dark:text-white/90 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700')" />
                   <span class="absolute inset-y-0 end-3 flex items-center text-[11px] text-gray-400 pointer-events-none">/ {{ itemUnit(i) }}</span>
                 </div>
                 @if (itemConfigured(i)) {

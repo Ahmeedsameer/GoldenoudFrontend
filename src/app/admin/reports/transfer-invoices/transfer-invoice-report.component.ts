@@ -11,6 +11,7 @@ import { DatePickerComponent } from '../../../shared/components/form/date-picker
 import { TransferInvoiceReportService, InvoiceReportRow, InvoiceReportFilters } from '../../../services/transfer-invoice-report.service';
 import { ShopService } from '../../../services/shop.service';
 import { UserManagmentService } from '../../../services/user-managment.service';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'مسودة', submitted: 'بانتظار الموافقة', approved: 'تمت الموافقة', rejected: 'مرفوض',
@@ -26,7 +27,7 @@ const STATUS_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-transfer-invoice-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './transfer-invoice-report.component.html',
 })
 export class TransferInvoiceReportComponent implements OnInit {

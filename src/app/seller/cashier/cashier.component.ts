@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, of, forkJoin } from 'rxjs';
@@ -14,6 +14,10 @@ import { LabelComponent } from '../../shared/components/form/label/label.compone
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
 import { CatalogSellDialogComponent, ComposedLine } from './catalog-sell-dialog/catalog-sell-dialog.component';
+import { SearchBarComponent } from '../../shared/components/common/search-bar/search-bar.component';
+import { CustomerFormComponent } from '../../shared/components/customer-form/customer-form.component';
+import { CustomerService } from '../../services/customer.service';
+import { ActivatedRoute } from '@angular/router';
 
 export interface SellerCurrency { id: number; code: string; name: string; symbol: string; rate: number; }
 export interface SellerSafe    { id: number; safe_type: { name: string; kind: string }; }
@@ -44,14 +48,18 @@ export interface CatalogProduct {
     FormsModule,
     InvoiceReceiptComponent,
     CatalogSellDialogComponent,
+    SearchBarComponent,
+    CustomerFormComponent,
   ],
   templateUrl: './cashier.component.html',
   styleUrl: './cashier.component.css',
 })
-export class CashierComponent implements OnInit, OnDestroy {
+export class CashierComponent implements OnInit, AfterViewInit, OnDestroy {
   private fb = inject(FormBuilder);
   private salesService   = inject(SalesService);
   private overrideService = inject(OverrideService);
+  private customerService = inject(CustomerService);
+  private route = inject(ActivatedRoute);
   private destroy$ = new Subject<void>();
 
   isSubmitting = false;
@@ -89,11 +97,20 @@ export class CashierComponent implements OnInit, OnDestroy {
     return this.currencies.find(c => c.id === +id)?.symbol ?? '';
   }
 
-  // ── Customer typeahead ──────────────────────────────────
+  // ── Customer typeahead — searches by name OR phone (either field can drive it) ──
   customerQuery = '';
   customerResults: Customer[] = [];
   showCustomerDropdown = false;
+  /** True once a search has actually completed with zero matches — only then
+   *  do we offer "add new customer" (never while the field is simply empty). */
+  customerSearchedNoResults = false;
   private customerSearch$ = new Subject<string>();
+
+  // ── Quick-create customer (cashier, no need to leave the page) ──────────
+  showQuickAddCustomer = false;
+  quickAddCustomer = { name: '', phone: '', email: '', address: '' };
+  quickAddCustomerLoading = false;
+  quickAddCustomerError = '';
 
   // ── Header form ─────────────────────────────────────────
   form: FormGroup = this.fb.group({
@@ -155,18 +172,152 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.syncComputedTotal();
   }
 
+  // ── Barcode scanner ───────────────────────────────────────────────────────
+  // A standard USB/BT barcode scanner behaves like a keyboard — it types the
+  // code into whatever field has focus, then sends Enter. A plain text input
+  // bound with (keyup.enter) already handles that natively; no custom
+  // keystroke-buffering/global listener is needed.
+  @ViewChild('barcodeInput') private barcodeInputRef?: ElementRef<HTMLInputElement>;
+
+  barcodeValue = '';
+  barcodeLoading = false;
+
+  /** Codes scanned while a previous lookup is still in flight — never
+   *  dropped, just processed one at a time once the current lookup
+   *  finishes. Necessary because two overlapping lookups for the SAME
+   *  product could otherwise both read the pre-increment quantity and
+   *  collapse into a single +1 instead of +2 (a lost-update race) — running
+   *  them strictly one-at-a-time makes that structurally impossible while
+   *  still never losing a scan the cashier fired off quickly. */
+  private barcodeQueue: string[] = [];
+
+  ngAfterViewInit(): void {
+    this.focusBarcodeInput();
+  }
+
+  private focusBarcodeInput(): void {
+    // Deferred a tick so it runs after the current change-detection cycle —
+    // calling .focus() synchronously right after clearing the value can lose
+    // to Angular's own DOM update in some browsers.
+    setTimeout(() => this.barcodeInputRef?.nativeElement.focus(), 0);
+  }
+
+  /** Fires on Enter — exactly when a scanner (or a cashier typing a code by
+   *  hand) finishes sending the barcode. The field is cleared and refocused
+   *  immediately regardless of queue state, so the cashier can keep scanning
+   *  at full speed with no visible delay; the actual lookups just resolve
+   *  serially behind the scenes. */
+  onBarcodeScan(): void {
+    const code = this.barcodeValue.trim();
+    this.barcodeValue = '';
+    this.focusBarcodeInput();
+    if (!code) return;
+
+    this.barcodeQueue.push(code);
+    this.processBarcodeQueue();
+  }
+
+  private processBarcodeQueue(): void {
+    if (this.barcodeLoading || this.barcodeQueue.length === 0) return;
+
+    const code = this.barcodeQueue.shift()!;
+    this.barcodeLoading = true;
+
+    this.salesService.findGoodsByBarcode(code).subscribe({
+      next: ({ status, data }) => {
+        this.barcodeLoading = false;
+
+        if (status === 'ambiguous') {
+          this.alert = { show: true, type: 'error', message: `أكثر من منتج مسجَّل بنفس الباركود "${code}" — راجع بيانات المنتجات.` };
+        } else if (status === 'not_found' || !data) {
+          this.alert = { show: true, type: 'error', message: `لم يتم العثور على منتج بالباركود "${code}".` };
+        } else {
+          // Covers every outcome inside addOrIncrementFromBarcode too — found
+          // + added, found + quantity incremented, missing price, or exceeds
+          // stock — all converge back here before the queue/focus continue.
+          this.addOrIncrementFromBarcode(data);
+        }
+
+        // Regain focus after EVERY outcome — success, not found, ambiguous,
+        // missing price, or exceeds stock — so the cashier never has to
+        // click the field again mid-shift.
+        this.focusBarcodeInput();
+        this.processBarcodeQueue();
+      },
+      error: () => {
+        this.barcodeLoading = false;
+        this.alert = { show: true, type: 'error', message: `تعذّر البحث عن الباركود "${code}".` };
+        this.focusBarcodeInput();
+        this.processBarcodeQueue();
+      },
+    });
+  }
+
+  /** If this product is already a plain (non-composed) line on the invoice,
+   *  bump its quantity by 1 — same stock/price rules apply automatically
+   *  since it's the same reactive form control exceedsStock()/hasStockError
+   *  already watch. Otherwise adds a new line via the same addComposedLine()
+   *  every catalog-card click already goes through. */
+  private addOrIncrementFromBarcode(goods: GoodsSearchResult): void {
+    const product = goods.supply_item.product;
+
+    if (goods.configured_unit_price == null) {
+      this.alert = { show: true, type: 'error', message: `${product.name} ليس له سعر بيع محدد — أكمل إدارة الأسعار أولاً.` };
+      return;
+    }
+
+    const existingIdx = this.items.controls.findIndex((_, i) =>
+      !this.compositionKeys[i] &&
+      this.items.at(i).get('product_id')?.value === product.id
+    );
+
+    if (existingIdx >= 0) {
+      const qtyCtrl = this.items.at(existingIdx).get('quantity');
+      const newQty = (+(qtyCtrl?.value) || 0) + 1;
+      if (newQty > this.stockAvailable(existingIdx)) {
+        this.alert = {
+          show: true, type: 'error',
+          message: `الكمية المطلوبة من "${product.name}" أكبر من المتاح في المخزون (${this.stockAvailable(existingIdx)} ${this.itemUnit(existingIdx)}). لا يمكن إتمام البيع.`,
+        };
+        return;
+      }
+      qtyCtrl?.setValue(newQty);
+      this.syncComputedTotal();
+      return;
+    }
+
+    if ((goods.product_shop_stock ?? 0) <= 0) {
+      this.alert = { show: true, type: 'error', message: `${product.name} نفد من المخزون في هذا الفرع — يحتاج توريد.` };
+      return;
+    }
+
+    this.addComposedLine({
+      product_id: product.id, name: product.name, sku: product.sku, unit: goods.unit ?? product.scalar,
+      quantity: 1, price: goods.configured_unit_price, stock: goods.product_shop_stock ?? 0,
+      parent_product_id: null, role: null,
+    });
+  }
+
   // ── Sales Catalog — always visible, no button-gating ─────────────────────
   // "When I open the Sales screen, I see the Catalog" — this is the default,
   // primary view, not a secondary action hidden behind a button/modal.
   catalogItems: CatalogProduct[] = [];
   catalogLoading = false;
+  catalogSearch = '';
 
   private loadCatalog() {
     this.catalogLoading = true;
-    this.salesService.searchCatalogProducts('').subscribe({
+    this.salesService.searchCatalogProducts(this.catalogSearch).subscribe({
       next: (rows) => { this.catalogItems = rows; this.catalogLoading = false; },
       error: () => { this.catalogLoading = false; },
     });
+  }
+
+  /** Wired to the shared search-bar — already debounced (300ms), trimmed,
+   *  and lowercased by the component itself before this fires. */
+  setCatalogSearch(value: string) {
+    this.catalogSearch = value;
+    this.loadCatalog();
   }
 
   /** Set only while the Product Builder is open for a Compound Product. */
@@ -457,21 +608,21 @@ export class CashierComponent implements OnInit, OnDestroy {
     return rows.length > 0 && rows.every(g => g?.configured_unit_price != null);
   }
 
-  /** Per-item pricing active (default). Global mode is the manual-total fallback. */
-  get useNewEngine(): boolean {
-    return this.pricingMode === 'auto';
-  }
-
-  /** Automatic invoice total = Σ (quantity × editable line price). */
+  /** Automatic invoice total = Σ (quantity × editable line price). Both
+   *  pricing modes ("أسعار الأصناف" and "إجمالي يدوي"/Manual Total) price
+   *  every line directly and compute the invoice total this way — the only
+   *  remaining difference is WHERE the price comes from by default
+   *  (pre-filled config vs always manual) and whether the price-floor
+   *  override flow applies (see onSubmit()/isPriceWarning()). */
   get computedTotal(): number {
     return this.selectedGoods.reduce((sum, g, i) => sum + (g ? this.lineTotal(i) : 0), 0);
   }
 
-  /** Mirror the computed total into the form so payments/balance logic reuses it. */
+  /** Mirror the computed total into the form so payments/balance logic reuses it.
+   *  The invoice total is always computed (Σ qty × price) — never manually
+   *  typed, in either pricing mode. */
   private syncComputedTotal(): void {
-    if (this.pricingMode === 'auto') {
-      this.form.get('total_amount')?.setValue(+this.computedTotal.toFixed(2), { emitEvent: false });
-    }
+    this.form.get('total_amount')?.setValue(+this.computedTotal.toFixed(2), { emitEvent: false });
   }
 
   // ── Live cost summary (Part 2) ───────────────────────────────────────────
@@ -489,12 +640,11 @@ export class CashierComponent implements OnInit, OnDestroy {
   }
 
   /** Items total (before cost) − the same figure shown as "إجمالي الفاتورة".
-   *  In Global-Total mode the per-item prices are only an estimate (the real
-   *  split happens server-side at save), so the real revenue figure to show
-   *  here — and to base "الربح المتوقع" on — is the manually entered total,
-   *  not the stale per-item price sum. */
+   *  Always the live per-line price sum — both pricing modes now price every
+   *  line directly, so there is no separate "estimate vs entered total" case
+   *  left to reconcile. */
   get cartItemsTotal(): number {
-    return this.useNewEngine ? this.computedTotal : this.totalAmount;
+    return this.computedTotal;
   }
 
   get cartItemCount(): number {
@@ -539,6 +689,20 @@ export class CashierComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadCatalog();
 
+    // Arrived from Customer Details' "Create Invoice" action — preselect the
+    // customer exactly like picking them from the search dropdown (same
+    // selectCustomer() used everywhere else), just skipping the search step.
+    const preselectId = this.route.snapshot.queryParamMap.get('customer_id');
+    if (preselectId) {
+      this.customerService.getCustomer(+preselectId).subscribe({
+        next: (res) => {
+          const customer = (res?.data ?? res)?.customer;
+          if (customer) this.selectCustomer(customer);
+        },
+        error: () => {},
+      });
+    }
+
     this.initLoading = true;
     forkJoin({
       currencies: this.salesService.getSellerCurrencies(),
@@ -572,7 +736,8 @@ export class CashierComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$),
     ).subscribe((results) => {
       this.customerResults = results;
-      this.showCustomerDropdown = results.length > 0;
+      this.showCustomerDropdown = true;
+      this.customerSearchedNoResults = results.length === 0 && this.customerQuery.trim().length >= 3;
     });
 
     // Recompute the automatic invoice total whenever quantities change.
@@ -610,10 +775,17 @@ export class CashierComponent implements OnInit, OnDestroy {
     return new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
-  // ── Customer ────────────────────────────────────────────
+  // ── Customer — search by name OR phone, either field drives the same lookup ──
   onPhoneInput(value: string) {
     this.customerQuery = value;
     this.form.get('phone')?.setValue(value);
+    this.customerSearch$.next(value);
+  }
+
+  /** Typing a name also searches — selecting a result fills in the phone too. */
+  onNameInput(value: string) {
+    this.form.get('name')?.setValue(value);
+    this.customerQuery = value;
     this.customerSearch$.next(value);
   }
 
@@ -623,10 +795,52 @@ export class CashierComponent implements OnInit, OnDestroy {
     this.form.get('name')?.setValue(customer.name);
     this.showCustomerDropdown = false;
     this.customerResults = [];
+    this.customerSearchedNoResults = false;
   }
 
   closeCustomerDropdown() {
     setTimeout(() => { this.showCustomerDropdown = false; }, 200);
+  }
+
+  /** "+ إضافة عميل جديد" — opens a small inline form, prefilled from whatever
+   *  was already typed (a digit-heavy query goes to phone, otherwise name). */
+  openQuickAddCustomer() {
+    const q = this.customerQuery.trim();
+    const looksLikePhone = /^[\d\s+()-]+$/.test(q) && q.length > 0;
+    this.quickAddCustomer = {
+      name: looksLikePhone ? '' : q,
+      phone: looksLikePhone ? q : '',
+      email: '',
+      address: '',
+    };
+    this.quickAddCustomerError = '';
+    this.showQuickAddCustomer = true;
+    this.showCustomerDropdown = false;
+  }
+
+  submitQuickAddCustomer() {
+    if (!this.quickAddCustomer.name.trim() || !this.quickAddCustomer.phone.trim()) {
+      this.quickAddCustomerError = 'الاسم ورقم الهاتف مطلوبان.';
+      return;
+    }
+    this.quickAddCustomerLoading = true;
+    this.quickAddCustomerError = '';
+    this.salesService.createCustomer({
+      name: this.quickAddCustomer.name.trim(),
+      phone: this.quickAddCustomer.phone.trim(),
+      email: this.quickAddCustomer.email.trim() || null,
+      address: this.quickAddCustomer.address.trim() || null,
+    }).subscribe({
+      next: (customer) => {
+        this.quickAddCustomerLoading = false;
+        this.showQuickAddCustomer = false;
+        this.selectCustomer(customer);
+      },
+      error: (err) => {
+        this.quickAddCustomerLoading = false;
+        this.quickAddCustomerError = err?.error?.message || 'تعذّر حفظ بيانات العميل.';
+      },
+    });
   }
 
   // ── Price type ──────────────────────────────────────────
@@ -766,16 +980,20 @@ export class CashierComponent implements OnInit, OnDestroy {
     return myQty > 0 ? share / myQty : 0;
   }
 
-  /** True when a weighted item's estimated price falls below the category minimum. */
+  /** True when a manually-entered line price falls below its category's
+   *  minimum — only checked in "إجمالي يدوي" (Manual Total) mode, which is
+   *  the only mode with a price-floor override/manager-approval workflow
+   *  (see onSubmit()). Compares the cashier's actual entered price directly —
+   *  there is no more distribution estimate to compare against. */
   isPriceWarning(index: number): boolean {
+    if (this.pricingMode !== 'global') return false;
     const goods = this.selectedGoods[index];
     if (!goods) return false;
     const category = goods.supply_item?.product?.category;
-    if (!category || category.is_fixed) return false;
-    if (!this.totalAmount) return false;
-    const estimated = this.estimatedUnitPrice(index);
-    const minPrice  = +(category.minimum_sell_price ?? 0);
-    return minPrice > 0 && estimated < minPrice;
+    if (!category) return false;
+    const price    = this.lineUnitPrice(index);
+    const minPrice = +(category.minimum_sell_price ?? 0);
+    return minPrice > 0 && price > 0 && price < minPrice;
   }
 
   // ── Override request flow ────────────────────────────────
@@ -792,7 +1010,7 @@ export class CashierComponent implements OnInit, OnDestroy {
         return {
           product_name:    goods.supply_item.product.name,
           category_name:   category.name ?? '',
-          estimated_price: +this.estimatedUnitPrice(i).toFixed(4),
+          estimated_price: +this.lineUnitPrice(i).toFixed(4),
           minimum_price:   +(category.minimum_sell_price ?? 0),
         } satisfies OverrideViolation;
       })
@@ -938,9 +1156,11 @@ export class CashierComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // In per-item mode, every line must have a unit price — except Alcohol,
-    // whose price is deliberately always 0 (see itemConfigured()).
-    if (this.useNewEngine) {
+    // Every line must have a unit price — except Alcohol, whose price is
+    // deliberately always 0 (see itemConfigured()). Applies in both pricing
+    // modes: "أسعار الأصناف" pre-fills from config but still requires a
+    // price; "إجمالي يدوي" (Manual Total) requires the cashier to type one.
+    {
       const missing = this.selectedGoods.findIndex((g, idx) => g != null && this.lineUnitPrice(idx) <= 0 && this.lineRole(idx) !== 'alcohol');
       if (missing !== -1) {
         const name = this.selectedGoods[missing]?.supply_item?.product?.name ?? '';
@@ -970,10 +1190,11 @@ export class CashierComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // The legacy client-side violation/override flow only applies to the
-    // Global-Total engine. Under the new per-item engine the price is fixed by
-    // configuration, so the backend enforces the floor and notifies directly.
-    if (!this.useNewEngine && this.hasViolations && this.overrideState !== 'approved') {
+    // The price-floor violation/override-approval flow applies only to
+    // "إجمالي يدوي" (Manual Total) mode — the cashier is deliberately
+    // re-pricing every line by hand there, so a price under the category
+    // minimum needs manager sign-off before the sale can go through.
+    if (this.pricingMode === 'global' && this.hasViolations && this.overrideState !== 'approved') {
       this.overrideState = 'needed';
       return;
     }
@@ -984,9 +1205,9 @@ export class CashierComponent implements OnInit, OnDestroy {
       name:         fv.name       || '',
       price_type:   fv.price_type,
       safe_id:      fv.safe_id ? +fv.safe_id : null,
-      // New engine → computed total; Global Total → the entered amount.
-      total_amount: this.useNewEngine ? +this.computedTotal.toFixed(2) : +fv.total_amount,
-      pricing_mode: this.useNewEngine ? 'auto' : 'global',
+      // Always computed — never manually typed, in either pricing mode.
+      total_amount: +this.computedTotal.toFixed(2),
+      pricing_mode: this.pricingMode,
       payments: this.isPhysicalSafe
         ? this.payments.value.map((p: any) => ({
             currency_id:        +p.currency_id,

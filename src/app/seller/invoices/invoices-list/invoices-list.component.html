@@ -10,6 +10,9 @@
 <div class="ds-card overflow-hidden">
   <!-- Filter toolbar -->
   <div class="flex flex-wrap gap-2 px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
+    <div class="w-64">
+      <app-search-bar placeholder="بحث برقم الفاتورة أو اسم العميل أو الهاتف..." (searchChange)="applySearch($event)"></app-search-bar>
+    </div>
     <select
       [(ngModel)]="statusFilter"
       (ngModelChange)="applyStatusFilter($event)"

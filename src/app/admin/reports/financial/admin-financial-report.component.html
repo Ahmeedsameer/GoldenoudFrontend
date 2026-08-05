@@ -187,11 +187,9 @@
       <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
         <div class="flex items-center justify-between mb-4 gap-3">
           <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 shrink-0">ملخص مالي للفروع</h2>
-          <input
-            type="text"
-            [(ngModel)]="shopSearch"
-            placeholder="بحث عن فرع..."
-            class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full max-w-[160px]">
+          <div class="w-full max-w-[200px]">
+            <app-search-bar placeholder="بحث عن فرع..." (searchChange)="shopSearch = $event"></app-search-bar>
+          </div>
         </div>
 
         @if (filteredShopStats.length === 0) {

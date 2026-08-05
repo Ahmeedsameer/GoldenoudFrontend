@@ -13,6 +13,7 @@ import { ShopService } from '../../../services/shop.service';
 import { SafeService } from '../../../services/safe.service';
 import { HrService } from '../../../services/hr.service';
 import { UserManagmentService } from '../../../services/user-managment.service';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'قيد المراجعة', active: 'نشطة', rejected: 'مرفوضة', completed: 'مكتملة', cancelled: 'ملغاة',
@@ -27,7 +28,7 @@ const STATUS_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-salary-advance-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './salary-advance-report.component.html',
 })
 export class SalaryAdvanceReportComponent implements OnInit {

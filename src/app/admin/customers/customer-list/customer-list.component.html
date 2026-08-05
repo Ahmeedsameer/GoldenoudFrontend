@@ -1,0 +1,73 @@
+<app-loading [loading]="list.loading"></app-loading>
+
+<div class="crud-page-head">
+  <div>
+    <h1 class="page-title">العملاء</h1>
+    <p class="page-subtitle">بيانات العملاء وسجل مشترياتهم — يُشتق كل رقم هنا من فواتيرهم الفعلية، لا يُخزَّن بشكل منفصل</p>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <div class="w-64">
+      <app-search-bar placeholder="بحث بالاسم أو الهاتف أو رقم العميل أو رقم الفاتورة..." (searchChange)="setSearch($event)"></app-search-bar>
+    </div>
+  </div>
+</div>
+
+<div class="db-tbl-card">
+  <div class="db-tbl-wrap">
+    <table class="db-tbl">
+      <thead>
+        <tr>
+          <th>رقم العميل</th>
+          <th>الاسم</th>
+          <th>الهاتف</th>
+          <th>الفرع</th>
+          <th>عدد الفواتير</th>
+          <th>إجمالي المشتريات</th>
+          <th>آخر شراء</th>
+          <th style="text-align: center;">الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of list.result.data; track c.id) {
+          <tr>
+            <td class="font-mono" style="color: #9CA3AF;">#{{ c.id }}</td>
+            <td>
+              <div class="flex items-center gap-2.5">
+                <div class="crud-avatar">{{ c.name?.charAt(0)?.toUpperCase() ?? '?' }}</div>
+                <span class="font-semibold" style="color: #111827;">{{ c.name }}</span>
+              </div>
+            </td>
+            <td class="font-mono" style="color: #6B7280;">{{ c.phone }}</td>
+            <td style="color: #6B7280;">{{ c.shop?.name || '—' }}</td>
+            <td class="font-mono" style="color: #6B7280;">{{ c.total_invoices ?? 0 }}</td>
+            <td class="font-mono font-semibold" style="color: #111827;">{{ (c.total_purchases ?? 0) | number:'1.2-2' }} ج.م</td>
+            <td style="color: #9CA3AF; font-size: 0.8125rem; white-space: nowrap;">
+              {{ c.last_purchase_date ? (c.last_purchase_date | date:'mediumDate') : '—' }}
+            </td>
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <a [routerLink]="[c.id]" class="crud-action crud-action-view">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  عرض
+                </a>
+              </div>
+            </td>
+          </tr>
+        }
+
+        @if (!list.loading && list.result.data.length === 0) {
+          <tr>
+            <td colspan="8" style="padding: 4rem 1rem; text-align: center;">
+              <p class="text-sm font-medium" style="color: #6B7280;">لا يوجد عملاء</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
+</div>

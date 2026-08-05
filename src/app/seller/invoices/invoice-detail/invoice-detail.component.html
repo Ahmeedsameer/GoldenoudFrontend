@@ -3,7 +3,7 @@
 <!-- Breadcrumb -->
 <div class="mb-6">
   <div class="flex items-center gap-2 mb-1">
-    <a routerLink="/dashboard/invoices" class="text-sm text-gray-400 hover:text-brand-500 transition-colors">فواتيري</a>
+    <a [routerLink]="invoiceListLink" class="text-sm text-gray-400 hover:text-brand-500 transition-colors">فواتيري</a>
     <span class="text-gray-300 dark:text-gray-600">/</span>
     <span class="text-sm text-gray-600 dark:text-gray-400">تفاصيل الفاتورة</span>
   </div>
@@ -116,8 +116,11 @@
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الكمية</th>
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">سعر الوحدة</th>
               <th class="px-5 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">الإجمالي</th>
-              <th class="px-5 py-3.5 text-right text-xs font-medium text-amber-600 dark:text-amber-400">التكلفة</th>
-              <th class="px-5 py-3.5 text-right text-xs font-medium text-success-600 dark:text-success-400">الربح</th>
+              @if (isAdmin) {
+                <th class="px-5 py-3.5 text-right text-xs font-medium text-amber-600 dark:text-amber-400">التكلفة</th>
+                <th class="px-5 py-3.5 text-right text-xs font-medium text-success-600 dark:text-success-400">ربح الوحدة</th>
+                <th class="px-5 py-3.5 text-right text-xs font-medium text-success-600 dark:text-success-400">الربح</th>
+              }
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
@@ -142,12 +145,17 @@
                 <td class="px-5 py-3.5 font-mono font-semibold text-gray-800 dark:text-white/90">
                   {{ line.lineTotal | number:'1.2-2' }}
                 </td>
-                <td class="px-5 py-3.5 font-mono text-amber-600 dark:text-amber-400">
-                  {{ line.cost | number:'1.2-2' }}
-                </td>
-                <td class="px-5 py-3.5 font-mono font-semibold" [class]="line.profit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
-                  {{ line.profit | number:'1.2-2' }}
-                </td>
+                @if (isAdmin) {
+                  <td class="px-5 py-3.5 font-mono text-amber-600 dark:text-amber-400">
+                    {{ line.cost | number:'1.2-2' }}
+                  </td>
+                  <td class="px-5 py-3.5 font-mono font-semibold" [class]="line.profit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                    {{ lineProfitPerUnit(line) | number:'1.2-2' }}
+                  </td>
+                  <td class="px-5 py-3.5 font-mono font-semibold" [class]="line.profit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+                    {{ line.profit | number:'1.2-2' }}
+                  </td>
+                }
               </tr>
             }
           </tbody>
@@ -164,18 +172,20 @@
             </span>
           </div>
         }
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">إجمالي التكلفة</span>
-          <span class="font-mono text-sm font-semibold text-amber-600 dark:text-amber-400">
-            {{ totalCost() | number:'1.2-2' }}
-          </span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">إجمالي الربح</span>
-          <span class="font-mono text-sm font-semibold" [class]="totalProfit() >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
-            {{ totalProfit() | number:'1.2-2' }}
-          </span>
-        </div>
+        @if (isAdmin) {
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400">إجمالي التكلفة</span>
+            <span class="font-mono text-sm font-semibold text-amber-600 dark:text-amber-400">
+              {{ totalCost() | number:'1.2-2' }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400">إجمالي الربح</span>
+            <span class="font-mono text-sm font-semibold" [class]="totalProfit() >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+              {{ totalProfit() | number:'1.2-2' }}
+            </span>
+          </div>
+        }
         <div class="flex items-center gap-4">
           <span class="text-sm text-gray-500 dark:text-gray-400">الإجمالي الكلي</span>
           <span class="text-xl font-bold font-mono text-gray-800 dark:text-white/90">
@@ -188,6 +198,8 @@
     }
   </div>
 
-  <!-- Back -->
-  <app-button variant="outline" routerLink="/seller/invoices">← رجوع للقائمة</app-button>
+  <!-- Back — returns to wherever the user actually came from (cashier, invoice
+       list, customer details, reports, ...); falls back to the invoice list
+       only when opened directly with no prior in-app navigation. -->
+  <app-button variant="outline" (btnClick)="goBack()">← رجوع</app-button>
 }

@@ -44,8 +44,14 @@ export class ProductService {
         return this.httpClient.post<any>(`${ProductService.apiUrl}/${id}`, data);
     }
 
-    deleteProduct(id: number) {
-        return this.httpClient.delete<any>(`${ProductService.apiUrl}/${id}`, {});
+    // Products are never physically deleted — archive/restore only (see
+    // ProductController::archive()/restore()).
+    archiveProduct(id: number) {
+        return this.httpClient.post<any>(`${ProductService.apiUrl}/${id}/archive`, {});
+    }
+
+    restoreProduct(id: number) {
+        return this.httpClient.post<any>(`${ProductService.apiUrl}/${id}/restore`, {});
     }
 
     // ── Recipe (BOM) components for a product ──────────────────────────────────

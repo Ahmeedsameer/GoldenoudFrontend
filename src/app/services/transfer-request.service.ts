@@ -125,7 +125,7 @@ export interface TransferRequestPage {
 }
 
 export interface TransferRequestFilters {
-  status?: string; shop_id?: number; page?: number; per_page?: number;
+  status?: string; shop_id?: number; search?: string; page?: number; per_page?: number;
   /** Stock Requests view — every transfer sourced from the Main Warehouse (see backend baseQuery()). */
   warehouse_source?: boolean;
 }

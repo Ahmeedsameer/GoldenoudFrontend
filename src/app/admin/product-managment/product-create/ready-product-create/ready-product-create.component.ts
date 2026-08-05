@@ -13,9 +13,10 @@ import { ComponentCardComponent } from '../../../../shared/components/common/com
 /**
  * Ready Product — its own independent creation page (pre-bottled perfumes
  * sold directly, exactly as-is — no assembly). Per the ERP spec this form
- * carries ONLY identity + inventory-unit fields — no pricing (Pricing
- * Management only), no image, no catalog-visibility toggle (the products
- * table's `show_in_catalog` column already defaults to true).
+ * carries identity + inventory-unit fields plus an optional image (shown in
+ * the Sales Catalog) — no pricing (Pricing Management only), no
+ * catalog-visibility toggle (the products table's `show_in_catalog` column
+ * already defaults to true).
  */
 @Component({
   selector: 'app-ready-product-create',
@@ -31,6 +32,7 @@ export class ReadyProductCreateComponent implements OnInit {
 
   loading = false;
   alert: AlertState = { show: false, type: '', message: '' };
+  selectedFile: File | null = null;
 
   categories: { id: number; name: string }[] = [];
 
@@ -69,7 +71,7 @@ export class ReadyProductCreateComponent implements OnInit {
     const value = { ...this.form.value };
     if (value.scalar === 'kg') value.scalar = 'g';
 
-    const formData = this.formHelperService.createFormData(value);
+    const formData = this.formHelperService.createFormData(value, this.selectedFile, 'image');
 
     this.productService.createReadyProduct(formData).subscribe({
       next: () => {
@@ -81,5 +83,10 @@ export class ReadyProductCreateComponent implements OnInit {
         this.alert = this.formHelperService.handleBackendErrors(err, this.form);
       },
     });
+  }
+
+  onFileSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) this.selectedFile = file;
   }
 }

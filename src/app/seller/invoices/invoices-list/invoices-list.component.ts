@@ -8,6 +8,7 @@ import { ListManager } from '../../../services/list-manager';
 import { PaginationComponent } from '../../../pagination/pagination.component';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-invoices-list',
@@ -17,6 +18,7 @@ import { DatePickerComponent } from '../../../shared/components/form/date-picker
     PaginationComponent,
     LoadingComponent,
     DatePickerComponent,
+    SearchBarComponent,
   ],
   templateUrl: './invoices-list.component.html',
   styleUrl: './invoices-list.component.css',
@@ -54,6 +56,10 @@ export class InvoicesListComponent implements OnInit {
   applyDateTo(value: string) {
     this.dateTo = value;
     this.list.setFilter('date_to', value || undefined);
+  }
+
+  applySearch(value: string) {
+    this.list.setFilter('search', value || undefined);
   }
 
   viewInvoice(id: number) {

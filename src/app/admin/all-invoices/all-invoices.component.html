@@ -8,6 +8,9 @@
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">فواتير البيع، فواتير الشراء من الموردين، وفواتير النقل الداخلي — كلها في مكان واحد، مرتبة بالتوقيت الفعلي.</p>
     </div>
     <div class="flex items-center gap-2">
+      <div class="w-60">
+        <app-search-bar placeholder="بحث برقم الفاتورة أو اسم العميل أو الهاتف..." (searchChange)="setSearch($event)"></app-search-bar>
+      </div>
       <app-date-picker id="all-inv-from" [value]="from" (valueChange)="from = $event; applyRange()"></app-date-picker>
       <app-date-picker id="all-inv-to" [value]="to" (valueChange)="to = $event; applyRange()"></app-date-picker>
       @if (from || to) {

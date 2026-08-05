@@ -45,9 +45,14 @@
         }
       </div>
 
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ activeTab.label }}</h2>
-        <app-report-toolbar [exportPath]="exportPath" [params]="exportParams" [fileName]="'تقرير-الجرد-' + activeTab.key" [showRefresh]="false"></app-report-toolbar>
+        <div class="flex items-center gap-2">
+          <div class="w-64">
+            <app-search-bar placeholder="بحث برقم الجلسة أو المنتج أو الكود..." (searchChange)="setSearch($event)"></app-search-bar>
+          </div>
+          <app-report-toolbar [exportPath]="exportPath" [params]="exportParams" [fileName]="'تقرير-الجرد-' + activeTab.key" [showRefresh]="false"></app-report-toolbar>
+        </div>
       </div>
 
       @if (activeTab.key === 'accuracy-trend' && trendSeries.length) {
@@ -60,17 +65,23 @@
             <thead>
               <tr>
                 @for (c of activeTab.columns; track c.key) { <th>{{ c.label }}</th> }
+                @if (hasSessionLink) { <th></th> }
               </tr>
             </thead>
             <tbody>
-              @for (r of rows; track $index) {
+              @for (r of filteredRows; track $index) {
                 <tr>
                   @for (c of activeTab.columns; track c.key) { <td>{{ cell(r, c.key) }}</td> }
+                  @if (hasSessionLink) {
+                    <td>
+                      <a [routerLink]="['/dashboard/reports/counts', r.session_id]" class="text-xs font-medium" style="color:#9A7B1A">عرض التفاصيل ‹</a>
+                    </td>
+                  }
                 </tr>
               }
             </tbody>
           </table>
-          @if (!rowsLoading && !rows.length) { <app-report-empty-state message="لا توجد بيانات لهذا التقرير"></app-report-empty-state> }
+          @if (!rowsLoading && !filteredRows.length) { <app-report-empty-state [message]="rows.length ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد بيانات لهذا التقرير'"></app-report-empty-state> }
         </div>
       </div>
 

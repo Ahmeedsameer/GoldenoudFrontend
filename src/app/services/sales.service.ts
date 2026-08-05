@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, retry } from 'rxjs';
 import { CreateInvoiceRequest, Customer, GoodsSearchResult, Invoice, PaymentMethod, SalesCategory } from '../models/sales.model';
+import { AuthService } from './auth.service';
 
 import { environment } from '../../environments/environment';
 
@@ -12,6 +13,7 @@ const API_BASE = `${environment.apiBaseUrl}`;
 })
 export class SalesService {
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
   // ── Goods search (for cashier item rows) ───
   searchGoods(search: string, perPage = 20, categoryId?: number): Observable<GoodsSearchResult[]> {
@@ -20,6 +22,16 @@ export class SalesService {
     return this.http
       .get<any>(`${API_BASE}/sales/goods`, { params })
       .pipe(map((res) => res.data?.data || res.data || []));
+  }
+
+  /**
+   * Barcode-scanner lookup — EXACT match only (barcode, then SKU), never
+   * product name. Distinct from searchGoods()'s fuzzy multi-field search.
+   */
+  findGoodsByBarcode(code: string): Observable<{ status: 'found' | 'not_found' | 'ambiguous'; data: GoodsSearchResult | null }> {
+    return this.http
+      .get<any>(`${API_BASE}/sales/goods/barcode`, { params: { code } })
+      .pipe(map((res) => ({ status: res.status, data: res.data })));
   }
 
   // ── Catalog (finished/sellable) products — show_in_catalog=true ────────────
@@ -86,11 +98,18 @@ export class SalesService {
       .pipe(map((res) => res.data || []));
   }
 
-  // ── Customer search (for cashier customer section) ─────────
-  searchCustomers(phone: string, perPage = 10): Observable<Customer[]> {
+  // ── Customer search (for cashier customer section) — name OR phone ────
+  searchCustomers(search: string, perPage = 10): Observable<Customer[]> {
     return this.http
-      .get<any>(`${API_BASE}/sales/customers`, { params: { phone, per_page: perPage } })
+      .get<any>(`${API_BASE}/sales/customers`, { params: { search, per_page: perPage } })
       .pipe(map((res) => res.data?.data || res.data || []));
+  }
+
+  /** Quick-create a customer from inside the cashier without submitting an invoice. */
+  createCustomer(payload: { name: string; phone: string; email?: string | null; address?: string | null }): Observable<Customer> {
+    return this.http
+      .post<any>(`${API_BASE}/sales/customers`, payload)
+      .pipe(map((res) => res.data));
   }
 
   // ── Invoices list ──────────────────────────────────────────
@@ -103,10 +122,20 @@ export class SalesService {
   }
 
   // ── Single invoice ─────────────────────────────────────────
+  // Role-scoped: `/sales/invoices/{id}` (InvoiceController) is seller-owned-only
+  // (`where('seller_id', auth()->id())`), so a manager opening another
+  // seller's invoice from the shared invoice-detail page 404s there — must
+  // go through `/manager/invoices/{id}` (shop-scoped) instead. Admin has no
+  // seat in the `sales,manager`-only role check at all — reuse the existing
+  // admin-only invoice-review endpoint. Same Invoice shape from all three.
+  private invoiceDetailBase(id: number): string {
+    if (this.authService.isAdmin()) return `${API_BASE}/admin/invoices/${id}`;
+    if (this.authService.isManager()) return `${API_BASE}/manager/invoices/${id}`;
+    return `${API_BASE}/sales/invoices/${id}`;
+  }
+
   getInvoice(id: number): Observable<any> {
-    return this.http
-      .get<any>(`${API_BASE}/sales/invoices/${id}`)
-      .pipe(retry(2));
+    return this.http.get<any>(this.invoiceDetailBase(id)).pipe(retry(2));
   }
 
   // ── Create invoice ─────────────────────────────────────────
@@ -116,7 +145,8 @@ export class SalesService {
 
   // ── Update invoice status ──────────────────────────────────
   updateInvoiceStatus(id: number, status: string): Observable<any> {
-    return this.http.put<any>(`${API_BASE}/sales/invoices/${id}/status`, { status });
+    const base = this.authService.isAdmin() ? `${API_BASE}/admin/invoices/${id}/status` : `${API_BASE}/sales/invoices/${id}/status`;
+    return this.http.put<any>(base, { status });
   }
 
   // ── Seller-accessible currencies ───────────────────────────

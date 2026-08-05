@@ -12,6 +12,7 @@ import { LoadingComponent } from '../../../../loading/loading.component';
 import { ModalComponent } from '../../../../shared/components/ui/modal/modal.component';
 import { Option, SelectComponent } from '../../../../shared/components/form/select/select.component';
 import { DatePickerComponent } from '../../../../shared/components/form/date-picker/date-picker.component';
+import { SearchBarComponent } from '../../../../shared/components/common/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-supplies-list',
@@ -24,6 +25,7 @@ import { DatePickerComponent } from '../../../../shared/components/form/date-pic
     ModalComponent,
     SelectComponent,
     DatePickerComponent,
+    SearchBarComponent,
   ],
   templateUrl: './supplies-list.component.html',
   styleUrl: './supplies-list.component.css',
@@ -66,6 +68,10 @@ export class SuppliesListComponent implements OnInit {
       },
       error: () => {},
     });
+  }
+
+  setSearch(value: string) {
+    this.list.setFilter('search', value);
   }
 
   setSupplierFilter(value: string) {

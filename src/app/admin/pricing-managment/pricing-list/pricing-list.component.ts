@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 import { AuthService } from '../../../services/auth.service';
 import { PricingService, PriceUpdateChange, PricingRow } from '../../../services/pricing.service';
 
@@ -16,7 +17,7 @@ import { PricingService, PriceUpdateChange, PricingRow } from '../../../services
  */
 @Component({
   selector: 'app-pricing-list',
-  imports: [CommonModule, RouterLink, LoadingComponent, ModalComponent, ReportToolbarComponent],
+  imports: [CommonModule, RouterLink, LoadingComponent, ModalComponent, ReportToolbarComponent, SearchBarComponent],
   templateUrl: './pricing-list.component.html',
 })
 export class PricingListComponent implements OnInit {

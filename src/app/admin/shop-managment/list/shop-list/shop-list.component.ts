@@ -9,6 +9,7 @@ import { LoadingComponent } from '../../../../loading/loading.component';
 import { ModalComponent } from '../../../../shared/components/ui/modal/modal.component';
 import { ListManager } from '../../../../services/list-manager';
 import { ShopService } from '../../../../services/shop.service';
+import { SearchBarComponent } from '../../../../shared/components/common/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-shop-list',
@@ -21,6 +22,7 @@ import { ShopService } from '../../../../services/shop.service';
     ButtonComponent,
     LoadingComponent,
     ModalComponent,
+    SearchBarComponent,
   ],
   templateUrl: './shop-list.component.html',
   styleUrl: './shop-list.component.css',

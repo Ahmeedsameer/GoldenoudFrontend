@@ -11,6 +11,7 @@ interface PickerProduct {
   name: string;
   sku: string | null;
   unit: string;
+  image?: string | null;
   capacity_ml: number | null;
   configured_unit_price: number | null;
   shop_stock: number;

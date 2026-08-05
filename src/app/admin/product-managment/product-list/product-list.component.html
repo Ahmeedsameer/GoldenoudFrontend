@@ -1,4 +1,4 @@
-<app-loading [loading]="list.loading || formLoading || deleteLoading"></app-loading>
+<app-loading [loading]="list.loading || formLoading || archiveLoading"></app-loading>
 
 <!-- ── Table card ──────────────────────────────────────────── -->
 <div class="ds-card overflow-hidden">
@@ -6,25 +6,34 @@
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
     <div>
-      <h2 class="text-base font-semibold text-gray-900 dark:text-white">المنتجات</h2>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">إدارة كتالوج المنتجات</p>
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ showingArchived ? 'المنتجات المؤرشفة' : 'المنتجات' }}</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        {{ showingArchived ? 'منتجات مؤرشفة — مخفية عن العمليات اليومية، يمكن استعادتها في أي وقت' : 'إدارة كتالوج المنتجات' }}
+      </p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <app-button variant="primary" size="sm" (btnClick)="openCreate()">
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-        </svg>
-        إضافة منتج
-      </app-button>
-      <div class="relative">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+      @if (!showingArchived) {
+        <app-button variant="primary" size="sm" (btnClick)="openCreate()">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
           </svg>
-        </span>
-        <input type="text" placeholder="بحث بالاسم..."
-          class="h-9 rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm placeholder:text-gray-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/10 focus:outline-none dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 w-52"
-          (input)="setNameFilter($any($event.target).value)" />
+          إضافة منتج
+        </app-button>
+      }
+      @if (isAdmin) {
+        <button type="button" (click)="toggleArchivedView()"
+          class="h-9 inline-flex items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors"
+          [class]="showingArchived
+            ? 'bg-brand-500 text-white'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/[0.05] dark:text-gray-300 dark:hover:bg-white/[0.08]'">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 01-2-2V4a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+          </svg>
+          {{ showingArchived ? 'عرض المنتجات النشطة' : 'عرض الأرشيف' }}
+        </button>
+      }
+      <div class="w-52">
+        <app-search-bar placeholder="بحث بالاسم أو SKU أو الباركود أو الفئة..." (searchChange)="setNameFilter($event)"></app-search-bar>
       </div>
     </div>
   </div>
@@ -102,7 +111,11 @@
 
               <!-- Status -->
               <td class="px-4 py-3">
-                @if (product.is_active) {
+                @if (product.is_archived) {
+                  <span class="inline-flex items-center gap-1 rounded-full bg-warning-50 px-2 py-0.5 text-xs font-medium text-warning-700 dark:bg-warning-500/15 dark:text-warning-400">
+                    مؤرشف
+                  </span>
+                } @else if (product.is_active) {
                   <span class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-xs font-medium text-success-700 dark:bg-success-500/15 dark:text-success-400">
                     نشط
                   </span>
@@ -127,24 +140,39 @@
                       </button>
                     </div>
                     <div dropdown-content>
-                      <button (click)="openEdit(product)"
-                        class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300">
-                        تعديل
-                      </button>
-                      @if (product.product_type !== 'COMPOUND') {
-                        <!-- Compound Products (perfumes) never get a predefined
-                             recipe/components — oil + bottle are chosen fresh by
-                             the seller on every sale via the Sales Catalog's
-                             Product Builder, never stored on the product itself. -->
-                        <button (click)="openRecipe(product)"
-                          class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-brand-600 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
-                          التركيبة (مكوّنات)
+                      @if (showingArchived) {
+                        <!-- Archived products can only be restored — editing/pricing/recipe
+                             stays locked until the product is active again. -->
+                        <button (click)="onRestore(product)" [disabled]="restoringId === product.id"
+                          class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-success-600 hover:bg-success-50 hover:text-success-700 dark:text-success-400 dark:hover:bg-success-500/10 disabled:opacity-50">
+                          {{ restoringId === product.id ? 'جارِ الاستعادة...' : 'استعادة' }}
                         </button>
+                      } @else {
+                        <button (click)="openEdit(product)"
+                          class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300">
+                          تعديل
+                        </button>
+                        @if (product.product_type !== 'COMPOUND') {
+                          <!-- Compound Products (perfumes) never get a predefined
+                               recipe/components — oil + bottle are chosen fresh by
+                               the seller on every sale via the Sales Catalog's
+                               Product Builder, never stored on the product itself. -->
+                          <button (click)="openRecipe(product)"
+                            class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-brand-600 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
+                            التركيبة (مكوّنات)
+                          </button>
+                        }
+                        @if (isAdmin) {
+                          <!-- Products are never physically deleted — archiving just
+                               hides them from daily operations; historical records
+                               (invoices, FIFO, reports) keep working unchanged, and
+                               an admin can restore it later from "عرض الأرشيف". -->
+                          <button (click)="openArchive(product)"
+                            class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-error-500 hover:bg-error-50 hover:text-error-700 dark:hover:bg-error-500/10">
+                            أرشفة
+                          </button>
+                        }
                       }
-                      <button (click)="openDelete(product)"
-                        class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-error-500 hover:bg-error-50 hover:text-error-700 dark:hover:bg-error-500/10">
-                        حذف
-                      </button>
                     </div>
                   </app-table-dropdown>
                 </div>
@@ -378,8 +406,8 @@
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800 resize-none"></textarea>
         </div>
 
-        @if (isCompound || isReadyProduct) {
-          <!-- Image upload (full width) — Compound + Ready Products only -->
+        @if (isCompound || isReadyProduct || isPackaging) {
+          <!-- Image upload (full width) — Compound + Ready Products + Packaging (bottles) -->
           <div class="sm:col-span-2">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الصورة</label>
             @if (currentImageUrl) {
@@ -417,37 +445,38 @@
 
 
 <!-- ════════════════════════════════════════════════════════
-     DELETE CONFIRMATION MODAL
+     ARCHIVE CONFIRMATION MODAL — products are never physically deleted
      ════════════════════════════════════════════════════════ -->
-<app-modal [isOpen]="showDeleteModal" (close)="showDeleteModal = false" className="max-w-md m-4">
+<app-modal [isOpen]="showArchiveModal" (close)="showArchiveModal = false" className="max-w-md m-4">
   <div class="p-6">
 
     <div class="flex items-center gap-4 mb-5">
-      <div class="w-12 h-12 rounded-full bg-error-100 flex items-center justify-center shrink-0 dark:bg-error-500/15">
-        <svg class="w-6 h-6 text-error-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      <div class="w-12 h-12 rounded-full bg-warning-100 flex items-center justify-center shrink-0 dark:bg-warning-500/15">
+        <svg class="w-6 h-6 text-warning-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 01-2-2V4a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
         </svg>
       </div>
       <div>
-        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">حذف المنتج</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          هل أنت متأكد من حذف
-          <span class="font-medium text-gray-700 dark:text-gray-300">{{ deletingProduct?.name }}</span>؟
-          لا يمكن التراجع عن هذه العملية.
+        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
+          أرشفة <span class="font-medium">{{ archivingProduct?.name }}</span>
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+          سيتم أرشفة هذا المنتج. سيختفي من العمليات اليومية، لكنه سيبقى متاحاً للفواتير السابقة والتقارير وسجلات التدقيق.
+          <br />
+          يمكن التراجع عن هذا الإجراء لاحقاً.
         </p>
       </div>
     </div>
 
     <div class="flex gap-3">
-      <button type="button" (click)="onDelete()" [disabled]="deleteLoading"
+      <button type="button" (click)="onArchive()" [disabled]="archiveLoading"
         class="flex-1 h-10 rounded-lg font-medium text-sm transition-colors"
-        [class]="deleteLoading
-          ? 'bg-error-400 text-white cursor-not-allowed'
-          : 'bg-error-500 hover:bg-error-600 text-white'">
-        @if (deleteLoading) { جاري الحذف... } @else { تأكيد الحذف }
+        [class]="archiveLoading
+          ? 'bg-warning-400 text-white cursor-not-allowed'
+          : 'bg-warning-500 hover:bg-warning-600 text-white'">
+        @if (archiveLoading) { جارِ الأرشفة... } @else { تأكيد الأرشفة }
       </button>
-      <button type="button" (click)="showDeleteModal = false" [disabled]="deleteLoading"
+      <button type="button" (click)="showArchiveModal = false" [disabled]="archiveLoading"
         class="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
         إلغاء
       </button>

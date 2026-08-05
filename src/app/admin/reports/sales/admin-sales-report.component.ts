@@ -24,13 +24,14 @@ import { LoadingComponent } from '../../../loading/loading.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 interface PeriodOption { key: ReportPeriod; label: string; }
 
 @Component({
   selector: 'app-admin-sales-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './admin-sales-report.component.html',
 })
 export class AdminSalesReportComponent implements OnInit {

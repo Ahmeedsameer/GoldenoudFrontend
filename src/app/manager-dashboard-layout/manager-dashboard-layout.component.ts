@@ -30,6 +30,14 @@ export class ManagerDashboardLayoutComponent {
       ],
     },
     {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/></svg>`,
+      name: 'العملاء',
+      subItems: [
+        { name: 'قائمة العملاء', path: '/dashboard/customers' },
+        { name: 'تقارير العملاء', path: '/dashboard/customers/reports' },
+      ],
+    },
+    {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
       name: 'طلبات الموافقة',
       subItems: [

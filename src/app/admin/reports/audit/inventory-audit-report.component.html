@@ -42,6 +42,12 @@
       <app-report-kpi-card title="جلسات الجرد" [value]="report.kpis.count_sessions" icon="📦" color="neutral"></app-report-kpi-card>
     </div>
 
+    <div class="mb-3 flex justify-end">
+      <div class="w-64">
+        <app-search-bar placeholder="بحث بالمنتج أو الكود أو المرجع..." (searchChange)="setSearch($event)"></app-search-bar>
+      </div>
+    </div>
+
     <div class="db-tbl-card">
       <div class="db-tbl-wrap">
         <table class="db-tbl">
@@ -49,7 +55,7 @@
             <tr><th>التاريخ</th><th>المستخدم</th><th>الفرع</th><th>المنتج</th><th>العملية</th><th>الكمية القديمة</th><th>الكمية الجديدة</th><th>الفرق</th><th>السبب</th><th>المرجع</th></tr>
           </thead>
           <tbody>
-            @for (r of report.rows; track $index) {
+            @for (r of filteredRows; track $index) {
               <tr>
                 <td style="color:#9CA3AF">{{ r.date }}</td>
                 <td style="color:#6B7280">{{ r.user || '—' }}</td>
@@ -65,7 +71,7 @@
             }
           </tbody>
         </table>
-        @if (!report.rows.length) { <app-report-empty-state message="لا توجد عمليات مسجّلة في هذه الفترة"></app-report-empty-state> }
+        @if (!filteredRows.length) { <app-report-empty-state [message]="report.rows.length ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد عمليات مسجّلة في هذه الفترة'"></app-report-empty-state> }
       </div>
     </div>
   }

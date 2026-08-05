@@ -11,5 +11,6 @@ export interface User{
     created_at?: string | null;
     createdAt:Date | null;
     emailVerifiedAt:Date | null;
+    status?: 'active' | 'inactive';
 
 }

@@ -8,6 +8,8 @@ import { ReportEmptyStateComponent } from '../../../shared/components/reports/re
 import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 import { StockService } from '../../../services/stock.service';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
+import { matchesSearch } from '../../../shared/utils/text-search.util';
 
 type TabKey = 'balances' | 'outstanding' | 'purchases' | 'payments';
 
@@ -40,7 +42,7 @@ const TABS: ReportTab[] = [
 @Component({
   selector: 'app-supplier-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './supplier-reports.component.html',
 })
 export class SupplierReportsComponent implements OnInit {
@@ -55,6 +57,15 @@ export class SupplierReportsComponent implements OnInit {
   rowsLoading = false;
   errorMsg = '';
   rows: any[] = [];
+
+  search = '';
+  setSearch(value: string): void { this.search = value; }
+
+  /** Client-side — every tab's rows are already fully loaded. */
+  get filteredRows(): any[] {
+    if (!this.search) return this.rows;
+    return this.rows.filter((r) => this.activeTab.columns.some((c) => matchesSearch(this.search, r[c.key])));
+  }
 
   get exportParams(): Record<string, any> {
     return this.activeTab.usesDateRange ? { date_from: this.from || undefined, date_to: this.to || undefined } : {};

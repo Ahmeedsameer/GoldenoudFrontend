@@ -9,6 +9,7 @@ import { LoadingComponent } from '../../../loading/loading.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { buildInvoiceDisplayLines, InvoiceDisplayLine } from '../../../models/invoice-display.util';
 import { AuthService } from '../../../services/auth.service';
+import { NavigationHistoryService } from '../../../services/navigation-history.service';
 
 @Component({
   selector: 'app-invoice-detail',
@@ -27,6 +28,18 @@ export class InvoiceDetailComponent implements OnInit {
   private salesService = inject(SalesService);
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
+  private navigationHistory = inject(NavigationHistoryService);
+
+  /** Same list route for seller and manager; admin has no `/dashboard/invoices`
+   *  list — this component is mounted under all three dashboards, so the
+   *  fallback/breadcrumb target must branch on role. */
+  private get invoiceListFallback(): string {
+    return this.authService.isAdmin() ? '/dashboard/all-invoices' : '/dashboard/invoices';
+  }
+
+  get invoiceListLink(): string {
+    return this.invoiceListFallback;
+  }
 
   invoiceId!: number;
   invoice: Invoice | null = null;
@@ -93,6 +106,19 @@ export class InvoiceDetailComponent implements OnInit {
     return buildInvoiceDisplayLines((this.invoice as any)?.items ?? [], canSeeComposition);
   }
 
+  /** Cost/profit are admin-only — this component is shared by both the
+   *  Manager and Seller dashboards, and neither role should see profit. */
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  /** Profit per unit — line.profit is already the line's TOTAL profit
+   *  (lineTotal − cost, from the frozen invoice snapshot), never recomputed
+   *  from live product data. */
+  lineProfitPerUnit(line: InvoiceDisplayLine): number {
+    return line.quantity > 0 ? +(line.profit / line.quantity).toFixed(2) : 0;
+  }
+
   grandTotal(): number {
     return this.displayLines.reduce((sum, line) => sum + line.lineTotal, 0);
   }
@@ -129,5 +155,15 @@ export class InvoiceDetailComponent implements OnInit {
   paymentMethodLabel(method: string | undefined): string {
     if (!method) return '—';
     return PAYMENT_METHOD_TYPE_LABELS[method as PaymentMethodType] ?? method;
+  }
+
+  /**
+   * Returns to wherever the user actually came from (cashier, invoice list,
+   * customer details, reports, ...) when there's real in-app navigation
+   * history; otherwise (opened directly via URL/deep link) falls back to
+   * this invoice's own list — never a hardcoded route baked into the page.
+   */
+  goBack(): void {
+    this.navigationHistory.back(this.invoiceListFallback);
   }
 }

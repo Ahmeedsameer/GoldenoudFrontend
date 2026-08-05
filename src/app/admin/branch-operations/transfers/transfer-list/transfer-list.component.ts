@@ -11,11 +11,12 @@ import {
 } from '../../../../services/transfer-request.service';
 import { ShopService } from '../../../../services/shop.service';
 import { AuthService } from '../../../../services/auth.service';
+import { SearchBarComponent } from '../../../../shared/components/common/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-transfer-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, SearchBarComponent],
   templateUrl: './transfer-list.component.html',
 })
 export class TransferListComponent implements OnInit {
@@ -63,6 +64,7 @@ export class TransferListComponent implements OnInit {
 
   statusFilter = '';
   shopFilter: number | null = null;
+  search = '';
   shops: { id: number; name: string }[] = [];
 
   statuses: { key: string; label: string }[] = [
@@ -79,7 +81,7 @@ export class TransferListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.svc.list({ status: this.statusFilter || undefined, shop_id: this.shopFilter ?? undefined, page: this.page, per_page: 20 }).subscribe({
+    this.svc.list({ status: this.statusFilter || undefined, shop_id: this.shopFilter ?? undefined, search: this.search || undefined, page: this.page, per_page: 20 }).subscribe({
       next: (page) => {
         this.transfers = page.data;
         this.meta = { current_page: page.current_page, last_page: page.last_page, total: page.total };
@@ -90,6 +92,7 @@ export class TransferListComponent implements OnInit {
   }
 
   applyFilters(): void { this.page = 1; this.load(); }
+  setSearch(value: string): void { this.search = value; this.applyFilters(); }
   nextPage(): void { if (this.meta && this.page < this.meta.last_page) { this.page++; this.load(); } }
   prevPage(): void { if (this.page > 1) { this.page--; this.load(); } }
 

@@ -15,6 +15,8 @@ import { ShopService } from '../../../services/shop.service';
 import { ProductService } from '../../../services/product.service';
 import { CategoryService } from '../../../services/category.service';
 import { StockService } from '../../../services/stock.service';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
+import { matchesSearch } from '../../../shared/utils/text-search.util';
 
 /**
  * Phase 4.11 — Stock Movement Report. Every row comes from the same
@@ -24,7 +26,7 @@ import { StockService } from '../../../services/stock.service';
 @Component({
   selector: 'app-stock-movement-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportBarChartComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportBarChartComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './stock-movement-report.component.html',
 })
 export class StockMovementReportComponent implements OnInit {
@@ -111,5 +113,14 @@ export class StockMovementReportComponent implements OnInit {
   get totalsByTypeList(): { key: string; label: string; quantity_in: number; quantity_out: number }[] {
     if (!this.report) return [];
     return Object.entries(this.report.totals_by_type).map(([key, v]) => ({ key, ...v }));
+  }
+
+  search = '';
+  setSearch(value: string): void { this.search = value; }
+
+  get filteredRows(): StockMovementReportData['rows'] {
+    const rows = this.report?.rows ?? [];
+    if (!this.search) return rows;
+    return rows.filter((r) => matchesSearch(this.search, r.product_name, r.sku, r.reference_number));
   }
 }

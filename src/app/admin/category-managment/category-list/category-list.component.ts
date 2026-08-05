@@ -11,10 +11,11 @@ import { LoadingComponent } from "../../../loading/loading.component";
 import { PaginationHelperService } from '../../../services/pagination-helper.service';
 import { ListManager } from '../../../services/list-manager';
 import { map } from 'rxjs';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-category-list',
-  imports: [PaginationComponent, SelectComponent, CommonModule, CategoryTypePip, ButtonComponent, RouterLink, LoadingComponent],
+  imports: [PaginationComponent, SelectComponent, CommonModule, CategoryTypePip, ButtonComponent, RouterLink, LoadingComponent, SearchBarComponent],
   templateUrl: './category-list.component.html',
   styleUrl: './category-list.component.css',
 })

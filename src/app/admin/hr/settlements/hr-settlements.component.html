@@ -1,0 +1,157 @@
+<app-loading [loading]="list.loading"></app-loading>
+
+<div class="ds-card overflow-hidden">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+    <div>
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">تسويات نهاية الخدمة</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">سجلات ثابتة لا تتغير — كل تسوية هي اللقطة المحفوظة وقت إنهاء الخدمة، ولا يُعاد حسابها أبداً</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="w-56">
+        <app-search-bar placeholder="بحث برقم التسوية أو اسم الموظف أو الإيميل..." (searchChange)="setSearch($event)"></app-search-bar>
+      </div>
+      <select (change)="setStatusFilter($any($event.target).value)"
+        class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+        <option value="">كل الحالات</option>
+        <option value="resigned">استقالة</option>
+        <option value="terminated">إنهاء خدمة</option>
+      </select>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">من:</label>
+        <app-date-picker id="settlements-date-from" [value]="dateFrom" (valueChange)="setDateFrom($event)"></app-date-picker>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">إلى:</label>
+        <app-date-picker id="settlements-date-to" [value]="dateTo" (valueChange)="setDateTo($event)"></app-date-picker>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="ds-table w-full">
+      <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+        <tr>
+          <th class="ds-th">رقم التسوية</th>
+          <th class="ds-th">الموظف</th>
+          <th class="ds-th">السبب</th>
+          <th class="ds-th">تاريخ ترك العمل</th>
+          <th class="ds-th">المستحقات النهائية</th>
+          <th class="ds-th">أُعدّت بواسطة</th>
+          <th class="ds-th text-center">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of list.result.data; track row.id) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="px-4 py-3 text-sm font-mono font-medium text-gray-800 dark:text-white/90">{{ row.settlement_number }}</td>
+            <td class="px-4 py-3">
+              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ row.employee?.name }}</p>
+              <p class="text-xs text-gray-400 font-mono">{{ row.employee?.email }}</p>
+            </td>
+            <td class="px-4 py-3">
+              <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                [class]="row.employment_status === 'terminated'
+                  ? 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400'
+                  : 'bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-gray-300'">
+                {{ employmentStatusLabel(row.employment_status) }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ row.leaving_date | date:'mediumDate' }}</td>
+            <td class="px-4 py-3 text-sm font-mono font-semibold text-success-600 dark:text-success-400">{{ row.final_settlement | number:'1.2-2' }} ج.م</td>
+            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ row.prepared_by?.name || '—' }}</td>
+            <td class="px-4 py-3 text-center">
+              <button (click)="openDetail(row)"
+                class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">عرض التفاصيل</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="px-4 py-8 text-center text-sm text-gray-400">لا توجد تسويات بعد</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
+</div>
+
+
+<!-- ═══ SETTLEMENT DETAIL MODAL — exact saved snapshot, never recalculated ═══ -->
+<app-modal [isOpen]="showDetail" (close)="showDetail = false" className="max-w-lg m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">تسوية نهاية الخدمة</h2>
+      <button type="button" (click)="showDetail = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    @if (detailLoading) {
+      <p class="text-sm text-gray-400 py-6 text-center">جارٍ التحميل…</p>
+    } @else if (detail) {
+      <div class="mb-4">
+        <p class="text-sm font-mono font-semibold text-gray-800 dark:text-white/90">{{ detail.settlement_number }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ detail.employee?.name }} — {{ detail.employee?.email }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">
+          {{ employmentStatusLabel(detail.employment_status) }} · تاريخ ترك العمل {{ detail.leaving_date | date:'mediumDate' }}
+        </p>
+      </div>
+
+      <div class="mb-5 rounded-lg border border-gray-200 dark:border-white/10 divide-y divide-gray-100 dark:divide-white/[0.05] text-sm">
+        <div class="flex items-center justify-between px-4 py-2">
+          <span class="text-gray-500 dark:text-gray-400">الراتب الأساسي</span>
+          <span class="font-mono text-gray-700 dark:text-gray-300">{{ detail.basic_salary | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-2">
+          <span class="text-gray-500 dark:text-gray-400">أيام العمل</span>
+          <span class="font-mono text-gray-700 dark:text-gray-300">{{ detail.worked_days }} يوم</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-2">
+          <span class="text-gray-500 dark:text-gray-400">سعر اليوم</span>
+          <span class="font-mono text-gray-700 dark:text-gray-300">{{ detail.daily_rate | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-white/[0.02]">
+          <span class="font-medium text-gray-700 dark:text-gray-300">الراتب المستحق (بالتناسب)</span>
+          <span class="font-mono font-semibold text-gray-800 dark:text-white/90">{{ detail.salary_earned | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-2">
+          <span class="text-gray-500 dark:text-gray-400">عمولة المبيعات الشخصية</span>
+          <span class="font-mono text-success-600 dark:text-success-400">+ {{ detail.sales_commission | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-2">
+          <span class="text-gray-500 dark:text-gray-400">بونص الفرع</span>
+          <span class="font-mono text-success-600 dark:text-success-400">+ {{ detail.branch_profit | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-2">
+          <span class="text-gray-500 dark:text-gray-400">المكافآت</span>
+          <span class="font-mono text-success-600 dark:text-success-400">+ {{ detail.bonuses | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-2">
+          <span class="text-gray-500 dark:text-gray-400">الخصومات والغرامات</span>
+          <span class="font-mono text-error-600 dark:text-error-400">- {{ detail.deductions | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-2">
+          <span class="text-gray-500 dark:text-gray-400">رصيد السلفة غير المسدد</span>
+          <span class="font-mono text-error-600 dark:text-error-400">- {{ detail.salary_advances | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-white/[0.02]">
+          <span class="font-semibold text-gray-700 dark:text-gray-300">المستحقات النهائية</span>
+          <span class="font-mono font-bold text-success-600 dark:text-success-400">{{ detail.final_settlement | number:'1.2-2' }} ج.م</span>
+        </div>
+      </div>
+
+      @if (detail.notes) {
+        <div class="mb-4">
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">ملاحظات</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">{{ detail.notes }}</p>
+        </div>
+      }
+
+      <p class="text-xs text-gray-400">
+        أُعدّت بواسطة {{ detail.prepared_by?.name || '—' }} في {{ detail.created_at | date:'yyyy-MM-dd HH:mm' }}
+      </p>
+    }
+  </div>
+</app-modal>

@@ -64,16 +64,33 @@
               <div class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                 @for (b of bottleResults; track b.id) {
                   <button type="button" (click)="selectBottle(b)"
-                    class="flex w-full items-center justify-between px-3 py-2 text-right text-sm hover:bg-gray-50 dark:hover:bg-white/[0.04]">
-                    <span class="font-medium text-gray-800 dark:text-white/90">{{ b.name }}</span>
-                    <span class="text-xs font-mono text-gray-400">{{ b.capacity_ml }}ml · {{ b.configured_unit_price | number:'1.0-2' }} ج.م</span>
+                    class="flex w-full items-center justify-between gap-2 px-3 py-2 text-right text-sm hover:bg-gray-50 dark:hover:bg-white/[0.04]">
+                    <span class="flex items-center gap-2 min-w-0">
+                      @if (b.image) {
+                        <img [src]="b.image" [alt]="b.name" class="w-8 h-8 rounded-lg object-cover border border-gray-200 dark:border-white/10 shrink-0" />
+                      } @else {
+                        <span class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/[0.05] flex items-center justify-center shrink-0">
+                          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </span>
+                      }
+                      <span class="font-medium text-gray-800 dark:text-white/90 truncate">{{ b.name }}</span>
+                    </span>
+                    <span class="text-xs font-mono text-gray-400 shrink-0">{{ b.capacity_ml }}ml · {{ b.configured_unit_price | number:'1.0-2' }} ج.م</span>
                   </button>
                 }
               </div>
             }
           </div>
           @if (selectedBottle) {
-            <p class="text-[11px] text-gray-400 mt-1">السعة: {{ selectedBottle.capacity_ml }}ml · المتاح: {{ selectedBottle.shop_stock }} قطعة</p>
+            <div class="flex items-center gap-2 mt-1.5">
+              @if (selectedBottle.image) {
+                <img [src]="selectedBottle.image" [alt]="selectedBottle.name" class="w-8 h-8 rounded-lg object-cover border border-gray-200 dark:border-white/10" />
+              }
+              <p class="text-[11px] text-gray-400">السعة: {{ selectedBottle.capacity_ml }}ml · المتاح: {{ selectedBottle.shop_stock }} قطعة</p>
+            </div>
           }
         </div>
 

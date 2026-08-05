@@ -11,6 +11,8 @@ import { ReportLineChartComponent } from '../../../shared/components/reports/rep
 import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
 import { InventoryCountReportService, InventoryCountReportSummary, InventoryCountReportType } from '../../../services/inventory-count-report.service';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
+import { matchesSearch } from '../../../shared/utils/text-search.util';
 
 interface ReportTab { key: InventoryCountReportType; label: string; columns: { key: string; label: string }[]; }
 
@@ -54,7 +56,7 @@ const TABS: ReportTab[] = [
 @Component({
   selector: 'app-count-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportLineChartComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportLineChartComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './count-reports.component.html',
 })
 export class CountReportsComponent implements OnInit {
@@ -76,8 +78,25 @@ export class CountReportsComponent implements OnInit {
   trendCategories: string[] = [];
   trendSeries: { name: string; data: number[] }[] = [];
 
+  search = '';
+
+  /** Client-side — every tab's rows are already fully loaded (svc.data() returns the whole set). */
+  get filteredRows(): any[] {
+    if (!this.search) return this.rows;
+    return this.rows.filter((r) => this.activeTab.columns.some((c) => matchesSearch(this.search, r[c.key])));
+  }
+
+  setSearch(value: string): void {
+    this.search = value;
+  }
+
   get exportPath(): string { return `/branch-operations/reports/counts/${this.activeTab.key}/export`; }
   get exportParams(): Record<string, any> { return { from: this.from || undefined, to: this.to || undefined }; }
+
+  /** Only the three session-level tabs have a session_id per row to link out to. */
+  get hasSessionLink(): boolean {
+    return ['sessions', 'approved', 'pending'].includes(this.activeTab.key);
+  }
 
   ngOnInit(): void {
     const requestedType = this.route.snapshot.queryParamMap.get('type');

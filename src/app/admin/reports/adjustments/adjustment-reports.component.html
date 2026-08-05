@@ -47,9 +47,14 @@
         }
       </div>
 
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ activeTab.label }}</h2>
-        <app-report-toolbar [exportPath]="exportPath" [params]="exportParams" [fileName]="'تقرير-التسويات-' + activeTab.key" [showRefresh]="false"></app-report-toolbar>
+        <div class="flex items-center gap-2">
+          <div class="w-56">
+            <app-search-bar placeholder="بحث..." (searchChange)="setSearch($event)"></app-search-bar>
+          </div>
+          <app-report-toolbar [exportPath]="exportPath" [params]="exportParams" [fileName]="'تقرير-التسويات-' + activeTab.key" [showRefresh]="false"></app-report-toolbar>
+        </div>
       </div>
 
       @if (activeTab.key === 'monthly-trend' && trendSeries.length) {
@@ -65,14 +70,14 @@
               </tr>
             </thead>
             <tbody>
-              @for (r of rows; track $index) {
+              @for (r of filteredRows; track $index) {
                 <tr>
                   @for (c of activeTab.columns; track c.key) { <td>{{ cell(r, c.key) }}</td> }
                 </tr>
               }
             </tbody>
           </table>
-          @if (!rowsLoading && !rows.length) { <app-report-empty-state message="لا توجد بيانات لهذا التقرير"></app-report-empty-state> }
+          @if (!rowsLoading && !filteredRows.length) { <app-report-empty-state [message]="rows.length ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد بيانات لهذا التقرير'"></app-report-empty-state> }
         </div>
       </div>
 

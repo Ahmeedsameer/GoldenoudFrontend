@@ -102,8 +102,9 @@
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">الزيوت الأكثر استخداماً</h2>
         <div class="flex items-center gap-2">
-          <input type="text" [(ngModel)]="oilsSearch" placeholder="بحث..."
-            class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          <div class="w-48">
+            <app-search-bar placeholder="بحث بالاسم أو الكود..." (searchChange)="oilsSearch = $event"></app-search-bar>
+          </div>
           <app-report-toolbar exportPath="/admin/reports/perfume/export" [params]="exportParamsOil" fileName="تقرير-استهلاك-الزيوت" [showRefresh]="false"></app-report-toolbar>
         </div>
       </div>
@@ -134,8 +135,9 @@
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">الزجاجات الأكثر استخداماً</h2>
         <div class="flex items-center gap-2">
-          <input type="text" [(ngModel)]="bottlesSearch" placeholder="بحث..."
-            class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          <div class="w-48">
+            <app-search-bar placeholder="بحث بالاسم أو الكود..." (searchChange)="bottlesSearch = $event"></app-search-bar>
+          </div>
           <app-report-toolbar exportPath="/admin/reports/perfume/export" [params]="exportParamsBottle" fileName="تقرير-استهلاك-الزجاجات" [showRefresh]="false"></app-report-toolbar>
         </div>
       </div>

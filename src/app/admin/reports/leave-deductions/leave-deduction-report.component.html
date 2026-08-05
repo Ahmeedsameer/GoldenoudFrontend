@@ -1,0 +1,48 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="ds-card overflow-hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+    <div>
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">تقرير خصومات الإجازات</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ totalDays }} يوم إجازة بدون أجر — إجمالي الخصم {{ totalAmount | number:'1.2-2' }} ج.م</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <select [(ngModel)]="month" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+        <option [ngValue]="null">كل الأشهر</option>
+        @for (m of months; track m) { <option [ngValue]="m">شهر {{ m }}</option> }
+      </select>
+      <select [(ngModel)]="year" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+        <option [ngValue]="null">كل السنوات</option>
+        @for (y of years; track y) { <option [ngValue]="y">{{ y }}</option> }
+      </select>
+      <app-report-toolbar exportPath="/hr/reports/leave-deductions/export" [params]="filters" fileName="تقرير-خصومات-الإجازات" [showRefresh]="false"></app-report-toolbar>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="ds-table w-full">
+      <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+        <tr>
+          <th class="ds-th">الموظف</th>
+          <th class="ds-th">الشهر</th>
+          <th class="ds-th">أيام الإجازة بدون أجر</th>
+          <th class="ds-th">قيمة اليوم</th>
+          <th class="ds-th">إجمالي الخصم</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows; track r.id) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ r.employee_name }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ r.period }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-600 dark:text-gray-400">{{ r.unpaid_days }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ r.per_day | number:'1.2-2' }}</td>
+            <td class="px-4 py-3 text-sm font-mono font-bold text-error-500">{{ r.amount | number:'1.2-2' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">لا توجد خصومات إجازات في هذه الفترة</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

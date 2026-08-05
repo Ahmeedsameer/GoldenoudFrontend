@@ -284,13 +284,8 @@
       </h3>
       <span class="text-xs text-gray-400">{{ filteredSellers.length }} بائع</span>
     </div>
-    <div class="relative">
-      <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-      </svg>
-      <input type="text" [(ngModel)]="sellersSearch" (ngModelChange)="onSellersSearchChange()"
-        placeholder="بحث بالاسم أو الفرع…"
-        class="pr-9 pl-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 w-48"/>
+    <div class="w-48">
+      <app-search-bar placeholder="بحث بالاسم أو الفرع..." (searchChange)="sellersSearch = $event; onSellersSearchChange()"></app-search-bar>
     </div>
   </div>
 
@@ -373,13 +368,8 @@
       </h3>
       <span class="text-xs text-gray-400">{{ filteredProducts.length }} منتج</span>
     </div>
-    <div class="relative">
-      <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-      </svg>
-      <input type="text" [(ngModel)]="productsSearch" (ngModelChange)="onProductsSearchChange()"
-        placeholder="بحث باسم المنتج أو SKU…"
-        class="pr-9 pl-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 w-48"/>
+    <div class="w-48">
+      <app-search-bar placeholder="بحث باسم المنتج أو SKU..." (searchChange)="productsSearch = $event; onProductsSearchChange()"></app-search-bar>
     </div>
   </div>
 
@@ -582,13 +572,8 @@
         </h3>
         <span class="text-xs text-gray-400">{{ filteredCustomers.length }} عميل</span>
       </div>
-      <div class="relative">
-        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input type="text" [(ngModel)]="customersSearch" (ngModelChange)="onCustomersSearchChange()"
-          placeholder="بحث بالاسم أو الهاتف…"
-          class="pr-9 pl-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 w-48"/>
+      <div class="w-48">
+        <app-search-bar placeholder="بحث بالاسم أو الهاتف..." (searchChange)="customersSearch = $event; onCustomersSearchChange()"></app-search-bar>
       </div>
     </div>
 
@@ -712,8 +697,9 @@
       <!-- Customer search -->
       <div>
         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">العميل</label>
-        <input type="text" [(ngModel)]="invoiceCustomerSearch" placeholder="اسم أو هاتف…"
-          class="w-36 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+        <div class="w-36">
+          <app-search-bar placeholder="اسم أو هاتف..." (searchChange)="invoiceCustomerSearch = $event"></app-search-bar>
+        </div>
       </div>
 
       <!-- Apply / Reset -->

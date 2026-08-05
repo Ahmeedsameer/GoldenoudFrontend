@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { HrService } from '../../../services/hr.service';
 import { AuthService } from '../../../services/auth.service';
 import { ShopService } from '../../../services/shop.service';
@@ -13,7 +14,7 @@ type PlanMode = 'date_range' | 'fixed_amount' | 'fixed_months' | 'custom';
 
 @Component({
   selector: 'app-hr-advances',
-  imports: [CommonModule, FormsModule, LoadingComponent, ModalComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LoadingComponent, ModalComponent, DatePickerComponent],
   templateUrl: './hr-advances.component.html',
 })
 export class HrAdvancesComponent implements OnInit {
@@ -234,13 +235,63 @@ export class HrAdvancesComponent implements OnInit {
   }
 
   // ── Detail / repayment / plan edit ────────────────
+  detailTransactions: any[] = [];
+  detailTransactionsLoading = false;
+  showChangeDefaultSafe = false;
+  newDefaultSafeId: number | null = null;
+  changeDefaultSafeError = '';
+  changeDefaultSafeLoading = false;
+
   openDetail(row: any) {
     this.showDetail = true;
     this.detailLoading = true;
-    this.repaymentForm = { amount: 0, date: this.iso(new Date()), safe_id: null, notes: '' };
+    this.detailTransactions = [];
     this.hr.getAdvance(row.id).subscribe({
-      next: (d) => { this.detail = d; this.detailLoading = false; },
+      next: (d) => {
+        this.detail = d;
+        this.detailLoading = false;
+        // Defaults to the same safe the advance was disbursed from, unless
+        // changed via "تغيير الخزنة الافتراضية" — the admin can still override per-repayment below.
+        this.repaymentForm = { amount: 0, date: this.iso(new Date()), safe_id: d.default_repayment_safe_id ?? d.paying_safe_id ?? null, notes: '' };
+      },
       error: () => { this.detailLoading = false; },
+    });
+    this.detailTransactionsLoading = true;
+    this.hr.getAdvanceTransactions(row.id).subscribe({
+      next: (tx) => { this.detailTransactions = tx || []; this.detailTransactionsLoading = false; },
+      error: () => { this.detailTransactionsLoading = false; },
+    });
+  }
+
+  get defaultRepaymentSafeLabel(): string {
+    const id = this.detail?.default_repayment_safe_id ?? this.detail?.paying_safe_id;
+    const safe = this.safes.find((s) => s.id === id);
+    return safe ? this.safeLabel(safe) : '—';
+  }
+
+  // ── Task 6 — Change Default Cashbox (future installments only) ───
+  openChangeDefaultSafe() {
+    this.newDefaultSafeId = this.detail?.default_repayment_safe_id ?? this.detail?.paying_safe_id ?? null;
+    this.changeDefaultSafeError = '';
+    this.showChangeDefaultSafe = true;
+  }
+
+  confirmChangeDefaultSafe() {
+    if (!this.detail || !this.newDefaultSafeId) { this.changeDefaultSafeError = 'اختر الخزنة الجديدة'; return; }
+
+    this.changeDefaultSafeLoading = true;
+    this.changeDefaultSafeError = '';
+    this.hr.changeAdvanceDefaultSafe(this.detail.id, this.newDefaultSafeId).subscribe({
+      next: (r) => {
+        this.changeDefaultSafeLoading = false;
+        this.showChangeDefaultSafe = false;
+        this.detail = { ...this.detail, default_repayment_safe_id: r.data.default_repayment_safe_id };
+        this.repaymentForm.safe_id = r.data.default_repayment_safe_id;
+      },
+      error: (e) => {
+        this.changeDefaultSafeLoading = false;
+        this.changeDefaultSafeError = e?.error?.message || 'تعذّر تغيير الخزنة الافتراضية';
+      },
     });
   }
 

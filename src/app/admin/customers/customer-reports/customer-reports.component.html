@@ -1,0 +1,173 @@
+<div class="mb-6">
+  <h1 class="page-title">تقارير العملاء</h1>
+  <p class="page-subtitle">أكثر العملاء شراءً، العملاء الجدد، العملاء غير النشطين، وسجل مشتريات عميل معيّن</p>
+</div>
+
+<!-- Tabs -->
+<div class="inline-flex rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden mb-5">
+  <button type="button" (click)="setTab('top')"
+    [class]="tab === 'top' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
+    class="px-4 py-2 text-sm font-medium transition-colors">الأكثر شراءً</button>
+  <button type="button" (click)="setTab('new')"
+    [class]="tab === 'new' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
+    class="px-4 py-2 text-sm font-medium transition-colors">عملاء جدد</button>
+  <button type="button" (click)="setTab('inactive')"
+    [class]="tab === 'inactive' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
+    class="px-4 py-2 text-sm font-medium transition-colors">عملاء غير نشطين</button>
+  <button type="button" (click)="setTab('history')"
+    [class]="tab === 'history' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
+    class="px-4 py-2 text-sm font-medium transition-colors">سجل مشتريات عميل</button>
+</div>
+
+<!-- ═══ Top Customers ═══ -->
+@if (tab === 'top') {
+  <app-loading [loading]="topLoading"></app-loading>
+  <div class="flex items-center gap-2 mb-4">
+    <select [(ngModel)]="topPeriod" (ngModelChange)="loadTopCustomers()"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <option value="today">اليوم</option>
+      <option value="week">هذا الأسبوع</option>
+      <option value="month">هذا الشهر</option>
+      <option value="year">هذه السنة</option>
+    </select>
+  </div>
+
+  <div class="db-tbl-card">
+    <div class="db-tbl-wrap">
+      <table class="db-tbl">
+        <thead>
+          <tr>
+            <th>العميل</th>
+            <th>الهاتف</th>
+            <th>عدد الزيارات</th>
+            <th>إجمالي الإنفاق</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of topCustomers; track c.customer_id) {
+            <tr>
+              <td class="font-semibold" style="color: #111827;">{{ c.customer_name }}</td>
+              <td class="font-mono" style="color: #6B7280;">{{ c.customer_phone }}</td>
+              <td class="font-mono" style="color: #6B7280;">{{ c.visit_count }}</td>
+              <td class="font-mono font-semibold" style="color: #111827;">{{ c.total_spent | number:'1.2-2' }} ج.م</td>
+            </tr>
+          }
+          @if (!topLoading && topCustomers.length === 0) {
+            <tr><td colspan="4" style="padding: 3rem 1rem; text-align: center; color: #9CA3AF;">لا توجد بيانات</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+<!-- ═══ New Customers ═══ -->
+@if (tab === 'new') {
+  <app-loading [loading]="newLoading"></app-loading>
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <div class="flex items-center gap-2">
+      <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">من:</label>
+      <app-date-picker id="new-customers-from" [value]="newDateFrom" (valueChange)="newDateFrom = $event"></app-date-picker>
+    </div>
+    <div class="flex items-center gap-2">
+      <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">إلى:</label>
+      <app-date-picker id="new-customers-to" [value]="newDateTo" (valueChange)="newDateTo = $event"></app-date-picker>
+    </div>
+    <button type="button" (click)="loadNewCustomers()"
+      class="h-9 px-4 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium transition-colors">بحث</button>
+    <span class="text-xs text-gray-400">الإجمالي: {{ newTotal }}</span>
+  </div>
+
+  <div class="db-tbl-card">
+    <div class="db-tbl-wrap">
+      <table class="db-tbl">
+        <thead>
+          <tr><th>رقم العميل</th><th>الاسم</th><th>الهاتف</th><th>تاريخ التسجيل</th></tr>
+        </thead>
+        <tbody>
+          @for (c of newCustomers; track c.id) {
+            <tr>
+              <td class="font-mono" style="color: #9CA3AF;">#{{ c.id }}</td>
+              <td class="font-semibold" style="color: #111827;">{{ c.name }}</td>
+              <td class="font-mono" style="color: #6B7280;">{{ c.phone }}</td>
+              <td style="color: #6B7280;">{{ c.created_at | date:'mediumDate' }}</td>
+            </tr>
+          }
+          @if (!newLoading && newCustomers.length === 0) {
+            <tr><td colspan="4" style="padding: 3rem 1rem; text-align: center; color: #9CA3AF;">لا يوجد عملاء جدد في هذه الفترة</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+<!-- ═══ Inactive Customers ═══ -->
+@if (tab === 'inactive') {
+  <app-loading [loading]="inactiveLoading"></app-loading>
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">لم يشترِ منذ (أيام):</label>
+    <input type="number" min="1" [(ngModel)]="inactiveDays"
+      class="h-9 w-24 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90" />
+    <button type="button" (click)="loadInactiveCustomers()"
+      class="h-9 px-4 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium transition-colors">بحث</button>
+    <span class="text-xs text-gray-400">الإجمالي: {{ inactiveTotal }}</span>
+  </div>
+
+  <div class="db-tbl-card">
+    <div class="db-tbl-wrap">
+      <table class="db-tbl">
+        <thead>
+          <tr><th>رقم العميل</th><th>الاسم</th><th>الهاتف</th><th>عدد الفواتير</th><th>آخر شراء</th></tr>
+        </thead>
+        <tbody>
+          @for (c of inactiveCustomers; track c.id) {
+            <tr>
+              <td class="font-mono" style="color: #9CA3AF;">#{{ c.id }}</td>
+              <td class="font-semibold" style="color: #111827;">{{ c.name }}</td>
+              <td class="font-mono" style="color: #6B7280;">{{ c.phone }}</td>
+              <td class="font-mono" style="color: #6B7280;">{{ c.total_invoices ?? 0 }}</td>
+              <td style="color: #6B7280;">{{ c.last_purchase_date ? (c.last_purchase_date | date:'mediumDate') : 'لم يشترِ من قبل' }}</td>
+            </tr>
+          }
+          @if (!inactiveLoading && inactiveCustomers.length === 0) {
+            <tr><td colspan="5" style="padding: 3rem 1rem; text-align: center; color: #9CA3AF;">لا يوجد عملاء غير نشطين</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+<!-- ═══ Customer Purchase History (search → existing Customer Detail page) ═══ -->
+@if (tab === 'history') {
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">ابحث عن عميل لعرض سجل مشترياته الكامل — الإجمالي والمتوسط وعدد الفواتير تُعرض في صفحة تفاصيل العميل.</p>
+  <div class="w-72 mb-4">
+    <app-search-bar placeholder="بحث بالاسم أو الهاتف..." (searchChange)="searchHistory($event)"></app-search-bar>
+  </div>
+
+  <div class="db-tbl-card">
+    <div class="db-tbl-wrap">
+      <table class="db-tbl">
+        <thead>
+          <tr><th>رقم العميل</th><th>الاسم</th><th>الهاتف</th><th style="text-align:center;">الإجراءات</th></tr>
+        </thead>
+        <tbody>
+          @for (c of historyResults; track c.id) {
+            <tr>
+              <td class="font-mono" style="color: #9CA3AF;">#{{ c.id }}</td>
+              <td class="font-semibold" style="color: #111827;">{{ c.name }}</td>
+              <td class="font-mono" style="color: #6B7280;">{{ c.phone }}</td>
+              <td style="text-align:center;">
+                <a [routerLink]="['/dashboard/customers', c.id]" class="crud-action crud-action-view">عرض السجل</a>
+              </td>
+            </tr>
+          }
+          @if (!historyLoading && historyResults.length === 0 && historySearch.trim().length >= 2) {
+            <tr><td colspan="4" style="padding: 3rem 1rem; text-align: center; color: #9CA3AF;">لا توجد نتائج</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

@@ -9,10 +9,11 @@ import { PaginationComponent } from '../../../../pagination/pagination.component
 import { ButtonComponent } from '../../../../shared/components/ui/button/button.component';
 import { LoadingComponent } from '../../../../loading/loading.component';
 import { ModalComponent } from '../../../../shared/components/ui/modal/modal.component';
+import { SearchBarComponent } from '../../../../shared/components/common/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-warehouse-inventory',
-  imports: [CommonModule, FormsModule, PaginationComponent, ButtonComponent, LoadingComponent, ModalComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, ButtonComponent, LoadingComponent, ModalComponent, SearchBarComponent],
   templateUrl: './warehouse-inventory.component.html',
   styleUrl: './warehouse-inventory.component.css',
 })

@@ -1,0 +1,370 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="mb-6">
+  <div class="flex items-center gap-2 mb-1">
+    <a routerLink="/dashboard/customers" class="text-sm text-gray-400 hover:text-brand-500 transition-colors">العملاء</a>
+    <span class="text-gray-300 dark:text-gray-600">/</span>
+    <span class="text-sm text-gray-600 dark:text-gray-400">تفاصيل العميل</span>
+  </div>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">{{ customer?.name || ('#' + customer?.id) }}</h2>
+    @if (customer) {
+      <!-- ═══ Task 1 — Customer Actions ═══ -->
+      <div class="flex items-center gap-2">
+        @if (canExport) {
+          <app-report-toolbar [exportPath]="'/customers/' + customer.id + '/export'" [fileName]="'عميل-' + customer.name" [showRefresh]="false"></app-report-toolbar>
+        }
+        @if (canCreateInvoice) {
+          <button type="button" (click)="createInvoiceForCustomer()"
+            class="h-9 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-3 text-sm font-medium text-white transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            فاتورة جديدة
+          </button>
+        }
+        @if (isAdmin) {
+          <button type="button" (click)="openEditCustomer()"
+            class="h-9 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-700 px-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors">
+            تعديل بيانات العميل
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5">
+    <app-alert [variant]="alert.type === 'success' ? 'success' : 'error'" [message]="alert.message"></app-alert>
+  </div>
+}
+
+@if (customer) {
+  <!-- ═══ Task 2 — Dashboard summary cards ═══ -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4 mb-5">
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+      <p class="text-xs text-gray-400 mb-1">عميل منذ</p>
+      <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ stats?.customer_since ? (stats.customer_since | date:'mediumDate') : '—' }}</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+      <p class="text-xs text-gray-400 mb-1">آخر عملية شراء</p>
+      <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ stats?.last_purchase_date ? (stats.last_purchase_date | date:'mediumDate') : '—' }}</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+      <p class="text-xs text-gray-400 mb-1">أيام منذ آخر شراء</p>
+      <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ stats?.days_since_last_purchase ?? '—' }}</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+      <p class="text-xs text-gray-400 mb-1">إجمالي المشتريات</p>
+      <p class="text-base font-bold text-success-600 dark:text-success-400">{{ (stats?.total_purchases ?? 0) | number:'1.2-2' }} ج.م</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+      <p class="text-xs text-gray-400 mb-1">عدد الفواتير</p>
+      <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ stats?.total_invoices ?? 0 }}</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+      <p class="text-xs text-gray-400 mb-1">متوسط قيمة الفاتورة</p>
+      <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ (stats?.average_invoice ?? 0) | number:'1.2-2' }} ج.م</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+      <p class="text-xs text-gray-400 mb-1">إجمالي المنتجات المشتراة</p>
+      <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ stats?.total_products_purchased ?? 0 }}</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
+    <!-- Customer info -->
+    <div class="lg:col-span-2 rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">بيانات العميل</h3>
+        @if (canManageTags) {
+          <button type="button" (click)="openTagPicker()" class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">+ إضافة وسم</button>
+        }
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm mb-4">
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">رقم العميل</span>
+          <span class="font-mono font-medium text-gray-800 dark:text-white/90">#{{ customer.id }}</span>
+        </div>
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">الاسم الكامل</span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ customer.name }}</span>
+        </div>
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">رقم الهاتف</span>
+          <span class="font-mono font-medium text-gray-800 dark:text-white/90">{{ customer.phone }}</span>
+        </div>
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">البريد الإلكتروني</span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ customer.email || '—' }}</span>
+        </div>
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">العنوان</span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ customer.address || '—' }}</span>
+        </div>
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">الفرع</span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ customer.shop?.name || '—' }}</span>
+        </div>
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">تاريخ الإنشاء</span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ customer.created_at ? (customer.created_at | date:'mediumDate') : '—' }}</span>
+        </div>
+        <div>
+          <span class="block text-xs text-gray-400 dark:text-gray-500 mb-0.5">تاريخ آخر عملية شراء</span>
+          <span class="font-medium text-gray-800 dark:text-white/90">{{ stats?.last_purchase_date ? (stats.last_purchase_date | date:'mediumDate') : '—' }}</span>
+        </div>
+      </div>
+
+      <!-- ═══ Task 3 — Tags ═══ -->
+      <div class="pt-4 border-t border-gray-100 dark:border-white/[0.05]">
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mb-2">الوسوم</span>
+        <div class="flex flex-wrap items-center gap-2">
+          @for (tag of autoTags; track tag.id) {
+            <app-badge variant="light" [color]="tagBadgeColor(tag)" size="sm">{{ tag.name }}</app-badge>
+          }
+          @for (tag of manualTags; track tag.id) {
+            <span class="inline-flex items-center gap-1">
+              <app-badge variant="solid" [color]="tagBadgeColor(tag)" size="sm">{{ tag.name }}</app-badge>
+              @if (canManageTags) {
+                <button type="button" (click)="detachTag(tag.id)" title="إزالة الوسم" class="text-gray-400 hover:text-error-500 text-xs">✕</button>
+              }
+            </span>
+          }
+          @if (autoTags.length === 0 && manualTags.length === 0) {
+            <span class="text-xs text-gray-400">لا توجد وسوم</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Task 6 — Customer Notes History ═══ -->
+    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-6 flex flex-col">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-3">سجل الملاحظات</h3>
+
+      @if (canAddNote) {
+        <div class="mb-3">
+          <textarea [(ngModel)]="newNoteDraft" rows="2"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none resize-none mb-2"
+            placeholder="أضف ملاحظة جديدة..."></textarea>
+          <button type="button" (click)="addNote()" [disabled]="addingNote || !newNoteDraft.trim()"
+            class="h-8 px-4 rounded-lg text-xs font-medium text-white transition-colors"
+            [class]="(addingNote || !newNoteDraft.trim()) ? 'bg-brand-400 cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600'">
+            @if (addingNote) { جارِ الإضافة... } @else { إضافة ملاحظة }
+          </button>
+        </div>
+      }
+
+      <div class="space-y-3 max-h-72 overflow-y-auto pe-1">
+        @if (noteHistoryLoading) {
+          <p class="text-xs text-gray-400">جارِ التحميل...</p>
+        } @else if (noteHistory.length === 0) {
+          <p class="text-sm text-gray-400">لا توجد ملاحظات بعد.</p>
+        } @else {
+          @for (note of noteHistory; track note.id) {
+            <div class="rounded-lg border border-gray-100 dark:border-white/[0.05] p-3">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ note.author?.name || '—' }}</span>
+                <span class="text-[11px] text-gray-400">{{ note.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+              </div>
+              <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ note.note }}</p>
+              @if (canDeleteNote) {
+                <button type="button" (click)="deleteNote(note.id)" class="mt-1 text-[11px] text-error-500 hover:text-error-600">حذف</button>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Task 2 — Analytics ═══ -->
+  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] overflow-hidden mb-5">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">تحليلات العميل</h3>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 p-6">
+      <div>
+        <p class="text-xs text-gray-400 mb-1">متوسط الأيام بين المشتريات</p>
+        <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ analytics?.avg_days_between_purchases != null ? (analytics.avg_days_between_purchases + ' يوم') : '—' }}</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 mb-1">أعلى فاتورة</p>
+        <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ analytics?.largest_invoice != null ? (analytics.largest_invoice | number:'1.2-2') + ' ج.م' : '—' }}</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 mb-1">أقل فاتورة</p>
+        <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ analytics?.smallest_invoice != null ? (analytics.smallest_invoice | number:'1.2-2') + ' ج.م' : '—' }}</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 mb-1">إجمالي الخصومات</p>
+        <p class="text-base font-bold text-gray-800 dark:text-white/90">{{ analytics?.total_discounts | number:'1.2-2' }} ج.م</p>
+      </div>
+      @if (isAdmin) {
+        <div>
+          <p class="text-xs text-gray-400 mb-1">إجمالي الربح من العميل</p>
+          <p class="text-base font-bold" [class]="(analytics?.total_profit ?? 0) >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+            {{ analytics?.total_profit != null ? (analytics.total_profit | number:'1.2-2') + ' ج.م' : '—' }}
+          </p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ═══ Favorite Products (top 5) ═══ -->
+  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] overflow-hidden mb-5">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">المنتجات المفضّلة</h3>
+    </div>
+    @if (mostPurchasedProducts.length > 0) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 p-6">
+        @for (p of mostPurchasedProducts; track p.product_id) {
+          <div class="rounded-xl border border-gray-200 dark:border-white/[0.05] p-3 text-center">
+            @if (p.image) {
+              <img [src]="p.image" alt="" class="w-16 h-16 rounded-lg object-cover mx-auto mb-2" />
+            } @else {
+              <div class="w-16 h-16 rounded-lg bg-gray-100 dark:bg-white/[0.05] flex items-center justify-center mx-auto mb-2 text-gray-300">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+            }
+            <p class="text-sm font-medium text-gray-800 dark:text-white/90 line-clamp-2 mb-1">{{ p.product_name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ p.total_qty }} {{ p.scalar }}</p>
+            <p class="text-xs text-gray-400">{{ p.purchase_count }} عملية شراء</p>
+            <p class="text-xs font-mono font-semibold text-success-600 dark:text-success-400 mt-1">{{ p.total_revenue | number:'1.2-2' }} ج.م</p>
+            <p class="text-[11px] text-gray-400 mt-0.5">آخر شراء: {{ p.last_purchase_date ? (p.last_purchase_date | date:'mediumDate') : '—' }}</p>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="px-6 py-8 text-center text-sm text-gray-400">لا توجد مشتريات بعد</div>
+    }
+  </div>
+
+  <!-- ═══ Task 4 — Similar Customers ═══ -->
+  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] overflow-hidden mb-5">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">عملاء مشابهون</h3>
+    </div>
+    @if (similarCustomersLoading) {
+      <div class="px-6 py-8 text-center text-sm text-gray-400">جارِ التحميل...</div>
+    } @else if (similarCustomers.length > 0) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 p-6">
+        @for (c of similarCustomers; track c.id) {
+          <a [routerLink]="['/dashboard/customers', c.id]" class="rounded-xl border border-gray-200 dark:border-white/[0.05] p-3 text-center block hover:border-brand-300 dark:hover:border-brand-500 transition-colors">
+            <p class="text-sm font-medium text-gray-800 dark:text-white/90 line-clamp-1 mb-1">{{ c.name }}</p>
+            <p class="text-xs font-mono font-semibold text-success-600 dark:text-success-400">{{ c.total_purchases | number:'1.2-2' }} ج.م</p>
+            <p class="text-[11px] text-gray-400 mt-0.5">آخر شراء: {{ c.last_purchase_date ? (c.last_purchase_date | date:'mediumDate') : '—' }}</p>
+          </a>
+        }
+      </div>
+    } @else {
+      <div class="px-6 py-8 text-center text-sm text-gray-400">لا يوجد عملاء مشابهون حالياً</div>
+    }
+  </div>
+
+  <!-- ═══ Task 1 — Customer Activity Timeline ═══ -->
+  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">سجل النشاط</h3>
+    </div>
+    @if (activity.length > 0) {
+      <div class="relative px-6 py-6 space-y-5 ms-2 border-s-2 border-gray-100 dark:border-white/[0.06]">
+        @for (entry of activity; track $index) {
+          <div class="relative ps-6" [class.cursor-pointer]="activityIsInvoice(entry)" [class.group]="activityIsInvoice(entry)" (click)="onActivityClick(entry)">
+            <span class="absolute -start-[9px] top-1 h-3.5 w-3.5 rounded-full bg-brand-400 border-2 border-white dark:border-gray-900"></span>
+            <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-transparent group-hover:border-gray-200 dark:group-hover:border-white/10 group-hover:bg-gray-50 dark:group-hover:bg-white/[0.02] transition-colors p-2 -m-2">
+              <div>
+                <span class="inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium mr-2" [class]="activityBadgeClass(entry)">
+                  {{ activityLabel(entry) }}
+                </span>
+                @if (entry.milestone) {
+                  <app-badge variant="solid" color="warning" size="sm">{{ entry.milestone === 'first_purchase' ? 'أول شراء' : 'أحدث شراء' }}</app-badge>
+                }
+                <span class="text-xs text-gray-400 mr-2">{{ entry.date | date:'dd MMM yyyy, HH:mm' }}</span>
+              </div>
+              <div class="flex items-center gap-4 text-sm">
+                <span class="text-gray-500 dark:text-gray-400">{{ entry.description }}</span>
+                <span class="text-gray-400 dark:text-gray-500 text-xs">{{ entry.user || '—' }}</span>
+                @if (activityIsInvoice(entry)) {
+                  <span class="text-xs font-medium text-brand-600 dark:text-brand-400 group-hover:underline">عرض ←</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="px-6 py-8 text-center text-sm text-gray-400">لا يوجد نشاط مسجّل بعد</div>
+    }
+  </div>
+}
+
+<!-- ═══ Edit Customer — reuses the same customer form as the cashier's quick-add ═══ -->
+<app-modal [isOpen]="showEditCustomer" (close)="showEditCustomer = false" className="max-w-md m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">تعديل بيانات العميل</h2>
+      <button type="button" (click)="showEditCustomer = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <app-customer-form
+      [model]="editCustomerModel" (modelChange)="editCustomerModel = $event"
+      [loading]="editCustomerLoading" [error]="editCustomerError"
+      submitLabel="حفظ التعديلات"
+      (save)="saveEditCustomer()" (cancel)="showEditCustomer = false">
+    </app-customer-form>
+  </div>
+</app-modal>
+
+<!-- ═══ Task 3 — Tag picker ═══ -->
+<app-modal [isOpen]="showTagPicker" (close)="showTagPicker = false" className="max-w-md m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">إضافة وسم</h2>
+      <button type="button" (click)="showTagPicker = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    @if (tagPickerError) {
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+        <p class="text-sm text-error-600 dark:text-error-400">{{ tagPickerError }}</p>
+      </div>
+    }
+
+    @if (availableManualTags.length > 0) {
+      <div class="mb-4">
+        <p class="text-xs text-gray-400 mb-2">اختر وسماً موجوداً</p>
+        <div class="flex flex-wrap gap-2">
+          @for (tag of availableManualTags; track tag.id) {
+            <button type="button" (click)="attachExistingTag(tag.id)" [disabled]="tagPickerLoading">
+              <app-badge variant="light" [color]="tagBadgeColor(tag)" size="sm">{{ tag.name }}</app-badge>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="pt-4 border-t border-gray-100 dark:border-white/[0.05]">
+      <p class="text-xs text-gray-400 mb-2">أو أنشئ وسماً جديداً</p>
+      <div class="flex gap-2 mb-3">
+        <input type="text" [(ngModel)]="newTagName" placeholder="اسم الوسم"
+          class="flex-1 h-10 rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+        <select [(ngModel)]="newTagColor" class="h-10 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <option value="primary">أزرق</option>
+          <option value="success">أخضر</option>
+          <option value="error">أحمر</option>
+          <option value="warning">أصفر</option>
+          <option value="info">فاتح</option>
+          <option value="dark">داكن</option>
+        </select>
+      </div>
+      <button type="button" (click)="createAndAttachTag()" [disabled]="tagPickerLoading || !newTagName.trim()"
+        class="w-full h-10 rounded-lg text-sm font-medium text-white transition-colors"
+        [class]="(tagPickerLoading || !newTagName.trim()) ? 'bg-brand-400 cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600'">
+        @if (tagPickerLoading) { جارِ الإضافة... } @else { إنشاء وإضافة }
+      </button>
+    </div>
+  </div>
+</app-modal>

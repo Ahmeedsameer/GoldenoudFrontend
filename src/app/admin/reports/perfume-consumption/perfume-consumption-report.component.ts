@@ -10,6 +10,7 @@ import {
   PerfumeReportService, PerfumeConsumptionSummary, PerfumeTrendRow,
 } from '../../../services/perfume-report.service';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 type Period = 'today' | 'week' | 'month' | 'year';
 
@@ -21,7 +22,7 @@ type Period = 'today' | 'week' | 'month' | 'year';
 @Component({
   selector: 'app-perfume-consumption-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './perfume-consumption-report.component.html',
 })
 export class PerfumeConsumptionReportComponent implements OnInit {

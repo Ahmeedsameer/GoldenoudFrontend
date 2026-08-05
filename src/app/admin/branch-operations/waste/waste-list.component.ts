@@ -8,13 +8,14 @@ import { WasteService, WasteRecord, WasteReason, WASTE_REASON_LABELS } from '../
 import { ShopService } from '../../../services/shop.service';
 import { ProductService } from '../../../services/product.service';
 import { AuthService } from '../../../services/auth.service';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 const REASONS: { key: WasteReason; label: string }[] = Object.entries(WASTE_REASON_LABELS).map(([key, label]) => ({ key: key as WasteReason, label }));
 
 @Component({
   selector: 'app-waste-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportEmptyStateComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportEmptyStateComponent, SearchBarComponent],
   templateUrl: './waste-list.component.html',
 })
 export class WasteListComponent implements OnInit {
@@ -37,6 +38,7 @@ export class WasteListComponent implements OnInit {
 
   shopFilter: number | null = null;
   reasonFilter = '';
+  search = '';
 
   showForm = false;
   saving = false;
@@ -61,7 +63,7 @@ export class WasteListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.svc.list({ shop_id: this.shopFilter ?? undefined, reason: this.reasonFilter || undefined, page: this.page, per_page: 25 }).subscribe({
+    this.svc.list({ shop_id: this.shopFilter ?? undefined, reason: this.reasonFilter || undefined, search: this.search || undefined, page: this.page, per_page: 25 }).subscribe({
       next: (page) => {
         this.records = page.data;
         this.meta = { current_page: page.current_page, last_page: page.last_page, total: page.total };
@@ -72,6 +74,7 @@ export class WasteListComponent implements OnInit {
   }
 
   applyFilters(): void { this.page = 1; this.load(); }
+  setSearch(value: string): void { this.search = value; this.applyFilters(); }
   nextPage(): void { if (this.meta && this.page < this.meta.last_page) { this.page++; this.load(); } }
   prevPage(): void { if (this.page > 1) { this.page--; this.load(); } }
 

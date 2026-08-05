@@ -12,6 +12,8 @@ import { InventoryAuditReportService, InventoryAuditReportData, InventoryAuditFi
 import { ShopService } from '../../../services/shop.service';
 import { ProductService } from '../../../services/product.service';
 import { StockService } from '../../../services/stock.service';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
+import { matchesSearch } from '../../../shared/utils/text-search.util';
 
 /**
  * Phase 4.14 — Inventory Audit Report. Reuses StockMovementService's rows
@@ -21,7 +23,7 @@ import { StockService } from '../../../services/stock.service';
 @Component({
   selector: 'app-inventory-audit-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './inventory-audit-report.component.html',
 })
 export class InventoryAuditReportComponent implements OnInit {
@@ -52,6 +54,15 @@ export class InventoryAuditReportComponent implements OnInit {
   }
 
   get exportParams(): Record<string, any> { return this.filters; }
+
+  search = '';
+  setSearch(value: string): void { this.search = value; }
+
+  get filteredRows(): InventoryAuditReportData['rows'] {
+    const rows = this.report?.rows ?? [];
+    if (!this.search) return rows;
+    return rows.filter((r) => matchesSearch(this.search, r.product_name, r.sku, r.reference_number, r.user));
+  }
 
   ngOnInit(): void {
     this.shopSvc.getShops({ per_page: 200 }).subscribe({ next: (res) => { this.shops = (res.data || []).map((s: any) => ({ id: s.id, name: s.name })); } });

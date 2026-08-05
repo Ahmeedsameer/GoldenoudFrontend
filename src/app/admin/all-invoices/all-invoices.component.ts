@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AllInvoicesService, AllInvoiceRow, AllInvoicesType } from '../../services/all-invoices.service';
 import { LoadingComponent } from '../../loading/loading.component';
 import { DatePickerComponent } from '../../shared/components/form/date-picker/date-picker.component';
+import { SearchBarComponent } from '../../shared/components/common/search-bar/search-bar.component';
 
 interface TypeTab { key: AllInvoicesType; label: string; }
 
@@ -25,7 +26,7 @@ const TYPE_TABS: TypeTab[] = [
 @Component({
   selector: 'app-all-invoices',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './all-invoices.component.html',
 })
 export class AllInvoicesComponent implements OnInit {
@@ -37,6 +38,7 @@ export class AllInvoicesComponent implements OnInit {
 
   from = '';
   to = '';
+  search = '';
 
   loading = false;
   rows: AllInvoiceRow[] = [];
@@ -58,11 +60,18 @@ export class AllInvoicesComponent implements OnInit {
   applyRange(): void { this.currentPage = 1; this.load(); }
   clearRange(): void { this.from = ''; this.to = ''; this.currentPage = 1; this.load(); }
 
+  setSearch(value: string): void {
+    this.search = value;
+    this.currentPage = 1;
+    this.load();
+  }
+
   load(): void {
     this.loading = true;
     const params: any = { type: this.activeType, page: this.currentPage, per_page: 25 };
     if (this.from) params.date_from = this.from;
     if (this.to) params.date_to = this.to;
+    if (this.search) params.search = this.search;
 
     this.service.getAll(params).subscribe({
       next: (res) => {

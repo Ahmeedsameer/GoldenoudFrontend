@@ -30,6 +30,7 @@ export class PackagingCreateComponent implements OnInit {
 
   loading = false;
   alert: AlertState = { show: false, type: '', message: '' };
+  selectedFile: File | null = null;
 
   categories: { id: number; name: string }[] = [];
 
@@ -57,7 +58,7 @@ export class PackagingCreateComponent implements OnInit {
     this.loading = true;
     this.alert = { show: false, type: '', message: '' };
 
-    const formData = this.formHelperService.createFormData(this.form.value);
+    const formData = this.formHelperService.createFormData(this.form.value, this.selectedFile, 'image');
 
     this.productService.createPackaging(formData).subscribe({
       next: () => {
@@ -69,5 +70,10 @@ export class PackagingCreateComponent implements OnInit {
         this.alert = this.formHelperService.handleBackendErrors(err, this.form);
       },
     });
+  }
+
+  onFileSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) this.selectedFile = file;
   }
 }

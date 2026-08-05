@@ -78,6 +78,12 @@
       </div>
     }
 
+    <div class="flex justify-end mb-3">
+      <div class="w-56">
+        <app-search-bar placeholder="بحث باسم الفرع..." (searchChange)="setSearch($event)"></app-search-bar>
+      </div>
+    </div>
+
     <div class="db-tbl-card">
       <div class="db-tbl-wrap">
         <table class="db-tbl">
@@ -88,7 +94,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (b of data.branches; track b.shop_id) {
+            @for (b of filteredBranches; track b.shop_id) {
               <tr>
                 <td class="font-medium" style="color:#9A7B1A">{{ b.shop_name }}</td>
                 <td style="color:#6B7280">{{ b.invoice_count }}</td>
@@ -101,8 +107,8 @@
                 <td style="color:#6B7280">{{ b.top_bottle ? (b.top_bottle.name + ' (' + b.top_bottle.qty + ')') : '—' }}</td>
               </tr>
             }
-            @if (!data.branches.length) {
-              <tr><td colspan="9" class="text-center text-sm text-gray-400 py-6">لا توجد بيانات</td></tr>
+            @if (!filteredBranches.length) {
+              <tr><td colspan="9" class="text-center text-sm text-gray-400 py-6">{{ data.branches.length ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد بيانات' }}</td></tr>
             }
           </tbody>
         </table>

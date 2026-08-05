@@ -8,12 +8,13 @@ import { PaginationComponent } from '../../../../pagination/pagination.component
 import { ButtonComponent } from '../../../../shared/components/ui/button/button.component';
 import { LoadingComponent } from '../../../../loading/loading.component';
 import { ModalComponent } from '../../../../shared/components/ui/modal/modal.component';
+import { SearchBarComponent } from '../../../../shared/components/common/search-bar/search-bar.component';
 
 type TransferMode = 'return' | 'transfer';
 
 @Component({
   selector: 'app-shop-stock',
-  imports: [CommonModule, FormsModule, PaginationComponent, ButtonComponent, LoadingComponent, ModalComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, ButtonComponent, LoadingComponent, ModalComponent, SearchBarComponent],
   templateUrl: './shop-stock.component.html',
   styleUrl: './shop-stock.component.css',
 })

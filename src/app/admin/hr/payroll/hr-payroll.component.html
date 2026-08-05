@@ -1,23 +1,48 @@
-<app-loading [loading]="loading || generating"></app-loading>
+<app-loading [loading]="list.loading || generating"></app-loading>
+
+<!-- ═══ Summary cards ═══ -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-5">
+  <app-report-kpi-card title="مرتبات معلّقة" [value]="summary?.pending_count ?? '—'" [mono]="false" color="warning" icon="⏳"></app-report-kpi-card>
+  <app-report-kpi-card title="مرتبات مدفوعة" [value]="summary?.paid_count ?? '—'" [mono]="false" color="success" icon="✅"></app-report-kpi-card>
+  <app-report-kpi-card title="إجمالي المرتبات" [value]="summary?.total_amount | number:'1.0-2'" suffix="ج.م" color="brand"></app-report-kpi-card>
+  <app-report-kpi-card title="إجمالي المدفوع" [value]="summary?.total_paid | number:'1.0-2'" suffix="ج.م" color="success"></app-report-kpi-card>
+  <app-report-kpi-card title="المتبقي" [value]="summary?.remaining | number:'1.0-2'" suffix="ج.م" color="warning"></app-report-kpi-card>
+</div>
 
 <div class="ds-card overflow-hidden">
   <!-- Header + controls -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
     <div>
-      <h2 class="text-base font-semibold text-gray-900 dark:text-white">الرواتب</h2>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">توليد كشوف الرواتب الشهرية (سجلات ثابتة لا تتغير)</p>
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">إدارة الرواتب</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">توليد كشوف الرواتب الشهرية (سجلات ثابتة لا تتغير) وصرفها عبر الخزنة</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <select [(ngModel)]="month" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <div class="w-48">
+        <app-search-bar placeholder="بحث باسم الموظف..." (searchChange)="setSearch($event)"></app-search-bar>
+      </div>
+      <select [(ngModel)]="month" (ngModelChange)="setMonth($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
         @for (m of months; track m) { <option [ngValue]="m">شهر {{ m }}</option> }
       </select>
-      <select [(ngModel)]="year" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <select [(ngModel)]="year" (ngModelChange)="setYear($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
         @for (y of years; track y) { <option [ngValue]="y">{{ y }}</option> }
+      </select>
+      <select [(ngModel)]="shopId" (ngModelChange)="setShopFilter($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+        <option [ngValue]="null">كل الفروع</option>
+        @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+      </select>
+      <select [(ngModel)]="statusFilter" (ngModelChange)="setStatusFilter($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+        <option value="">كل الحالات</option>
+        <option value="generated">مُولّد</option>
+        <option value="paid">مدفوع</option>
       </select>
       <button (click)="openSettings()" class="h-9 px-3 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">إعدادات الخصومات</button>
       <button (click)="generateAll()" [disabled]="generating"
-        class="h-9 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-3 text-sm font-medium text-white transition-colors disabled:opacity-50">
+        class="h-9 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-700 px-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors disabled:opacity-50">
         توليد كشوف الشهر
+      </button>
+      <button (click)="openBulkPay()"
+        class="h-9 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-3 text-sm font-medium text-white transition-colors">
+        دفع كل المرتبات المعلّقة
       </button>
     </div>
   </div>
@@ -27,6 +52,7 @@
       <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
         <tr>
           <th class="ds-th">الموظف</th>
+          <th class="ds-th">الفرع</th>
           <th class="ds-th">أساسي</th>
           <th class="ds-th">عمولة شخصية</th>
           <th class="ds-th">بونص فرع</th>
@@ -40,9 +66,10 @@
         </tr>
       </thead>
       <tbody>
-        @for (p of payrolls; track p.id) {
+        @for (p of list.result.data; track p.id) {
           <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
             <td class="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ p.user?.name || '—' }}</td>
+            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ p.user?.shop?.name || '—' }}</td>
             <td class="px-4 py-3 text-sm font-mono text-gray-600 dark:text-gray-400">{{ p.base_salary | number:'1.0-2' }}</td>
             <td class="px-4 py-3 text-sm font-mono text-success-600 dark:text-success-400">+{{ p.personal_commission_amount | number:'1.0-2' }}</td>
             <td class="px-4 py-3 text-sm font-mono text-success-600 dark:text-success-400">+{{ p.branch_commission_amount | number:'1.0-2' }}</td>
@@ -65,27 +92,29 @@
             <td class="px-4 py-3">
               <div class="flex items-center justify-center gap-2 text-xs font-medium">
                 <button (click)="openDetail(p)" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">تفاصيل</button>
-                @if (!p.is_locked) {
-                  <button (click)="lock(p)" [disabled]="busyId === p.id" class="text-amber-600 hover:text-amber-700 disabled:opacity-50">قفل</button>
-                } @else {
-                  <button (click)="unlock(p)" [disabled]="busyId === p.id" class="text-gray-500 hover:text-gray-700 disabled:opacity-50">فتح</button>
-                }
                 @if (p.status !== 'paid') {
-                  <button (click)="pay(p)" [disabled]="busyId === p.id" class="text-success-600 hover:text-success-700 disabled:opacity-50">دفع</button>
+                  @if (!p.is_locked) {
+                    <button (click)="lock(p)" [disabled]="busyId === p.id" class="text-amber-600 hover:text-amber-700 disabled:opacity-50">قفل</button>
+                  } @else {
+                    <button (click)="unlock(p)" [disabled]="busyId === p.id" class="text-gray-500 hover:text-gray-700 disabled:opacity-50">فتح</button>
+                  }
+                  <button (click)="openPay(p)" [disabled]="busyId === p.id" class="text-success-600 hover:text-success-700 disabled:opacity-50">دفع</button>
                 }
               </div>
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="11" class="px-4 py-8 text-center text-sm text-gray-400">لا توجد كشوف لهذا الشهر — اضغط «توليد كشوف الشهر»</td></tr>
+          <tr><td colspan="12" class="px-4 py-8 text-center text-sm text-gray-400">لا توجد كشوف مطابقة — اضغط «توليد كشوف الشهر»</td></tr>
         }
       </tbody>
     </table>
   </div>
+
+  <app-pagination [paginationResult]="list.result" (pageChange)="list.setPage($event)"></app-pagination>
 </div>
 
 
-<!-- ═══ BREAKDOWN MODAL ═══ -->
+<!-- ═══ BREAKDOWN + CASH HISTORY MODAL ═══ -->
 <app-modal [isOpen]="showDetail" (close)="showDetail = false" className="max-w-lg m-4 w-full">
   <div class="p-6">
     <div class="flex items-center justify-between mb-4">
@@ -109,8 +138,122 @@
           <span class="text-lg font-bold font-mono text-gray-900 dark:text-white">{{ detail.net_salary | number:'1.2-2' }} ج.م</span>
         </div>
       </div>
+
+      @if (detail.status === 'paid') {
+        <p class="text-xs text-gray-400 mt-3">
+          صُرف بواسطة {{ detail.paid_by?.name || '—' }} من {{ detail.paying_safe ? safeLabel(detail.paying_safe) : '—' }} في {{ detail.paid_at | date:'yyyy-MM-dd HH:mm' }}
+        </p>
+      }
+
+      <!-- ═══ Task 6 — Cash History ═══ -->
+      <div class="mt-5 pt-4 border-t border-gray-100 dark:border-white/[0.05]">
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">سجل الحركة المالية</p>
+        @if (detailTransactionsLoading) {
+          <p class="text-xs text-gray-400">جارِ التحميل...</p>
+        } @else if (detailTransactions.length === 0) {
+          <p class="text-xs text-gray-400">لا توجد حركات مالية بعد</p>
+        } @else {
+          <div class="space-y-1.5">
+            @for (t of detailTransactions; track t.id) {
+              <div class="flex items-center justify-between text-xs py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
+                <div>
+                  <span class="font-mono text-gray-500 dark:text-gray-400">#{{ t.id }}</span>
+                  <span class="text-gray-600 dark:text-gray-300 mr-1">{{ safeLabel(t.safe) }}</span>
+                  <span class="text-gray-400 mr-1">— {{ t.user?.name || '—' }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-medium" [class]="t.direction === 'in' ? 'text-success-600' : 'text-error-500'">
+                    {{ t.direction === 'in' ? '+' : '-' }}{{ t.amount | number:'1.2-2' }}
+                  </span>
+                  <a [routerLink]="['/dashboard/safe', t.safe_id]" class="text-brand-600 hover:underline">فتح الخزنة</a>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
     } @else {
       <p class="text-sm text-gray-400 py-6 text-center">جارٍ التحميل…</p>
+    }
+  </div>
+</app-modal>
+
+
+<!-- ═══ PAY SALARY MODAL (Task 2) ═══ -->
+<app-modal [isOpen]="showPay" (close)="showPay = false" className="max-w-sm m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">صرف الراتب</h2>
+      <button type="button" (click)="showPay = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    @if (payTarget) {
+      <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">{{ payTarget.user?.name }}</p>
+      <p class="text-lg font-mono font-bold text-gray-900 dark:text-white mb-4">{{ payTarget.net_salary | number:'1.2-2' }} ج.م</p>
+    }
+    @if (payError) {
+      <div class="mb-3 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+        <p class="text-sm text-error-600 dark:text-error-400">{{ payError }}</p>
+      </div>
+    }
+    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">الخزنة</label>
+    <select [(ngModel)]="paySafeId" class="w-full h-10 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-4">
+      <option [ngValue]="null" disabled>اختر الخزنة</option>
+      @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
+    </select>
+    <button (click)="submitPay()" [disabled]="payLoading"
+      class="w-full h-10 rounded-lg text-sm font-medium text-white transition-colors"
+      [class]="payLoading ? 'bg-brand-400 cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600'">
+      @if (payLoading) { جارِ الصرف... } @else { تأكيد الصرف }
+    </button>
+  </div>
+</app-modal>
+
+
+<!-- ═══ BULK PAY ALL PENDING MODAL (Task 4) ═══ -->
+<app-modal [isOpen]="showBulkPay" (close)="showBulkPay = false" className="max-w-md m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">دفع كل المرتبات المعلّقة</h2>
+      <button type="button" (click)="showBulkPay = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    @if (!bulkResult) {
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">سيتم صرف كل المرتبات المعلّقة لشهر {{ month }}/{{ year }}{{ shopId ? ' (الفرع المحدد فقط)' : '' }} من خزنة واحدة.</p>
+      @if (bulkError) {
+        <div class="mb-3 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+          <p class="text-sm text-error-600 dark:text-error-400">{{ bulkError }}</p>
+        </div>
+      }
+      <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">الخزنة</label>
+      <select [(ngModel)]="bulkSafeId" class="w-full h-10 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-4">
+        <option [ngValue]="null" disabled>اختر الخزنة</option>
+        @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
+      </select>
+      <button (click)="submitBulkPay()" [disabled]="bulkLoading"
+        class="w-full h-10 rounded-lg text-sm font-medium text-white transition-colors"
+        [class]="bulkLoading ? 'bg-brand-400 cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600'">
+        @if (bulkLoading) { جارِ الصرف... } @else { تأكيد صرف الكل }
+      </button>
+    } @else {
+      <div class="mb-4 p-3 rounded-lg bg-success-50 border border-success-200 dark:bg-success-500/10 dark:border-success-500/20">
+        <p class="text-sm text-success-600 dark:text-success-400">تم صرف {{ bulkResult.paid.length }} راتب بنجاح.</p>
+      </div>
+      @if (bulkResult.failed.length > 0) {
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">لم يتم صرف {{ bulkResult.failed.length }} راتب:</p>
+        <div class="space-y-1.5 mb-4">
+          @for (f of bulkResult.failed; track f.payroll_id) {
+            <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-error-50 dark:bg-error-500/10">
+              <span class="text-gray-700 dark:text-gray-300">{{ f.employee }}</span>
+              <span class="text-error-600 dark:text-error-400">{{ f.reason }}</span>
+            </div>
+          }
+        </div>
+      }
+      <button (click)="showBulkPay = false" class="w-full h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">إغلاق</button>
     }
   </div>
 </app-modal>

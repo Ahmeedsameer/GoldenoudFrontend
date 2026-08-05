@@ -49,6 +49,14 @@ export class AdminDashboardLayoutComponent {
       ],
     },
     {
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+      name: "العملاء",
+      subItems: [
+        { name: "قائمة العملاء", path: "/dashboard/customers" },
+        { name: "تقارير العملاء", path: "/dashboard/customers/reports" },
+      ],
+    },
+    {
       icon:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M53.5 245.1L110.3 131.4C121.2 109.7 143.3 96 167.6 96L472.5 96C496.7 96 518.9 109.7 529.7 131.4L586.5 245.1C590.1 252.3 592 260.2 592 268.3C592 295.6 570.8 318 544 319.9L544 512C544 529.7 529.7 544 512 544C494.3 544 480 529.7 480 512L480 320L384 320L384 496C384 522.5 362.5 544 336 544L144 544C117.5 544 96 522.5 96 496L96 319.9C69.2 318 48 295.6 48 268.3C48 260.3 49.9 252.3 53.5 245.1zM160 320L160 432C160 440.8 167.2 448 176 448L304 448C312.8 448 320 440.8 320 432L320 320L160 320z"/></svg>`,
       name: "ادارة الفروع",
       path:"/dashboard/shops"
@@ -92,6 +100,10 @@ export class AdminDashboardLayoutComponent {
         { name: "تقارير التحويلات",  path: "/dashboard/reports/transfers" },
         { name: "تقرير فواتير النقل الداخلية",  path: "/dashboard/reports/transfer-invoices" },
         { name: "تقرير سلف الرواتب",  path: "/dashboard/reports/salary-advances" },
+        { name: "تقرير الرواتب",  path: "/dashboard/reports/payroll" },
+        { name: "تقرير صرف الرواتب",  path: "/dashboard/reports/salary-payments" },
+        { name: "تقرير أقساط السلف",  path: "/dashboard/reports/advance-installments" },
+        { name: "تقرير خصومات الإجازات",  path: "/dashboard/reports/leave-deductions" },
         { name: "تقارير الموردين",   path: "/dashboard/reports/suppliers" },
         { name: "تقارير وسائل الدفع", path: "/dashboard/reports/payment-methods" },
         { name: "تقارير الهالك",     path: "/dashboard/reports/waste" },
@@ -117,6 +129,7 @@ export class AdminDashboardLayoutComponent {
         { name: "المكافآت والخصومات", path: "/dashboard/hr/bonuses-penalties" },
         { name: "سلف الرواتب", path: "/dashboard/hr/advances" },
         { name: "الرواتب", path: "/dashboard/hr/payroll" },
+        { name: "التسويات", path: "/dashboard/hr/settlements" },
         { name: "تقارير الموارد البشرية", path: "/dashboard/hr/reports" },
       ],
     },

@@ -39,4 +39,9 @@ export class UserManagmentService {
   public resetUserPassword(userId: number, data: { new_password: string; new_password_confirmation: string }) {
     return this.httpClient.put<any>(`${this.apiUrl}/${userId}/reset-password`, data);
   }
+
+  /** Deactivate/reactivate an admin account — never a hard delete, flips users.status. */
+  public toggleStatus(userId: number) {
+    return this.httpClient.put<any>(`${this.apiUrl}/${userId}/toggle-status`, {});
+  }
 }

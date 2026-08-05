@@ -107,8 +107,15 @@ export const routes: Routes = [
       { path: 'reports/payment-methods', loadComponent: () => import('./admin/reports/payment-methods/payment-method-reports.component').then(m => m.PaymentMethodReportsComponent) },
       { path: 'reports/transfer-invoices', loadComponent: () => import('./admin/reports/transfer-invoices/transfer-invoice-report.component').then(m => m.TransferInvoiceReportComponent) },
       { path: 'reports/salary-advances', loadComponent: () => import('./admin/reports/salary-advances/salary-advance-report.component').then(m => m.SalaryAdvanceReportComponent) },
+      { path: 'reports/payroll', loadComponent: () => import('./admin/reports/payroll/payroll-report.component').then(m => m.PayrollReportComponent) },
+      { path: 'reports/salary-payments', loadComponent: () => import('./admin/reports/salary-payments/salary-payment-report.component').then(m => m.SalaryPaymentReportComponent) },
+      { path: 'reports/advance-installments', loadComponent: () => import('./admin/reports/advance-installments/advance-installment-report.component').then(m => m.AdvanceInstallmentReportComponent) },
+      { path: 'reports/leave-deductions', loadComponent: () => import('./admin/reports/leave-deductions/leave-deduction-report.component').then(m => m.LeaveDeductionReportComponent) },
       { path: 'reports/waste', loadComponent: () => import('./admin/reports/waste/waste-reports.component').then(m => m.WasteReportsComponent) },
       { path: 'reports/counts', loadComponent: () => import('./admin/reports/counts/count-reports.component').then(m => m.CountReportsComponent) },
+      // Reuses the exact same session-detail page as Branch Operations' own count screen
+      // (branch-operations/counts/:id) — one component, two entry points, no duplicated logic.
+      { path: 'reports/counts/:id', loadComponent: () => import('./admin/branch-operations/counts/count-detail/count-detail.component').then(m => m.CountDetailComponent) },
       { path: 'reports/adjustments', loadComponent: () => import('./admin/reports/adjustments/adjustment-reports.component').then(m => m.AdjustmentReportsComponent) },
       { path: 'reports/stock-movement', loadComponent: () => import('./admin/reports/stock-movement/stock-movement-report.component').then(m => m.StockMovementReportComponent) },
       { path: 'reports/inventory-ledger', loadComponent: () => import('./admin/reports/inventory-ledger/inventory-ledger.component').then(m => m.InventoryLedgerComponent) },
@@ -131,11 +138,16 @@ export const routes: Routes = [
       { path: 'stock-intelligence', loadComponent: () => import('./admin/stock/admin-stock-intelligence.component').then(m => m.AdminStockIntelligenceComponent) },
       { path: 'pending-invoices',   loadComponent: () => import('./admin/invoices/admin-invoices.component').then(m => m.AdminInvoicesComponent) },
       { path: 'all-invoices',       loadComponent: () => import('./admin/all-invoices/all-invoices.component').then(m => m.AllInvoicesComponent) },
+      { path: 'invoices/:id',       loadComponent: () => import('./seller/invoices/invoice-detail/invoice-detail.component').then(m => m.InvoiceDetailComponent) },
       { path: 'hr/employees',       loadComponent: () => import('./admin/hr/employees/hr-employees.component').then(m => m.HrEmployeesComponent) },
       { path: 'hr/transfers',       loadComponent: () => import('./admin/hr/transfers/hr-transfers.component').then(m => m.HrTransfersComponent) },
       { path: 'hr/attendance',      loadComponent: () => import('./admin/hr/attendance/hr-attendance.component').then(m => m.HrAttendanceComponent) },
       { path: 'hr/leaves',          loadComponent: () => import('./admin/hr/leaves/hr-leaves.component').then(m => m.HrLeavesComponent) },
       { path: 'hr/payroll',         loadComponent: () => import('./admin/hr/payroll/hr-payroll.component').then(m => m.HrPayrollComponent) },
+      { path: 'hr/settlements',     loadComponent: () => import('./admin/hr/settlements/hr-settlements.component').then(m => m.HrSettlementsComponent) },
+      { path: 'customers',          loadComponent: () => import('./admin/customers/customer-list/customer-list.component').then(m => m.CustomerListComponent) },
+      { path: 'customers/reports',  loadComponent: () => import('./admin/customers/customer-reports/customer-reports.component').then(m => m.CustomerReportsComponent) },
+      { path: 'customers/:id',      loadComponent: () => import('./admin/customers/customer-detail/customer-detail.component').then(m => m.CustomerDetailComponent) },
       { path: 'hr/reports',         loadComponent: () => import('./admin/hr/reports/hr-reports.component').then(m => m.HrReportsComponent) },
       { path: 'hr/schedule',        loadComponent: () => import('./admin/hr/schedule/hr-schedule.component').then(m => m.HrScheduleComponent) },
       { path: 'hr/bonuses-penalties', loadComponent: () => import('./admin/hr/bonuses-penalties/hr-bonuses-penalties.component').then(m => m.HrBonusesPenaltiesComponent) },
@@ -184,6 +196,10 @@ export const routes: Routes = [
       { path: 'stock/supplies/show/:id',  loadComponent: () => import('./admin/stock-managment/supplies/supply-detail/supply-detail.component').then(m => m.SupplyDetailComponent) },
       // ── Sales invoices — branch-wide (every seller), with cancel ────
       { path: 'branch-invoices',          loadComponent: () => import('./manager/invoices/manager-invoices.component').then(m => m.ManagerInvoicesComponent) },
+      // ── Customer Management — view only (see CustomerController scoping) ──
+      { path: 'customers',          loadComponent: () => import('./admin/customers/customer-list/customer-list.component').then(m => m.CustomerListComponent) },
+      { path: 'customers/reports',  loadComponent: () => import('./admin/customers/customer-reports/customer-reports.component').then(m => m.CustomerReportsComponent) },
+      { path: 'customers/:id',      loadComponent: () => import('./admin/customers/customer-detail/customer-detail.component').then(m => m.CustomerDetailComponent) },
       { path: 'safe/my-shop',       loadComponent: () => import('./manager/safe/manager-safe.component').then(m => m.ManagerSafeComponent) },
       { path: 'safe/my-shop/:safeId/transactions', loadComponent: () => import('./manager/safe/transactions/manager-transactions.component').then(m => m.ManagerTransactionsComponent) },
       { path: 'conventions',        loadComponent: () => import('./manager/convention/manager-convention.component').then(m => m.ManagerConventionComponent) },
@@ -223,6 +239,9 @@ export const routes: Routes = [
           { path: ':id', loadComponent: () => import('./seller/invoices/invoice-detail/invoice-detail.component').then(m => m.InvoiceDetailComponent) },
         ],
       },
+      // Customer detail — read-only, scoped server-side to customers this
+      // seller has personally sold to (see CustomerController::authorizeView()).
+      { path: 'customers/:id', loadComponent: () => import('./admin/customers/customer-detail/customer-detail.component').then(m => m.CustomerDetailComponent) },
       { path: '', redirectTo: 'cashier', pathMatch: 'full' },
     ],
   },

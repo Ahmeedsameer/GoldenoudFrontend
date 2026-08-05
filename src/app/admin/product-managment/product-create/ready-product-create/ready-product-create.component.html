@@ -69,6 +69,13 @@
           class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
       </div>
 
+      <div class="sm:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الصورة</label>
+        <input type="file" accept="image/*" (change)="onFileSelected($event)"
+          class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100 dark:file:bg-brand-500/10 dark:file:text-brand-400 dark:text-gray-400" />
+        <p class="text-[11px] text-gray-400 mt-1">تظهر في كتالوج المبيعات لتسهيل التعرف على المنتج.</p>
+      </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">حد التحذير</label>
         <input type="number" formControlName="warning_quantity" min="0" step="0.001" placeholder="مثال: 20"

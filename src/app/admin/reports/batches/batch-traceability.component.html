@@ -10,8 +10,9 @@
 
   <!-- Filters -->
   <div class="mb-5 flex flex-wrap items-center gap-2">
-    <input type="text" [(ngModel)]="search" (change)="applyFilters()" placeholder="بحث برقم الدفعة/المنتج/الكود"
-      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 min-w-[220px]"/>
+    <div class="min-w-[220px]">
+      <app-search-bar placeholder="بحث برقم الدفعة أو المنتج أو الكود..." (searchChange)="search = $event; applyFilters()"></app-search-bar>
+    </div>
     <select [(ngModel)]="productId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
       <option [ngValue]="null">كل المنتجات</option>
       @for (p of products; track p.id) { <option [ngValue]="p.id">{{ p.name }} ({{ p.sku }})</option> }

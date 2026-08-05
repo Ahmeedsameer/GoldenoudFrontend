@@ -1,0 +1,54 @@
+<app-loading [loading]="loading"></app-loading>
+
+<div class="ds-card overflow-hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+    <div>
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">تقرير صرف الرواتب</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">إجمالي المصروف في هذا الاختيار: {{ totalAmount | number:'1.2-2' }} ج.م</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">من:</label>
+        <app-date-picker id="sp-date-from" [value]="from" (valueChange)="from = $event; load()"></app-date-picker>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">إلى:</label>
+        <app-date-picker id="sp-date-to" [value]="to" (valueChange)="to = $event; load()"></app-date-picker>
+      </div>
+      <select [(ngModel)]="safeId" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+        <option [ngValue]="null">كل الخزائن</option>
+        @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
+      </select>
+      <app-report-toolbar exportPath="/hr/reports/salary-payments/export" [params]="filters" fileName="تقرير-صرف-الرواتب" [showRefresh]="false"></app-report-toolbar>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="ds-table w-full">
+      <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+        <tr>
+          <th class="ds-th">الموظف</th>
+          <th class="ds-th">الشهر</th>
+          <th class="ds-th">الخزنة</th>
+          <th class="ds-th">المبلغ</th>
+          <th class="ds-th">صرفه</th>
+          <th class="ds-th">تاريخ الصرف</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows; track r.id) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <td class="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ r.employee_name }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ r.period }}</td>
+            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ r.safe_name }}</td>
+            <td class="px-4 py-3 text-sm font-mono font-bold text-error-500">{{ r.amount | number:'1.2-2' }}</td>
+            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ r.paid_by }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ r.paid_at | date:'yyyy-MM-dd HH:mm' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-gray-400">لا توجد عمليات صرف في هذه الفترة</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

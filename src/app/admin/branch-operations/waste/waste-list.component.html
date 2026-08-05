@@ -53,6 +53,9 @@
   }
 
   <div class="mb-5 flex flex-wrap items-center gap-2">
+    <div class="w-60">
+      <app-search-bar placeholder="بحث برقم الهالك أو اسم المنتج..." (searchChange)="setSearch($event)"></app-search-bar>
+    </div>
     @if (!isManager) {
       <select (change)="shopFilter = $any($event.target).value ? +$any($event.target).value : null; applyFilters()"
         class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
@@ -70,10 +73,11 @@
   <div class="db-tbl-card">
     <div class="db-tbl-wrap">
       <table class="db-tbl">
-        <thead><tr><th>التاريخ</th><th>الفرع</th><th>المنتج</th><th>الكمية</th><th>السبب</th><th>القيمة التقديرية</th><th>بواسطة</th><th>ملاحظات</th></tr></thead>
+        <thead><tr><th>#</th><th>التاريخ</th><th>الفرع</th><th>المنتج</th><th>الكمية</th><th>السبب</th><th>القيمة التقديرية</th><th>بواسطة</th><th>ملاحظات</th></tr></thead>
         <tbody>
           @for (r of records; track r.id) {
             <tr>
+              <td class="font-mono text-xs" style="color:#9A7B1A">#{{ r.id }}</td>
               <td style="color:#9CA3AF">{{ r.date | date:'d MMM yyyy' }}</td>
               <td style="color:#6B7280">{{ r.shop?.name }}</td>
               <td class="font-medium" style="color:#9A7B1A">{{ r.product?.name }} <span class="text-xs font-mono" style="color:#9CA3AF">({{ r.product?.sku }})</span></td>

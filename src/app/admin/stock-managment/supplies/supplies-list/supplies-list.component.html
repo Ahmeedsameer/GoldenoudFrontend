@@ -29,6 +29,9 @@
   <div class="flex flex-col gap-2 px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
     <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
       <div class="flex flex-wrap gap-2">
+        <div class="w-56">
+          <app-search-bar placeholder="بحث برقم التوريد أو المورد أو المنتج..." (searchChange)="setSearch($event)"></app-search-bar>
+        </div>
         <div class="w-44">
           <app-select [options]="supplierOptions" (valueChange)="setSupplierFilter($event)"></app-select>
         </div>
@@ -63,6 +66,7 @@
         <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
           <tr>
             <th class="ds-th">#</th>
+            <th class="ds-th">رقم التوريد</th>
             <th class="ds-th">المورد</th>
             <th class="ds-th">التاريخ</th>
             <th class="ds-th">طريقة الدفع</th>
@@ -75,6 +79,7 @@
           @for (supply of list.result.data; track supply.id) {
             <tr class="ds-tr">
               <td class="ds-td text-gray-400 dark:text-gray-500 font-mono text-xs">{{ supply.id }}</td>
+              <td class="ds-td font-mono text-xs text-gray-500 dark:text-gray-400">{{ supply.invoice_number || '—' }}</td>
               <td class="ds-td font-medium text-gray-800 dark:text-white/90">{{ supply.supplier?.name }}</td>
               <td class="ds-td text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ supply.date | date:'mediumDate' }}</td>
               <td class="ds-td">

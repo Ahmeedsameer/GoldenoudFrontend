@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { AdminInvoiceService } from '../../services/admin-invoice.service';
 import { LoadingComponent } from '../../loading/loading.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
@@ -8,7 +9,7 @@ import { PAYMENT_METHOD_TYPE_LABELS, PaymentMethodType } from '../../models/sale
 @Component({
   selector: 'app-admin-invoices',
   standalone: true,
-  imports: [CommonModule, LoadingComponent, AlertComponent],
+  imports: [CommonModule, RouterLink, LoadingComponent, AlertComponent],
   templateUrl: './admin-invoices.component.html',
 })
 export class AdminInvoicesComponent implements OnInit {

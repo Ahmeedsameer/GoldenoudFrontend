@@ -1,18 +1,28 @@
 <app-loading [loading]="loading"></app-loading>
 
-<div class="p-4 md:p-6 max-w-5xl mx-auto" dir="rtl">
+<div class="p-4 md:p-6 max-w-6xl mx-auto" dir="rtl">
 
-  <a routerLink="/dashboard/branch-operations/counts" class="text-xs font-medium mb-3 inline-block" style="color:#9A7B1A">‹ الرجوع لجلسات الجرد</a>
+  <a [routerLink]="backLink" class="text-xs font-medium mb-3 inline-block" style="color:#9A7B1A">‹ الرجوع لجلسات الجرد</a>
 
   @if (errorMsg) { <div class="mb-5"><app-alert variant="error" [message]="errorMsg"></app-alert></div> }
 
   @if (session) {
     <div class="space-y-6">
 
+      <!-- Header -->
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">جلسة جرد #{{ session.id }}</h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ session.shop?.name }} · بواسطة {{ session.created_by_user?.name }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            {{ session.shop?.name }} · أُنشئت بواسطة {{ session.created_by_user?.name }}
+            @if (session.approved_by_user) { · اعتمدها {{ session.approved_by_user?.name }} }
+          </p>
+          <p class="text-xs text-gray-400 mt-1">
+            بدأت: {{ session.created_at | date:'d MMM yyyy, h:mm a' }}
+            @if (session.completed_at || session.approved_at || session.reviewed_at) {
+              · انتهت: {{ (session.completed_at || session.approved_at || session.reviewed_at) | date:'d MMM yyyy, h:mm a' }}
+            }
+          </p>
         </div>
         <span class="text-sm font-semibold px-3 py-1.5 rounded-full bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300">{{ statusLabel(session.status) }}</span>
       </div>
@@ -25,16 +35,40 @@
         </div>
       }
 
-      <!-- KPI summary once counting has begun -->
+      <!-- Coverage: total products in the branch at count time vs. actually counted vs. never touched this
+           session — shown from the very start, including while status is still 'counting', since that's
+           exactly when partial coverage (some products not yet counted) is a real, expected state. -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">إجمالي المنتجات في الفرع</p>
+          <p class="text-xl font-bold font-mono text-gray-900 dark:text-white">{{ session.summary?.total_products ?? session.items.length }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">تم عدّها</p>
+          <p class="text-xl font-bold font-mono text-success-600 dark:text-success-400">{{ session.summary?.counted_count ?? '—' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs text-gray-400 mb-1">لم تُعدّ</p>
+          <p class="text-xl font-bold font-mono" [style.color]="(session.summary?.not_counted_count ?? 0) > 0 ? '#B91C1C' : '#6B7280'">{{ session.summary?.not_counted_count ?? '—' }}</p>
+        </div>
+      </div>
+
+      <!-- Summary cards once counting has begun -->
       @if (session.status !== 'counting') {
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
-            <p class="text-xs text-gray-400 mb-1">عدد الأصناف</p>
-            <p class="text-xl font-bold font-mono text-gray-900 dark:text-white">{{ session.items.length }}</p>
+            <p class="text-xs text-gray-400 mb-1">مطابقة</p>
+            <p class="text-xl font-bold font-mono text-success-600 dark:text-success-400">{{ session.summary?.matching_count ?? '—' }}</p>
           </div>
           <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
-            <p class="text-xs text-gray-400 mb-1">أصناف بها فروق</p>
-            <p class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400">{{ itemsWithDifference().length }}</p>
+            <p class="text-xs text-gray-400 mb-1">عجز</p>
+            <p class="text-xl font-bold font-mono" style="color:#B91C1C">{{ session.summary?.shortage_count ?? '—' }}</p>
+            <p class="text-xs mt-0.5" style="color:#B91C1C">{{ (session.summary?.total_shortage_value ?? 0) | number:'1.2-2' }} ج.م</p>
+          </div>
+          <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+            <p class="text-xs text-gray-400 mb-1">زيادة</p>
+            <p class="text-xl font-bold font-mono" style="color:#1E40AF">{{ session.summary?.excess_count ?? '—' }}</p>
+            <p class="text-xs mt-0.5" style="color:#1E40AF">{{ (session.summary?.total_excess_value ?? 0) | number:'1.2-2' }} ج.م</p>
           </div>
           <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
             <p class="text-xs text-gray-400 mb-1">نسبة دقة الجرد</p>
@@ -45,48 +79,112 @@
         </div>
       }
 
+      <!-- Filters + search + export -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" (click)="setFilter('all')" class="px-3 h-8 rounded-lg text-xs font-medium transition-colors"
+            [class]="filter === 'all' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'">الكل</button>
+          <button type="button" (click)="setFilter('match')" class="px-3 h-8 rounded-lg text-xs font-medium transition-colors"
+            [class]="filter === 'match' ? 'bg-success-500 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'">مطابقة</button>
+          <button type="button" (click)="setFilter('shortage')" class="px-3 h-8 rounded-lg text-xs font-medium transition-colors"
+            [class]="filter === 'shortage' ? 'bg-error-500 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'">عجز</button>
+          <button type="button" (click)="setFilter('excess')" class="px-3 h-8 rounded-lg text-xs font-medium transition-colors"
+            [class]="filter === 'excess' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'">زيادة</button>
+          <button type="button" (click)="setFilter('not_counted')" class="px-3 h-8 rounded-lg text-xs font-medium transition-colors"
+            [class]="filter === 'not_counted' ? 'bg-error-500 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'">لم تُعدّ</button>
+          <button type="button" (click)="setFilter('adjusted')" class="px-3 h-8 rounded-lg text-xs font-medium transition-colors"
+            [class]="filter === 'adjusted' ? 'bg-success-500 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'">تمت التسوية</button>
+          <button type="button" (click)="setFilter('not_adjusted')" class="px-3 h-8 rounded-lg text-xs font-medium transition-colors"
+            [class]="filter === 'not_adjusted' ? 'bg-gray-500 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'">لم تُسوَّ</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="text" [(ngModel)]="search" placeholder="بحث بالاسم أو SKU أو الباركود..."
+            class="h-8 w-56 px-3 text-xs rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+          @if (isAdmin) {
+            <app-report-toolbar [exportPath]="'/branch-operations/counts/' + session.id + '/export'" [params]="exportParams"
+              fileName="جلسة-جرد" [showRefresh]="false"></app-report-toolbar>
+          }
+        </div>
+      </div>
+
       <!-- Items table -->
       <div class="db-tbl-card">
         <div class="db-tbl-wrap">
           <table class="db-tbl">
             <thead>
               <tr>
-                <th>المنتج</th><th>كمية النظام</th><th>الكمية الفعلية</th>
-                @if (session.status !== 'counting') { <th>الفرق</th> }
+                <th></th>
+                <th>المنتج</th><th>SKU</th><th class="hidden lg:table-cell">الباركود</th>
+                <th>كمية النظام</th><th>الكمية الفعلية</th>
+                @if (session.status !== 'counting') { <th>الفرق</th><th>الحالة</th> }
                 @if (session.status === 'review' || session.status === 'approved' || session.status === 'completed') { <th>السبب</th> }
               </tr>
             </thead>
             <tbody>
-              @for (item of session.items; track item.id) {
-                <tr>
-                  <td class="font-medium" style="color:#9A7B1A">{{ item.product?.name }} <span class="text-xs font-mono" style="color:#9CA3AF">({{ item.product?.sku }})</span></td>
-                  <td class="font-mono" style="color:#6B7280">{{ item.system_quantity }} {{ item.product?.scalar }}</td>
+              @for (item of filteredItems; track item.id) {
+                <tr style="cursor:pointer" (click)="openDetail(item)">
                   <td>
+                    @if (item.product?.image) {
+                      <img [src]="item.product?.image" [alt]="item.product?.name" class="w-8 h-8 rounded-lg object-cover border border-gray-200 dark:border-white/10" />
+                    } @else {
+                      <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    }
+                  </td>
+                  <td class="font-medium" style="color:#9A7B1A">{{ item.product?.name }}</td>
+                  <td class="font-mono text-xs" style="color:#9CA3AF">{{ item.product?.sku || '—' }}</td>
+                  <td class="hidden lg:table-cell font-mono text-xs" style="color:#9CA3AF">{{ item.product?.barcode || '—' }}</td>
+                  <td class="font-mono" style="color:#6B7280">{{ item.system_quantity }} {{ item.product?.scalar }}</td>
+                  <td (click)="$event.stopPropagation()">
                     @if (session.status === 'counting') {
                       <input type="number" min="0" step="0.001" [(ngModel)]="physicalQty[item.id]"
                         class="w-28 px-2 py-1 text-sm rounded border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"/>
                     } @else {
-                      <span class="font-mono" style="color:#6B7280">{{ item.physical_quantity }}</span>
+                      <span class="font-mono" style="color:#6B7280">{{ item.physical_quantity ?? '—' }}</span>
                     }
                   </td>
                   @if (session.status !== 'counting') {
                     <td class="font-mono" [style.color]="diff(item) === 0 ? '#059669' : '#DC2626'">
                       {{ item.difference != null ? ((diff(item) > 0 ? '+' : '') + item.difference) : '—' }}
                     </td>
+                    <td>
+                      <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" [ngClass]="diffStatusClass(diffStatus(item))" style="padding: 3px 10px;">
+                        {{ diffStatusLabel(diffStatus(item)) }}
+                      </span>
+                    </td>
                   }
                   @if (session.status === 'review') {
-                    <td>
+                    <td (click)="$event.stopPropagation()">
                       @if (diff(item) !== 0) {
                         <div class="flex items-center gap-1">
-                          <input type="text" [(ngModel)]="itemReasons[item.id]" (blur)="saveReason(item.id)" placeholder="سبب الفرق"
-                            class="w-40 px-2 py-1 text-xs rounded border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"/>
+                          <select [(ngModel)]="itemReasonTypes[item.id]" (change)="saveReason(item.id)"
+                            class="w-32 px-1.5 py-1 text-xs rounded border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                            <option value="">نوع السبب</option>
+                            @for (rt of reasonTypes; track rt) { <option [value]="rt">{{ reasonTypeLabel(rt) }}</option> }
+                          </select>
+                          <input type="text" [(ngModel)]="itemReasons[item.id]" (blur)="saveReason(item.id)" placeholder="تفاصيل السبب"
+                            class="w-36 px-2 py-1 text-xs rounded border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"/>
                         </div>
                       }
                     </td>
                   }
                   @if (session.status === 'approved' || session.status === 'completed') {
-                    <td style="color:#9CA3AF">{{ item.reason }}</td>
+                    <td style="color:#9CA3AF">
+                      @if (item.reason) {
+                        <span class="text-xs">{{ reasonTypeLabel(item.reason_type) }} — {{ item.reason }}</span>
+                      } @else { — }
+                    </td>
                   }
+                </tr>
+              }
+              @if (!loading && filteredItems.length === 0) {
+                <tr>
+                  <td [attr.colspan]="8" style="padding: 2.5rem 1rem; text-align: center; color: #9CA3AF;">لا توجد أصناف مطابقة للبحث/الفلتر</td>
                 </tr>
               }
             </tbody>
@@ -115,3 +213,119 @@
   }
 
 </div>
+
+<!-- Product detail drawer -->
+<app-modal [isOpen]="!!selectedItem" (close)="closeDetail()" className="max-w-lg m-4 w-full">
+  @if (selectedItem) {
+    <div class="p-6" dir="rtl">
+      <div class="flex items-center gap-3 mb-4">
+        @if (selectedItem.product?.image) {
+          <img [src]="selectedItem.product?.image" [alt]="selectedItem.product?.name" class="w-14 h-14 rounded-xl object-cover border border-gray-200 dark:border-white/10" />
+        } @else {
+          <div class="w-14 h-14 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+            <svg class="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        }
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ selectedItem.product?.name }}</h2>
+          <p class="text-xs text-gray-400 font-mono">{{ selectedItem.product?.sku || '—' }} · {{ selectedItem.product?.barcode || '—' }}</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-3">
+          <p class="text-xs text-gray-400 mb-1">كمية النظام</p>
+          <p class="font-mono font-semibold text-gray-800 dark:text-white/90">{{ selectedItem.system_quantity }} {{ selectedItem.product?.scalar }}</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-3">
+          <p class="text-xs text-gray-400 mb-1">الكمية الفعلية</p>
+          <p class="font-mono font-semibold text-gray-800 dark:text-white/90">{{ selectedItem.physical_quantity ?? '—' }} {{ selectedItem.product?.scalar }}</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-3">
+          <p class="text-xs text-gray-400 mb-1">الفرق</p>
+          <p class="font-mono font-semibold" [style.color]="diff(selectedItem) === 0 ? '#059669' : '#DC2626'">
+            {{ selectedItem.difference != null ? ((diff(selectedItem) > 0 ? '+' : '') + selectedItem.difference) : '—' }}
+          </p>
+        </div>
+        <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-3">
+          <p class="text-xs text-gray-400 mb-1">الحالة</p>
+          <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium" [ngClass]="diffStatusClass(diffStatus(selectedItem))" style="padding: 3px 10px;">
+            {{ diffStatusLabel(diffStatus(selectedItem)) }}
+          </span>
+        </div>
+        <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-3 col-span-2">
+          <p class="text-xs text-gray-400 mb-1">قيمة الفرق (بتكلفة الشراء)</p>
+          <p class="font-mono font-semibold" [style.color]="diff(selectedItem) === 0 ? '#059669' : '#DC2626'">
+            {{ (selectedItem.difference_value ?? 0) | number:'1.2-2' }} ج.م
+          </p>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-3 mb-4">
+        <p class="text-xs text-gray-400 mb-1">السبب</p>
+        <p class="text-sm text-gray-700 dark:text-gray-300">
+          @if (selectedItem.reason) {
+            <span class="font-medium">{{ reasonTypeLabel(selectedItem.reason_type) }}</span> — {{ selectedItem.reason }}
+          } @else { لا يوجد سبب مسجّل }
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-3">
+          <p class="text-xs text-gray-400 mb-1">من قام بالعد</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedItem.counted_by_user?.name || '—' }}</p>
+          @if (selectedItem.updated_at) {
+            <p class="text-xs text-gray-400 mt-0.5">{{ selectedItem.updated_at | date:'d MMM yyyy, h:mm a' }}</p>
+          }
+        </div>
+        <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-3">
+          <p class="text-xs text-gray-400 mb-1">اعتمد بواسطة</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">{{ session?.approved_by_user?.name || '—' }}</p>
+          @if (session?.approved_at) {
+            <p class="text-xs text-gray-400 mt-0.5">{{ session?.approved_at | date:'d MMM yyyy, h:mm a' }}</p>
+          }
+        </div>
+      </div>
+
+      <!-- Stock adjustment — populated only once "تنفيذ تسوية المخزون" has actually run for this session -->
+      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-3">
+        <p class="text-xs text-gray-400 mb-2">تسوية المخزون</p>
+        @if (selectedItem.adjustment_applied) {
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div>
+              <p class="text-xs text-gray-400 mb-0.5">المخزون قبل التسوية</p>
+              <p class="font-mono font-semibold text-gray-800 dark:text-white/90">{{ selectedItem.stock_before_adjustment }} {{ selectedItem.product?.scalar }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 mb-0.5">المخزون بعد التسوية</p>
+              <p class="font-mono font-semibold text-gray-800 dark:text-white/90">{{ selectedItem.stock_after_adjustment }} {{ selectedItem.product?.scalar }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 mb-0.5">الكمية المعدَّلة</p>
+              <p class="font-mono font-semibold" [style.color]="(selectedItem.adjustment_quantity ?? 0) >= 0 ? '#059669' : '#DC2626'">
+                {{ (selectedItem.adjustment_quantity ?? 0) > 0 ? '+' : '' }}{{ selectedItem.adjustment_quantity }} {{ selectedItem.product?.scalar }}
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 mb-0.5">نُفِّذت بواسطة</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedItem.adjustment_applied_by || '—' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 mb-0.5">تاريخ التسوية</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedItem.adjustment_date ? (selectedItem.adjustment_date | date:'d MMM yyyy, h:mm a') : '—' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 mb-0.5">حالة التسوية</p>
+              <span class="inline-flex items-center gap-1 rounded-full text-xs font-medium bg-[#D1FAE5] text-[#065F46]" style="padding: 3px 10px;">تم التنفيذ</span>
+            </div>
+          </div>
+        } @else {
+          <p class="text-sm text-gray-500 dark:text-gray-400">لم تُنفَّذ تسوية مخزون لهذا الصنف بعد.</p>
+        }
+      </div>
+    </div>
+  }
+</app-modal>

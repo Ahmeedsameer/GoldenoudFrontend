@@ -48,6 +48,9 @@
   }
 
   <div class="mb-5 flex flex-wrap items-center gap-2">
+    <div class="w-64">
+      <app-search-bar placeholder="بحث برقم الجلسة أو المنتج أو SKU أو الباركود..." (searchChange)="setSearch($event)"></app-search-bar>
+    </div>
     <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
       <option value="">كل الحالات</option>
       <option value="counting">جاري الجرد</option>

@@ -8,6 +8,7 @@ import { ReportLoadingSkeletonComponent } from '../../../shared/components/repor
 import { ReportEmptyStateComponent } from '../../../shared/components/reports/report-empty-state/report-empty-state.component';
 import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 import {
   BatchTraceabilityService, BatchRow, BatchSummary, BatchDetailData, BatchFilters,
 } from '../../../services/batch-traceability.service';
@@ -25,7 +26,7 @@ import { StockService } from '../../../services/stock.service';
 @Component({
   selector: 'app-batch-traceability',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './batch-traceability.component.html',
 })
 export class BatchTraceabilityComponent implements OnInit {

@@ -270,9 +270,18 @@
       </div>
 
       @if (detail.paying_safe) {
-        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">
           الخزنة/العهدة الدافعة: <span class="font-medium text-gray-700 dark:text-gray-300">{{ safeLabel(detail.paying_safe) }}</span>
         </p>
+      }
+      @if (isAdmin && detail.status === 'active') {
+        <div class="flex items-center gap-2 mb-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            الخزنة الافتراضية للأقساط القادمة:
+            <span class="font-medium text-gray-700 dark:text-gray-300">{{ defaultRepaymentSafeLabel }}</span>
+          </p>
+          <button (click)="openChangeDefaultSafe()" class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">تغيير الخزنة الافتراضية</button>
+        </div>
       }
 
       <div class="flex items-center justify-between mb-2">
@@ -307,6 +316,32 @@
         </div>
       }
 
+      <!-- ═══ Task 6 — Cash History ═══ -->
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-2">سجل الحركة المالية</h3>
+      @if (detailTransactionsLoading) {
+        <p class="text-xs text-gray-400 mb-4">جارِ التحميل...</p>
+      } @else if (detailTransactions.length === 0) {
+        <p class="text-xs text-gray-400 mb-4">لا توجد حركات مالية بعد</p>
+      } @else {
+        <div class="space-y-1.5 mb-5">
+          @for (t of detailTransactions; track t.id) {
+            <div class="flex items-center justify-between text-xs py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
+              <div>
+                <span class="font-mono text-gray-500 dark:text-gray-400">#{{ t.id }}</span>
+                <span class="text-gray-600 dark:text-gray-300 mr-1">{{ safeLabel(t.safe) }}</span>
+                <span class="text-gray-400 mr-1">— {{ t.user?.name || '—' }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono font-medium" [class]="t.direction === 'in' ? 'text-success-600' : 'text-error-500'">
+                  {{ t.direction === 'in' ? '+' : '-' }}{{ t.amount | number:'1.2-2' }}
+                </span>
+                <a [routerLink]="['/dashboard/safe', t.safe_id]" class="text-brand-600 hover:underline">فتح الخزنة</a>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
       @if (isAdmin && detail.status === 'active') {
         <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-2">تسجيل سداد مبكر</h3>
         <div class="grid grid-cols-2 gap-2 mb-2">
@@ -324,6 +359,34 @@
         <button (click)="recordRepayment()" [disabled]="busyId === detail.id" class="w-full h-9 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">تسجيل السداد</button>
       }
     }
+  </div>
+</app-modal>
+
+
+<!-- ═══ CHANGE DEFAULT CASHBOX (Task 6 — future installments only) ═══ -->
+<app-modal [isOpen]="showChangeDefaultSafe" (close)="showChangeDefaultSafe = false" className="max-w-sm m-4 w-full">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">تغيير الخزنة الافتراضية</h2>
+      <button type="button" (click)="showChangeDefaultSafe = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">يسري هذا التغيير على الأقساط القادمة فقط — لا يعدّل أي عملية سابقة.</p>
+    @if (changeDefaultSafeError) {
+      <div class="mb-3 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
+        <p class="text-sm text-error-600 dark:text-error-400">{{ changeDefaultSafeError }}</p>
+      </div>
+    }
+    <select [(ngModel)]="newDefaultSafeId" class="w-full h-10 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-4">
+      <option [ngValue]="null" disabled>اختر الخزنة</option>
+      @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
+    </select>
+    <button (click)="confirmChangeDefaultSafe()" [disabled]="changeDefaultSafeLoading"
+      class="w-full h-10 rounded-lg text-sm font-medium text-white transition-colors"
+      [class]="changeDefaultSafeLoading ? 'bg-brand-400 cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600'">
+      @if (changeDefaultSafeLoading) { جارِ الحفظ... } @else { حفظ }
+    </button>
   </div>
 </app-modal>
 

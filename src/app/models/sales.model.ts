@@ -12,6 +12,17 @@ export interface Customer {
   id?: number;
   name: string;
   phone: string;
+  email?: string | null;
+  address?: string | null;
+  shop_id?: number | null;
+  shop?: { id: number; name: string } | null;
+  created_at?: string | null;
+  /** Present on list/detail responses (Customer Management module) — computed
+   *  from the customer's own invoices, never stored redundantly. */
+  total_invoices?: number;
+  total_purchases?: number | null;
+  first_purchase_date?: string | null;
+  last_purchase_date?: string | null;
 }
 
 export type StockLevel = 'ok' | 'warning' | 'critical' | 'out';

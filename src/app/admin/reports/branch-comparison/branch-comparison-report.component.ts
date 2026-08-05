@@ -7,6 +7,8 @@ import { AlertComponent } from '../../../shared/components/ui/alert/alert.compon
 import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
 import { BranchComparisonService, BranchComparison } from '../../../services/branch-comparison.service';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
+import { matchesSearch } from '../../../shared/utils/text-search.util';
 
 type Period = 'today' | 'week' | 'month' | 'year';
 
@@ -19,7 +21,7 @@ type Period = 'today' | 'week' | 'month' | 'year';
 @Component({
   selector: 'app-branch-comparison-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent, ReportToolbarComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, NgApexchartsModule, LoadingComponent, AlertComponent, ReportToolbarComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './branch-comparison-report.component.html',
 })
 export class BranchComparisonReportComponent implements OnInit {
@@ -60,6 +62,15 @@ export class BranchComparisonReportComponent implements OnInit {
   }
 
   get exportParams(): Record<string, any> { return this.filters(); }
+
+  search = '';
+  setSearch(value: string): void { this.search = value; }
+
+  get filteredBranches(): BranchComparison['branches'] {
+    const branches = this.data?.branches ?? [];
+    if (!this.search) return branches;
+    return branches.filter((b) => matchesSearch(this.search, b.shop_name));
+  }
 
   setPeriod(p: Period): void {
     this.period = p;

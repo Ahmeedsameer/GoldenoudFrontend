@@ -19,6 +19,7 @@
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
       <button (click)="openShiftAdmin()" class="h-9 px-3 rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50">قوالب الشيفتات</button>
+      <button (click)="openBulkAssign()" class="h-9 px-3 rounded-lg border border-brand-300 text-brand-600 text-sm font-medium hover:bg-brand-50">تعيين جماعي للشيفت</button>
       <button (click)="saveWeek()" [disabled]="saving || !pendingCount"
         class="h-9 px-3 rounded-lg text-white text-sm font-medium disabled:opacity-40 relative"
         [class]="pendingCount ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-300'">
@@ -389,3 +390,12 @@
     </div>
   </div>
 }
+
+<!-- Bulk Shift Assignment — additive, independent of the per-cell editor above -->
+<app-bulk-shift-assign-modal
+  [isOpen]="showBulkAssign"
+  [shops]="shops"
+  [shiftTemplates]="shiftTemplates"
+  (close)="onBulkAssignClosed()"
+  (assigned)="onBulkAssigned()">
+</app-bulk-shift-assign-modal>

@@ -1,0 +1,125 @@
+<app-modal [isOpen]="isOpen" (close)="closeModal()" className="max-w-2xl m-4 w-full">
+  <div class="p-5">
+    <h2 class="text-base font-semibold text-gray-900 mb-4">تعيين جماعي للشيفت</h2>
+
+    @if (errorMessage) {
+      <div class="mb-4 rounded-lg border border-error-200 bg-error-50 text-error-700 text-sm px-3 py-2">{{ errorMessage }}</div>
+    }
+
+    @if (step === 'select') {
+      <!-- 1. Branch filter — required first, employee list is empty until picked -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">الفرع</label>
+        <select [(ngModel)]="filters.shop_id" (ngModelChange)="onShopChange()"
+          class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm">
+          <option [ngValue]="null">— اختر الفرع —</option>
+          @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+        </select>
+      </div>
+
+      @if (filters.shop_id) {
+        <!-- 2. Combinable employee filters -->
+        <div class="flex flex-wrap gap-2 mb-3">
+          <select [(ngModel)]="filters.role" (ngModelChange)="onRoleChange()"
+            class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
+            <option value="">كل الأقسام</option>
+            <option value="manager">مدراء الفروع</option>
+            <option value="sales">مبيعات</option>
+          </select>
+          <input type="text" placeholder="بحث بالاسم..." [value]="filters.search"
+            (input)="onSearchInput($any($event.target).value)"
+            class="h-9 flex-1 min-w-[160px] rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm" />
+        </div>
+
+        <!-- 3. Employee selection -->
+        <div class="border border-gray-200 rounded-lg mb-4">
+          <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
+            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox" [checked]="allFilteredSelected" (change)="toggleSelectAllFiltered()" [disabled]="employees.length === 0" />
+              تحديد الكل
+            </label>
+            <span class="text-xs text-gray-500">تم تحديد {{ selectedCount }} موظف</span>
+          </div>
+          <div class="max-h-64 overflow-y-auto divide-y divide-gray-100">
+            @if (loadingEmployees) {
+              <p class="text-sm text-gray-400 text-center py-6">جارٍ التحميل…</p>
+            } @else if (employees.length === 0) {
+              <p class="text-sm text-gray-400 text-center py-6">لا يوجد موظفون مطابقون للفلاتر الحالية</p>
+            } @else {
+              @for (emp of employees; track emp.id) {
+                <label class="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50">
+                  <input type="checkbox" [checked]="isSelected(emp.id)" (change)="toggle(emp.id)" />
+                  <span class="text-gray-800">{{ emp.name }}</span>
+                  <span class="text-gray-400 text-xs mr-auto">{{ emp.role === 'manager' ? 'مدير فرع' : 'مبيعات' }}</span>
+                </label>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- 4. Shift + 5. Date -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">الشيفت</label>
+            <select [(ngModel)]="shiftId" class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm">
+              <option [ngValue]="null">— اختر الشيفت —</option>
+              @for (t of shiftTemplates; track t.id) {
+                <option [ngValue]="t.id">{{ t.name }} ({{ t.start_time }}–{{ t.end_time }})</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+            <app-date-picker id="bulk-assign-date" [value]="date" (valueChange)="date = $event"></app-date-picker>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3">
+          <button type="button" (click)="closeModal()" class="h-10 px-4 rounded-lg border border-gray-300 text-gray-600 text-sm font-medium hover:bg-gray-50">إلغاء</button>
+          <button type="button" (click)="proceedToConfirm()" [disabled]="!canProceed || loadingConflicts"
+            class="h-10 px-4 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">
+            @if (loadingConflicts) { جارٍ التحقق... } @else { التالي }
+          </button>
+        </div>
+      }
+    }
+
+    @if (step === 'confirm') {
+      <div class="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+        سيتم تعيين شيفت <strong>{{ selectedShift?.name }}</strong> لـ <strong>{{ selectedCount }}</strong> موظف
+        في فرع <strong>{{ selectedShop?.name }}</strong> بتاريخ <strong>{{ date }}</strong>. هل تريد المتابعة؟
+      </div>
+
+      @if (conflicts.length > 0) {
+        <div class="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p class="text-sm font-medium text-amber-700 mb-2">
+            {{ conflicts.length }} موظفين لديهم شيفت مسجل بالفعل لهذا التاريخ.
+          </p>
+          <ul class="text-xs text-amber-700 mb-3 list-disc pr-4 max-h-24 overflow-y-auto">
+            @for (c of conflicts; track c.user_id) {
+              <li>{{ c.name }} — {{ c.shift_name || c.type }}</li>
+            }
+          </ul>
+          <div class="flex flex-col gap-2 text-sm">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="replaceChoice" [checked]="!replaceExisting" (change)="replaceExisting = false" />
+              تخطي الموجود (الافتراضي — لا يتم تعديل شيفتهم الحالي)
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="replaceChoice" [checked]="replaceExisting" (change)="replaceExisting = true" />
+              استبدال الموجود بالشيفت الجديد
+            </label>
+          </div>
+        </div>
+      }
+
+      <div class="flex justify-end gap-3">
+        <button type="button" (click)="backToSelect()" class="h-10 px-4 rounded-lg border border-gray-300 text-gray-600 text-sm font-medium hover:bg-gray-50">رجوع</button>
+        <button type="button" (click)="confirmAndSubmit()" [disabled]="submitting"
+          class="h-10 px-4 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium disabled:opacity-50">
+          @if (submitting) { جارٍ التنفيذ... } @else { تأكيد التعيين }
+        </button>
+      </div>
+    }
+  </div>
+</app-modal>

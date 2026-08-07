@@ -7,6 +7,7 @@ import { ShopService } from '../../../services/shop.service';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { BulkShiftAssignModalComponent } from './bulk-shift-assign-modal/bulk-shift-assign-modal.component';
 
 interface Cell {
   date: string;
@@ -49,7 +50,7 @@ const WEEKDAY_NAMES = ['السبت', 'الأحد', 'الاثنين', 'الثلا
 
 @Component({
   selector: 'app-hr-schedule',
-  imports: [CommonModule, FormsModule, LoadingComponent, ModalComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, ModalComponent, DatePickerComponent, BulkShiftAssignModalComponent],
   templateUrl: './hr-schedule.component.html',
 })
 export class HrScheduleComponent implements OnInit {
@@ -114,6 +115,12 @@ export class HrScheduleComponent implements OnInit {
   editingTemplateId: number | null = null;
   templateEditForm = { name: '', color: 'blue', start_time: '', end_time: '', description: '' };
   templateBusyId: number | null = null;
+
+  // ── Bulk Shift Assignment (additive — separate from the per-cell editor above) ──
+  showBulkAssign = false;
+  openBulkAssign() { this.showBulkAssign = true; }
+  onBulkAssignClosed() { this.showBulkAssign = false; }
+  onBulkAssigned() { this.showBulkAssign = false; this.load(); }
 
   // Edit-propagation-scope confirmation dialog
   showScopeDialog = false;

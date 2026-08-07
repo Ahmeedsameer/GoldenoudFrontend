@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, retry } from 'rxjs';
 
@@ -274,6 +274,27 @@ export class HrService {
 
   deleteShiftTemplate(id: number): Observable<any> {
     return this.http.delete<any>(`${this.base}/shift-templates/${id}`);
+  }
+
+  // ── Bulk Shift Assignment (additive — does not touch schedule/schedule/bulk above) ──
+  getAssignableEmployees(params: { shop_id?: number | string; role?: string; search?: string }): Observable<any> {
+    return this.http.get<any>(`${this.base}/schedule/bulk-assign/employees`, { params: dropUndefined(params) }).pipe(map((res) => res?.data ?? res));
+  }
+
+  getBulkAssignConflicts(employeeIds: number[], date: string): Observable<{ conflicts: any[]; count: number }> {
+    // Laravel expects PHP's bracket array notation (employee_ids[]=1&employee_ids[]=2)
+    // to parse a repeated query key into an array — HttpClient's default array
+    // serialization (employee_ids=1&employee_ids=2, no brackets) collapses to a
+    // single scalar server-side, which fails the 'array' validation rule.
+    let params = new HttpParams().set('date', date);
+    for (const id of employeeIds) params = params.append('employee_ids[]', id);
+    return this.http
+      .get<any>(`${this.base}/schedule/bulk-assign/conflicts`, { params })
+      .pipe(map((res) => res?.data ?? res));
+  }
+
+  bulkAssignShift(payload: { employee_ids: number[]; shift_id: number; date: string; replace_existing?: boolean }): Observable<any> {
+    return this.http.post<any>(`${this.base}/schedule/bulk-assign`, payload);
   }
 
   // ── Self-service: My Schedule / My Attendance / My Profile / My Sales ──

@@ -18,6 +18,7 @@ import { SearchBarComponent } from '../../shared/components/common/search-bar/se
 import { SalesCatalogComponent } from '../../shared/components/sales-catalog/sales-catalog.component';
 import { CustomerFormComponent } from '../../shared/components/customer-form/customer-form.component';
 import { CustomerService } from '../../services/customer.service';
+import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 
 export interface SellerCurrency { id: number; code: string; name: string; symbol: string; rate: number; }
@@ -60,10 +61,18 @@ export class CashierComponent implements OnInit, AfterViewInit, OnDestroy {
   private salesService   = inject(SalesService);
   private overrideService = inject(OverrideService);
   private customerService = inject(CustomerService);
+  private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private destroy$ = new Subject<void>();
 
   isSubmitting = false;
+
+  // ── Leave Lock — server is the actual source of truth (SalesService::
+  //    createInvoice() rejects the sale regardless of this flag); this only
+  //    gates the UI so the seller/manager sees a clear message up front
+  //    instead of a rejected submit. Never used to authorize anything. ──────
+  onLeaveToday = false;
+  leaveMessage: string | null = null;
   alert: { show: boolean; type: 'success' | 'error' | ''; message: string } = {
     show: false, type: '', message: '',
   };
@@ -641,6 +650,14 @@ export class CashierComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
+    this.authService.me().subscribe({
+      next: (res) => {
+        this.onLeaveToday = !!res?.on_leave_today;
+        this.leaveMessage = res?.leave_message ?? null;
+      },
+      error: () => {},
+    });
+
     this.initLoading = true;
     forkJoin({
       currencies: this.salesService.getSellerCurrencies(),
@@ -1078,6 +1095,13 @@ export class CashierComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Submit ──────────────────────────────────────────────
   onSubmit() {
+    // UI-side mirror of the backend's actual rejection (SalesService::
+    // createInvoice()) — never the real gate, just avoids a round-trip.
+    if (this.onLeaveToday) {
+      this.alert = { show: true, type: 'error', message: this.leaveMessage || 'لا يمكنك إجراء عمليات بيع أثناء الإجازة.' };
+      return;
+    }
+
     this.form.markAllAsTouched();
     this.items.controls.forEach((c) => (c as FormGroup).markAllAsTouched());
     this.payments.controls.forEach((c) => (c as FormGroup).markAllAsTouched());

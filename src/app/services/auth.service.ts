@@ -57,6 +57,15 @@ export class AuthService {
     return strUser ? JSON.parse(strUser) : null;
   }
 
+  /** Live account/leave status from the server — never cached, since leave
+   *  eligibility is date-driven and can flip between requests. Backend is
+   *  always the source of truth for on_leave_today (see
+   *  LeaveRequest::activeForUserToday()); this is only used to proactively
+   *  gate the UI, never to authorize the actual sale itself. */
+  me() {
+    return this.httpClient.post<any>(`${this.apiUrl}/me`, {});
+  }
+
   isAuthenticated(): boolean {
     return !(this.isTokenExpired()) ;
   }

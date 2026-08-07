@@ -8,7 +8,7 @@
  * production API host (e.g. 'https://api.your-domain.com'), and update the
  * Reverb block to match the production REVERB_* values in the backend's .env.
  */
-const SERVER_BASE = 'https://goldenperfumes.net/api';
+const SERVER_BASE = 'https://api.goldenperfumes.net/api';
 const API_BASE = `${SERVER_BASE}/api`;
 
 export const environment = {

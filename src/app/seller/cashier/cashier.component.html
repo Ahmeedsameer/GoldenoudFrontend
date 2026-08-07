@@ -14,6 +14,13 @@
   </div>
 }
 
+@if (onLeaveToday) {
+  <div class="mb-5">
+    <app-alert variant="error"
+      [message]="leaveMessage || 'لا يمكنك إجراء عمليات بيع أثناء الإجازة.'"></app-alert>
+  </div>
+}
+
 <!-- Customer card -->
 <div class="mb-5">
   <app-component-card title="بيانات العميل">
@@ -102,15 +109,23 @@
      Clicking a Ready Product adds it directly. Clicking a Compound Product
      (a perfume) opens the Product Builder immediately — no intermediate
      step, no button to "reveal" the catalog first. -->
-<div class="mb-5">
-  <app-component-card title="كتالوج المبيعات" desc="اضغط على منتج لإضافته — العطور تفتح صانع المنتج">
-    <app-sales-catalog
-      (productSelected)="onCatalogProductSelected($event)"
-      (compositionAdded)="onCatalogCompositionAdded($event)"
-      (pickError)="onCatalogPickError($event)">
-    </app-sales-catalog>
-  </app-component-card>
-</div>
+@if (!onLeaveToday) {
+  <div class="mb-5">
+    <app-component-card title="كتالوج المبيعات" desc="اضغط على منتج لإضافته — العطور تفتح صانع المنتج">
+      <app-sales-catalog
+        (productSelected)="onCatalogProductSelected($event)"
+        (compositionAdded)="onCatalogCompositionAdded($event)"
+        (pickError)="onCatalogPickError($event)">
+      </app-sales-catalog>
+    </app-component-card>
+  </div>
+} @else {
+  <div class="mb-5">
+    <app-component-card title="كتالوج المبيعات">
+      <p class="text-sm text-gray-400 text-center py-8">لا يمكنك إجراء عمليات بيع أثناء الإجازة.</p>
+    </app-component-card>
+  </div>
+}
 
 <form [formGroup]="form" novalidate>
 
@@ -677,7 +692,7 @@
 
   <div class="mt-5 flex items-center gap-3">
     <app-button (btnClick)="onSubmit()"
-      [disabled]="isSubmitting || hasStockError || overrideState === 'polling' || overrideState === 'rejected'">
+      [disabled]="isSubmitting || hasStockError || overrideState === 'polling' || overrideState === 'rejected' || onLeaveToday">
       @if (isSubmitting) {
         جاري الحفظ...
       } @else if (overrideState === 'approved') {

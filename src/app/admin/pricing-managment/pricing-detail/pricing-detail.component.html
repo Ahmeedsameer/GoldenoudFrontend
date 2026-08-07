@@ -15,27 +15,27 @@
 
   <!-- Batch-aware pricing summary — what the customer pays TODAY vs. what kicks in NEXT -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+    <div class="rounded-xl border border-gray-200 p-4">
       <p class="text-xs text-gray-400 mb-1">المخزون الحالي</p>
-      <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+      <p class="text-lg font-bold font-mono text-gray-800">
         {{ detail.current_inventory != null ? (detail.current_inventory | number:'1.0-3') + ' ' + (detail.unit || '') : '—' }}
       </p>
     </div>
-    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+    <div class="rounded-xl border border-gray-200 p-4">
       <p class="text-xs text-gray-400 mb-1">السعر الحالي (FIFO)</p>
       <p class="text-lg font-bold font-mono" style="color: #9A7B1A;">
         {{ detail.current_fifo_price != null ? (detail.current_fifo_price | number:'1.2-2') + ' ج.م' : '—' }}
       </p>
     </div>
-    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+    <div class="rounded-xl border border-gray-200 p-4">
       <p class="text-xs text-gray-400 mb-1">المتبقي من الدفعة الحالية</p>
-      <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+      <p class="text-lg font-bold font-mono text-gray-800">
         {{ detail.remaining_in_current_batch != null ? (detail.remaining_in_current_batch | number:'1.0-3') + ' ' + (detail.unit || '') : '—' }}
       </p>
     </div>
-    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+    <div class="rounded-xl border border-gray-200 p-4">
       <p class="text-xs text-gray-400 mb-1">سعر الدفعة القادمة</p>
-      <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+      <p class="text-lg font-bold font-mono text-gray-800">
         {{ detail.next_batch_price != null ? (detail.next_batch_price | number:'1.2-2') + ' ج.م' : '—' }}
       </p>
     </div>
@@ -64,11 +64,13 @@
       </div>
     </div>
   } @else {
-    <!-- Every batch, oldest-first — historical batches are immutable; only the newest unpriced batch is editable -->
+    <!-- Every batch, oldest-first — an unpriced batch can be priced for the first
+         time, and an already-priced batch's price can be edited going forward
+         (never touches past invoices, which keep their own frozen snapshot). -->
     <div class="db-tbl-card mb-8">
       <div style="padding: 1rem 1.25rem 0.5rem;">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">دُفعات التوريد</h3>
-        <p class="text-xs" style="color: #9CA3AF;">كل دفعة توريد لها سعر بيع مستقل وثابت — لا يمكن تعديل سعر دفعة تم تسعيرها من قبل.</p>
+        <h3 class="text-sm font-semibold text-gray-800">دُفعات التوريد</h3>
+        <p class="text-xs" style="color: #9CA3AF;">كل دفعة توريد لها سعر بيع مستقل — يمكن تعديل سعر دفعة مُسعَّرة لاحقاً (يؤثر فقط على المبيعات القادمة، الفواتير السابقة تبقى كما هي).</p>
       </div>
       <div class="db-tbl-wrap">
         <table class="db-tbl">
@@ -103,26 +105,37 @@
                 @if (isAdmin) {
                   <td>
                     @if (!batch.is_archived) {
-                      @if (!batch.is_priced) {
-                        @if (pricingBatchId === batch.id) {
+                      @if (pricingBatchId === batch.id) {
+                        <div class="flex flex-col gap-1">
                           <div class="flex items-center gap-1.5">
                             <input type="number" min="0.01" step="0.01" [(ngModel)]="batchPrice" placeholder="السعر"
-                              class="h-8 w-24 rounded-lg border border-gray-300 px-2 text-xs font-mono dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+                              class="h-8 w-24 rounded-lg border border-gray-300 px-2 text-xs font-mono" />
                             <button type="button" (click)="saveBatchPrice()" [disabled]="batchSaving || !batchPrice || batchPrice <= 0"
                               class="px-3 h-8 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium disabled:opacity-50">
                               @if (batchSaving) { ... } @else { حفظ }
                             </button>
                             <button type="button" (click)="cancelBatchPricing()"
-                              class="px-2 h-8 rounded-lg border border-gray-300 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-400">إلغاء</button>
+                              class="px-2 h-8 rounded-lg border border-gray-300 text-xs text-gray-600">إلغاء</button>
                           </div>
-                        } @else {
-                          <button type="button" (click)="startBatchPricing(batch)" class="lux-btn lux-btn-primary lux-btn-sm">تسعير</button>
-                        }
+                          @if (detail.category_minimum_price !== null && detail.category_minimum_price !== undefined) {
+                            <p class="text-[11px]" style="color: #9CA3AF;">
+                              الحد الأدنى: {{ detail.category_minimum_price | number:'1.2-2' }}
+                              @if (batchPrice !== null && batchPrice < detail.category_minimum_price) {
+                                <span class="text-error-500"> — السعر أقل من الحد الأدنى</span>
+                              }
+                            </p>
+                          }
+                        </div>
+                      } @else if (!batch.is_priced) {
+                        <button type="button" (click)="startBatchPricing(batch)" class="lux-btn lux-btn-primary lux-btn-sm">تسعير</button>
                       } @else {
-                        <button type="button" (click)="archiveBatch(batch)" [disabled]="archiving"
-                          class="px-3 h-8 rounded-lg border border-gray-300 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400">
-                          أرشفة
-                        </button>
+                        <div class="flex items-center gap-1.5">
+                          <button type="button" (click)="startBatchPricing(batch)" class="lux-btn lux-btn-outline lux-btn-sm">تعديل السعر</button>
+                          <button type="button" (click)="archiveBatch(batch)" [disabled]="archiving"
+                            class="px-3 h-8 rounded-lg border border-gray-300 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                            أرشفة
+                          </button>
+                        </div>
                       }
                     }
                   </td>
@@ -155,26 +168,26 @@
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
     @if (detail.product_type !== 'COMPOUND') {
-      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <div class="rounded-xl border border-gray-200 p-4">
         <p class="text-xs text-gray-400 mb-1">آخر سعر شراء</p>
-        <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+        <p class="text-lg font-bold font-mono text-gray-800">
           {{ detail.latest_purchase_price != null ? (detail.latest_purchase_price | number:'1.2-2') + ' ج.م' : '—' }}
         </p>
       </div>
-      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <div class="rounded-xl border border-gray-200 p-4">
         <p class="text-xs text-gray-400 mb-1">متوسط سعر الشراء</p>
-        <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+        <p class="text-lg font-bold font-mono text-gray-800">
           {{ detail.average_purchase_price != null ? (detail.average_purchase_price | number:'1.2-2') + ' ج.م' : '—' }}
         </p>
       </div>
-      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <div class="rounded-xl border border-gray-200 p-4">
         <p class="text-xs text-gray-400 mb-1">التكلفة الحالية (المعتمدة)</p>
-        <p class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">
+        <p class="text-lg font-bold font-mono text-gray-800">
           {{ detail.current_cost != null ? (detail.current_cost | number:'1.2-2') + ' ج.م' : '—' }}
         </p>
       </div>
     } @else {
-      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4 md:col-span-3">
+      <div class="rounded-xl border border-gray-200 p-4 md:col-span-3">
         <p class="text-xs text-gray-400">
           العطور المركّبة ليس لها تكلفة ثابتة — البائع يختار أي زيت وأي زجاجة عند كل عملية بيع، فالتكلفة الحقيقية
           تُحسب وقت البيع فقط. هذه الصفحة تتحكم في <b>سعر البيع الافتراضي</b> الذي يظهر للبائع كنقطة بداية، وهو قابل للتعديل لكل فاتورة.
@@ -182,7 +195,7 @@
       </div>
     }
 
-    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+    <div class="rounded-xl border border-gray-200 p-4">
       <p class="text-xs text-gray-400 mb-1">{{ priceLabel(detail) }}</p>
       <p class="text-lg font-bold font-mono" style="color: #9A7B1A;">
         @if (detail.selling_price != null) {
@@ -193,13 +206,13 @@
     </div>
 
     @if (detail.product_type !== 'COMPOUND') {
-      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <div class="rounded-xl border border-gray-200 p-4">
         <p class="text-xs text-gray-400 mb-1">الربح المتوقع</p>
         <p class="text-lg font-bold font-mono" style="color: #16794F;">
           {{ detail.estimated_profit != null ? (detail.estimated_profit | number:'1.2-2') + ' ج.م' : '—' }}
         </p>
       </div>
-      <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-4">
+      <div class="rounded-xl border border-gray-200 p-4">
         <p class="text-xs text-gray-400 mb-1">نسبة الربح</p>
         <p class="text-lg font-bold font-mono" style="color: #16794F;">
           {{ detail.profit_percent != null ? (detail.profit_percent | number:'1.1-1') + '%' : '—' }}
@@ -211,8 +224,8 @@
 
   <!-- Selling price editor (admin only) -->
   @if (isAdmin) {
-    <div class="rounded-xl border border-gray-200 dark:border-white/[0.07] p-5 mb-6">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-3">
+    <div class="rounded-xl border border-gray-200 p-5 mb-6">
+      <h3 class="text-sm font-semibold text-gray-800 mb-3">
         {{ detail.product_type === 'COMPOUND' ? 'تعديل سعر البيع الافتراضي' : 'تعديل ' + priceLabel(detail) }}
       </h3>
 
@@ -221,14 +234,14 @@
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
           <div>
-            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">السعر الجديد</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1">السعر الجديد</label>
             <input type="number" min="0.01" step="0.01" [(ngModel)]="newPrice"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm font-mono dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm font-mono" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">السبب (اختياري)</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1">السبب (اختياري)</label>
             <input type="text" [(ngModel)]="reason" placeholder="مثال: زيادة تكلفة المواد الخام"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm dark:bg-gray-800 dark:text-white/90 dark:border-gray-700" />
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm" />
           </div>
         </div>
         @if (saveError) {
@@ -240,7 +253,7 @@
             @if (saving) { جارٍ الحفظ… } @else { حفظ }
           </button>
           <button type="button" (click)="cancelEdit()"
-            class="px-4 h-9 rounded-lg border border-gray-300 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400">
+            class="px-4 h-9 rounded-lg border border-gray-300 text-xs font-medium text-gray-600 hover:bg-gray-50">
             إلغاء
           </button>
         </div>
@@ -254,7 +267,7 @@
 @if (detail && isAdmin) {
   <div class="db-tbl-card">
     <div style="padding: 1rem 1.25rem 0.5rem;">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">سجل الأسعار</h3>
+      <h3 class="text-sm font-semibold text-gray-800">سجل الأسعار</h3>
     </div>
     <div class="db-tbl-wrap">
       <table class="db-tbl">
@@ -298,10 +311,10 @@
     @if (historyLastPage > 1) {
       <div class="flex items-center justify-center gap-2 py-3">
         <button type="button" (click)="loadHistory(historyPage - 1)" [disabled]="historyPage <= 1"
-          class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">السابق</button>
+          class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40">السابق</button>
         <span class="text-xs text-gray-500">{{ historyPage }} / {{ historyLastPage }}</span>
         <button type="button" (click)="loadHistory(historyPage + 1)" [disabled]="historyPage >= historyLastPage"
-          class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40 dark:border-gray-700">التالي</button>
+          class="px-3 h-8 rounded-lg border border-gray-300 text-xs disabled:opacity-40">التالي</button>
       </div>
     }
   </div>

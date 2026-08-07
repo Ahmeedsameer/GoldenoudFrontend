@@ -3,23 +3,23 @@
 <div class="ds-card overflow-hidden">
 
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100">
     <div>
-      <h2 class="text-base font-semibold text-gray-900 dark:text-white">الموظفون</h2>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">إدارة الموظفين والرواتب والعمولات</p>
+      <h2 class="text-base font-semibold text-gray-900">الموظفون</h2>
+      <p class="text-xs text-gray-500 mt-0.5">إدارة الموظفين والرواتب والعمولات</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <div class="w-56">
         <app-search-bar placeholder="بحث بالاسم أو الإيميل أو الهاتف..." (searchChange)="setSearch($event)"></app-search-bar>
       </div>
       <select (change)="setRoleFilter($any($event.target).value)"
-        class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+        class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
         <option value="">كل الأدوار</option>
         <option value="sales">مبيعات</option>
         <option value="manager">مدير فرع</option>
       </select>
       <select (change)="setStatusFilter($any($event.target).value)"
-        class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+        class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
         <option value="">كل الحالات</option>
         <option value="active">نشط</option>
         <option value="inactive">معطّل</option>
@@ -35,7 +35,7 @@
   <!-- Table -->
   <div class="overflow-x-auto">
     <table class="ds-table w-full">
-      <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+      <thead class="ds-table-head bg-gray-50/50">
         <tr>
           <th class="ds-th">الموظف</th>
           <th class="ds-th">الدور</th>
@@ -48,34 +48,34 @@
       </thead>
       <tbody>
         @for (emp of list.result.data; track emp.id) {
-          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+          <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-4 py-3">
-              <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ emp.name }}</p>
+              <p class="text-sm font-medium text-gray-800">{{ emp.name }}</p>
               <p class="text-xs text-gray-400 font-mono">{{ emp.email }}</p>
             </td>
             <td class="px-4 py-3">
               <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
                 [class]="emp.role === 'manager'
-                  ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-400'
-                  : 'bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-gray-300'">
+                  ? 'bg-brand-50 text-brand-700'
+                  : 'bg-gray-100 text-gray-600'">
                 {{ emp.role === 'manager' ? 'مدير فرع' : 'مبيعات' }}
               </span>
             </td>
             <td class="px-4 py-3">
               @if (emp.primary_branch?.name) {
-                <span class="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-white/[0.06] dark:text-gray-300">{{ emp.primary_branch.name }}</span>
+                <span class="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{{ emp.primary_branch.name }}</span>
               } @else {
                 <span class="text-xs text-gray-400">—</span>
               }
             </td>
-            <td class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{{ emp.base_salary | number:'1.0-2' }}</td>
-            <td class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{{ emp.personal_commission_percent | number:'1.0-2' }}%</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-700">{{ emp.base_salary | number:'1.0-2' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-700">{{ emp.personal_commission_percent | number:'1.0-2' }}%</td>
             <td class="px-4 py-3">
               <button (click)="toggleStatus(emp)"
                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium cursor-pointer"
                 [class]="emp.status === 'active'
-                  ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400'
-                  : 'bg-gray-100 text-gray-500 dark:bg-white/[0.05] dark:text-gray-400'">
+                  ? 'bg-success-50 text-success-700'
+                  : 'bg-gray-100 text-gray-500'">
                 {{ emp.status === 'active' ? 'نشط' : 'معطّل' }}
               </button>
               @if (emp.employment_status && emp.employment_status !== 'working') {
@@ -85,12 +85,12 @@
             <td class="px-4 py-3 text-center">
               <div class="flex items-center justify-center gap-2">
                 <button (click)="openEdit(emp)"
-                  class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">تعديل</button>
+                  class="text-xs font-medium text-brand-600 hover:text-brand-700">تعديل</button>
                 <button (click)="openTimeline(emp)"
-                  class="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400">السجل الزمني</button>
+                  class="text-xs font-medium text-gray-500 hover:text-gray-700">السجل الزمني</button>
                 @if (emp.employment_status === 'working') {
                   <button (click)="openEndEmployment(emp)"
-                    class="text-xs font-medium text-error-600 hover:text-error-700 dark:text-error-400">إنهاء الخدمة</button>
+                    class="text-xs font-medium text-error-600 hover:text-error-700">إنهاء الخدمة</button>
                 }
               </div>
             </td>
@@ -110,17 +110,17 @@
 <app-modal [isOpen]="showModal" (close)="showModal = false" className="max-w-2xl m-4 w-full">
   <div class="p-6">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+      <h2 class="text-lg font-semibold text-gray-800">
         {{ isEditing ? 'تعديل موظف' : 'إضافة موظف جديد' }}
       </h2>
-      <button type="button" (click)="showModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      <button type="button" (click)="showModal = false" class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
     @if (formError) {
-      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-        <p class="text-sm text-error-600 dark:text-error-400">{{ formError }}</p>
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200">
+        <p class="text-sm text-error-600">{{ formError }}</p>
       </div>
     }
 
@@ -130,39 +130,39 @@
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">البيانات الشخصية</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الاسم <span class="text-error-500">*</span></label>
+          <label class="block text-xs font-medium text-gray-600 mb-1">الاسم <span class="text-error-500">*</span></label>
           <input type="text" formControlName="name"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
-            [class]="form.get('name')?.invalid && form.get('name')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'" />
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent focus:outline-none"
+            [class]="form.get('name')?.invalid && form.get('name')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 focus:border-brand-400'" />
           @if (form.get('name')?.invalid && form.get('name')?.touched) {
             <p class="mt-1 text-xs text-error-500">الاسم مطلوب</p>
           }
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">البريد الإلكتروني <span class="text-error-500">*</span></label>
+          <label class="block text-xs font-medium text-gray-600 mb-1">البريد الإلكتروني <span class="text-error-500">*</span></label>
           <input type="email" formControlName="email"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
-            [class]="form.get('email')?.invalid && form.get('email')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'" />
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent focus:outline-none"
+            [class]="form.get('email')?.invalid && form.get('email')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 focus:border-brand-400'" />
           @if (form.get('email')?.invalid && form.get('email')?.touched) {
             <p class="mt-1 text-xs text-error-500">أدخل بريدًا إلكترونيًا صحيحًا</p>
           }
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          <label class="block text-xs font-medium text-gray-600 mb-1">
             كلمة المرور @if (!isEditing) { <span class="text-error-500">*</span> } @else { <span class="text-gray-400">(اتركها فارغة لعدم التغيير)</span> }
           </label>
           <input type="password" formControlName="password" autocomplete="new-password"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
-            [class]="form.get('password')?.invalid && form.get('password')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'" />
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent focus:outline-none"
+            [class]="form.get('password')?.invalid && form.get('password')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 focus:border-brand-400'" />
           @if (form.get('password')?.invalid && form.get('password')?.touched) {
             <p class="mt-1 text-xs text-error-500">مطلوبة، 6 أحرف على الأقل</p>
           }
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الهاتف</label>
+          <label class="block text-xs font-medium text-gray-600 mb-1">الهاتف</label>
           <input type="text" formControlName="phone"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
-            [class]="form.get('phone')?.invalid && form.get('phone')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'" />
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent focus:outline-none"
+            [class]="form.get('phone')?.invalid && form.get('phone')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 focus:border-brand-400'" />
           @if (form.get('phone')?.invalid && form.get('phone')?.touched) {
             <p class="mt-1 text-xs text-error-500">{{ form.get('phone')?.getError('serverError') || 'رقم الهاتف غير صالح' }}</p>
           }
@@ -173,10 +173,10 @@
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">بيانات التوظيف</p>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الدور <span class="text-error-500">*</span></label>
+          <label class="block text-xs font-medium text-gray-600 mb-1">الدور <span class="text-error-500">*</span></label>
           <select formControlName="role"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
-            [class]="form.get('role')?.invalid && form.get('role')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'">
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent focus:outline-none"
+            [class]="form.get('role')?.invalid && form.get('role')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 focus:border-brand-400'">
             @for (r of roleOptions; track r.value) { <option [value]="r.value">{{ r.label }}</option> }
           </select>
           @if (form.get('role')?.invalid && form.get('role')?.touched) {
@@ -184,14 +184,14 @@
           }
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الحالة</label>
-          <select formControlName="status" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none">
+          <label class="block text-xs font-medium text-gray-600 mb-1">الحالة</label>
+          <select formControlName="status" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent focus:border-brand-400 focus:outline-none">
             <option value="active">نشط</option>
             <option value="inactive">معطّل</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">تاريخ التعيين</label>
+          <label class="block text-xs font-medium text-gray-600 mb-1">تاريخ التعيين</label>
           <app-date-picker
             id="employee-hire-date"
             [value]="form.get('hire_date')?.value"
@@ -204,10 +204,10 @@
       <!-- Primary branch -->
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">الفرع الأساسي</p>
       <div class="mb-5">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الفرع الأساسي (الدائم) <span class="text-error-500">*</span></label>
+        <label class="block text-xs font-medium text-gray-600 mb-1">الفرع الأساسي (الدائم) <span class="text-error-500">*</span></label>
         <select formControlName="shop_id"
-          class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent dark:text-white/90 dark:bg-gray-800 focus:outline-none"
-          [class]="form.get('shop_id')?.invalid && form.get('shop_id')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 dark:border-gray-700 focus:border-brand-400'">
+          class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent focus:outline-none"
+          [class]="form.get('shop_id')?.invalid && form.get('shop_id')?.touched ? 'border-error-500 focus:border-error-500' : 'border-gray-300 focus:border-brand-400'">
           <option [ngValue]="null" disabled>اختر الفرع الأساسي</option>
           @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
         </select>
@@ -221,34 +221,34 @@
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">الراتب والعمولة</p>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الراتب الأساسي الشهري</label>
-          <input type="number" formControlName="base_salary" min="0" step="0.01" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+          <label class="block text-xs font-medium text-gray-600 mb-1">الراتب الأساسي الشهري</label>
+          <input type="number" formControlName="base_salary" min="0" step="0.01" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent focus:border-brand-400 focus:outline-none" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">عمولة المبيعات الشخصية %</label>
-          <input type="number" formControlName="personal_commission_percent" min="0" max="100" step="0.01" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+          <label class="block text-xs font-medium text-gray-600 mb-1">عمولة المبيعات الشخصية %</label>
+          <input type="number" formControlName="personal_commission_percent" min="0" max="100" step="0.01" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent focus:border-brand-400 focus:outline-none" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">رصيد الإجازة الشهرية (أيام)</label>
-          <input type="number" formControlName="monthly_leave_allowance" min="0" max="365" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none" />
+          <label class="block text-xs font-medium text-gray-600 mb-1">رصيد الإجازة الشهرية (أيام)</label>
+          <input type="number" formControlName="monthly_leave_allowance" min="0" max="365" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent focus:border-brand-400 focus:outline-none" />
         </div>
       </div>
 
       <!-- Notes -->
       <div class="mb-5">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">ملاحظات</label>
-        <textarea formControlName="hr_notes" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none resize-none"></textarea>
+        <label class="block text-xs font-medium text-gray-600 mb-1">ملاحظات</label>
+        <textarea formControlName="hr_notes" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent focus:border-brand-400 focus:outline-none resize-none"></textarea>
       </div>
 
       <!-- Footer -->
-      <div class="flex gap-3 pt-4 border-t border-gray-100 dark:border-white/[0.05]">
+      <div class="flex gap-3 pt-4 border-t border-gray-100">
         <button type="submit" [disabled]="formLoading"
           class="flex-1 h-10 rounded-lg font-medium text-sm text-white transition-colors"
           [class]="formLoading ? 'bg-brand-400 cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600'">
           @if (formLoading) { جاري الحفظ... } @else { {{ isEditing ? 'حفظ التعديلات' : 'إنشاء الموظف' }} }
         </button>
         <button type="button" (click)="showModal = false" [disabled]="formLoading"
-          class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">إلغاء</button>
+          class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">إلغاء</button>
       </div>
     </form>
   </div>
@@ -260,10 +260,10 @@
   <div class="p-6">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">السجل الوظيفي الزمني</h2>
+        <h2 class="text-lg font-semibold text-gray-800">السجل الوظيفي الزمني</h2>
         <p class="text-xs text-gray-400 mt-0.5">{{ timelineEmployee?.name }}</p>
       </div>
-      <button type="button" (click)="showTimeline = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      <button type="button" (click)="showTimeline = false" class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
@@ -271,11 +271,11 @@
     @if (timelineLoading) {
       <p class="text-sm text-gray-400 py-6 text-center">جارٍ التحميل…</p>
     } @else {
-      <div class="relative space-y-4 ps-4 border-s-2 border-gray-100 dark:border-white/[0.06] max-h-96 overflow-y-auto">
+      <div class="relative space-y-4 ps-4 border-s-2 border-gray-100 max-h-96 overflow-y-auto">
         @for (t of timeline; track t.id) {
           <div class="relative">
             <span class="absolute -start-[21px] top-1 h-2.5 w-2.5 rounded-full bg-brand-400"></span>
-            <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ actionLabel(t.action) }}</p>
+            <p class="text-sm font-medium text-gray-800">{{ actionLabel(t.action) }}</p>
             <p class="text-[11px] text-gray-400 font-mono">{{ t.created_at | date:'yyyy-MM-dd HH:mm' }}</p>
           </div>
         } @empty {
@@ -291,24 +291,24 @@
 <app-modal [isOpen]="showEndEmployment" (close)="showEndEmployment = false" className="max-w-md m-4 w-full">
   <div class="p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">إنهاء الخدمة</h2>
-      <button type="button" (click)="showEndEmployment = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      <h2 class="text-lg font-semibold text-gray-800">إنهاء الخدمة</h2>
+      <button type="button" (click)="showEndEmployment = false" class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
     @if (endEmploymentStep === 'form') {
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ endEmploymentEmployee?.name }}</p>
+      <p class="text-sm text-gray-500 mb-4">{{ endEmploymentEmployee?.name }}</p>
 
       @if (endEmploymentError) {
-        <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-          <p class="text-sm text-error-600 dark:text-error-400">{{ endEmploymentError }}</p>
+        <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200">
+          <p class="text-sm text-error-600">{{ endEmploymentError }}</p>
         </div>
       }
 
       <div class="mb-4">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">سبب ترك العمل</label>
-        <div class="inline-flex rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden text-sm">
+        <label class="block text-xs font-medium text-gray-600 mb-1.5">سبب ترك العمل</label>
+        <div class="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
           <button type="button" (click)="endEmploymentType = 'resigned'"
             [class]="endEmploymentType === 'resigned' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-500'"
             class="px-4 py-2 font-medium transition-colors">استقالة</button>
@@ -319,7 +319,7 @@
       </div>
 
       <div class="mb-5">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">تاريخ ترك العمل <span class="text-error-500">*</span></label>
+        <label class="block text-xs font-medium text-gray-600 mb-1.5">تاريخ ترك العمل <span class="text-error-500">*</span></label>
         <app-date-picker
           id="end-employment-date"
           [value]="endEmploymentDate"
@@ -336,60 +336,60 @@
           @if (endEmploymentLoading) { جارِ الحساب... } @else { معاينة المستحقات }
         </button>
         <button type="button" (click)="showEndEmployment = false" [disabled]="endEmploymentLoading"
-          class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">إلغاء</button>
+          class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">إلغاء</button>
       </div>
 
     } @else if (endEmploymentStep === 'preview' && endEmploymentBreakdown) {
       <!-- Read-only breakdown — nothing saved yet, admin reviews then confirms -->
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">{{ endEmploymentEmployee?.name }}</p>
-      <p class="text-xs text-amber-600 dark:text-amber-400 mb-4">معاينة فقط — لم يتم الحفظ بعد</p>
+      <p class="text-sm text-gray-500 mb-1">{{ endEmploymentEmployee?.name }}</p>
+      <p class="text-xs text-amber-600 mb-4">معاينة فقط — لم يتم الحفظ بعد</p>
 
       @if (endEmploymentError) {
-        <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-          <p class="text-sm text-error-600 dark:text-error-400">{{ endEmploymentError }}</p>
+        <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200">
+          <p class="text-sm text-error-600">{{ endEmploymentError }}</p>
         </div>
       }
 
-      <div class="mb-5 rounded-lg border border-gray-200 dark:border-white/10 divide-y divide-gray-100 dark:divide-white/[0.05] text-sm">
+      <div class="mb-5 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
         <div class="flex items-center justify-between px-4 py-2">
-          <span class="text-gray-500 dark:text-gray-400">الراتب الأساسي</span>
-          <span class="font-mono text-gray-700 dark:text-gray-300">{{ endEmploymentBreakdown.basic_salary | number:'1.2-2' }} ج.م</span>
-        </div>
-        <div class="flex items-center justify-between px-4 py-2">
-          <span class="text-gray-500 dark:text-gray-400">أيام العمل حتى تاريخ الترك</span>
-          <span class="font-mono text-gray-700 dark:text-gray-300">{{ endEmploymentBreakdown.worked_days }} / {{ endEmploymentBreakdown.days_in_month }} يوم</span>
+          <span class="text-gray-500">الراتب الأساسي</span>
+          <span class="font-mono text-gray-700">{{ endEmploymentBreakdown.basic_salary | number:'1.2-2' }} ج.م</span>
         </div>
         <div class="flex items-center justify-between px-4 py-2">
-          <span class="text-gray-500 dark:text-gray-400">سعر اليوم</span>
-          <span class="font-mono text-gray-700 dark:text-gray-300">{{ endEmploymentBreakdown.daily_rate | number:'1.2-2' }} ج.م</span>
-        </div>
-        <div class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-white/[0.02]">
-          <span class="font-medium text-gray-700 dark:text-gray-300">الراتب المستحق (بالتناسب)</span>
-          <span class="font-mono font-semibold text-gray-800 dark:text-white/90">{{ endEmploymentBreakdown.salary_earned | number:'1.2-2' }} ج.م</span>
+          <span class="text-gray-500">أيام العمل حتى تاريخ الترك</span>
+          <span class="font-mono text-gray-700">{{ endEmploymentBreakdown.worked_days }} / {{ endEmploymentBreakdown.days_in_month }} يوم</span>
         </div>
         <div class="flex items-center justify-between px-4 py-2">
-          <span class="text-gray-500 dark:text-gray-400">عمولة المبيعات الشخصية</span>
-          <span class="font-mono text-success-600 dark:text-success-400">+ {{ endEmploymentBreakdown.personal_commission | number:'1.2-2' }} ج.م</span>
+          <span class="text-gray-500">سعر اليوم</span>
+          <span class="font-mono text-gray-700">{{ endEmploymentBreakdown.daily_rate | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-2 bg-gray-50">
+          <span class="font-medium text-gray-700">الراتب المستحق (بالتناسب)</span>
+          <span class="font-mono font-semibold text-gray-800">{{ endEmploymentBreakdown.salary_earned | number:'1.2-2' }} ج.م</span>
         </div>
         <div class="flex items-center justify-between px-4 py-2">
-          <span class="text-gray-500 dark:text-gray-400">بونص الفرع</span>
-          <span class="font-mono text-success-600 dark:text-success-400">+ {{ endEmploymentBreakdown.branch_bonus | number:'1.2-2' }} ج.م</span>
+          <span class="text-gray-500">عمولة المبيعات الشخصية</span>
+          <span class="font-mono text-success-600">+ {{ endEmploymentBreakdown.personal_commission | number:'1.2-2' }} ج.م</span>
         </div>
         <div class="flex items-center justify-between px-4 py-2">
-          <span class="text-gray-500 dark:text-gray-400">المكافآت</span>
-          <span class="font-mono text-success-600 dark:text-success-400">+ {{ endEmploymentBreakdown.bonus_total | number:'1.2-2' }} ج.م</span>
+          <span class="text-gray-500">بونص الفرع</span>
+          <span class="font-mono text-success-600">+ {{ endEmploymentBreakdown.branch_bonus | number:'1.2-2' }} ج.م</span>
         </div>
         <div class="flex items-center justify-between px-4 py-2">
-          <span class="text-gray-500 dark:text-gray-400">الخصومات والغرامات</span>
-          <span class="font-mono text-error-600 dark:text-error-400">- {{ endEmploymentBreakdown.total_deductions | number:'1.2-2' }} ج.م</span>
+          <span class="text-gray-500">المكافآت</span>
+          <span class="font-mono text-success-600">+ {{ endEmploymentBreakdown.bonus_total | number:'1.2-2' }} ج.م</span>
         </div>
         <div class="flex items-center justify-between px-4 py-2">
-          <span class="text-gray-500 dark:text-gray-400">رصيد السلفة غير المسدد</span>
-          <span class="font-mono text-error-600 dark:text-error-400">- {{ endEmploymentBreakdown.advance_balance | number:'1.2-2' }} ج.م</span>
+          <span class="text-gray-500">الخصومات والغرامات</span>
+          <span class="font-mono text-error-600">- {{ endEmploymentBreakdown.total_deductions | number:'1.2-2' }} ج.م</span>
         </div>
-        <div class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-white/[0.02]">
-          <span class="font-semibold text-gray-700 dark:text-gray-300">المستحقات النهائية</span>
-          <span class="font-mono font-bold text-success-600 dark:text-success-400">{{ endEmploymentBreakdown.final_settlement | number:'1.2-2' }} ج.م</span>
+        <div class="flex items-center justify-between px-4 py-2">
+          <span class="text-gray-500">رصيد السلفة غير المسدد</span>
+          <span class="font-mono text-error-600">- {{ endEmploymentBreakdown.advance_balance | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+          <span class="font-semibold text-gray-700">المستحقات النهائية</span>
+          <span class="font-mono font-bold text-success-600">{{ endEmploymentBreakdown.final_settlement | number:'1.2-2' }} ج.م</span>
         </div>
       </div>
 
@@ -400,30 +400,30 @@
           @if (endEmploymentLoading) { جارِ الحفظ... } @else { تأكيد إنهاء الخدمة }
         </button>
         <button type="button" (click)="backToForm()" [disabled]="endEmploymentLoading"
-          class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">رجوع</button>
+          class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">رجوع</button>
       </div>
 
     } @else if (endEmploymentStep === 'done' && endEmploymentBreakdown) {
       <!-- Confirmed — settlement document saved, now ask about deactivating the account -->
-      <div class="mb-5 rounded-lg border border-gray-200 dark:border-white/10 divide-y divide-gray-100 dark:divide-white/[0.05] text-sm">
+      <div class="mb-5 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
         @if (endEmploymentBreakdown.settlement) {
           <div class="flex items-center justify-between px-4 py-2">
-            <span class="text-gray-500 dark:text-gray-400">رقم التسوية</span>
-            <span class="font-mono font-semibold text-gray-800 dark:text-white/90">{{ endEmploymentBreakdown.settlement.settlement_number }}</span>
+            <span class="text-gray-500">رقم التسوية</span>
+            <span class="font-mono font-semibold text-gray-800">{{ endEmploymentBreakdown.settlement.settlement_number }}</span>
           </div>
         }
-        <div class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-white/[0.02]">
-          <span class="font-semibold text-gray-700 dark:text-gray-300">المستحقات النهائية المحفوظة</span>
-          <span class="font-mono font-bold text-success-600 dark:text-success-400">{{ endEmploymentBreakdown.final_settlement | number:'1.2-2' }} ج.م</span>
+        <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+          <span class="font-semibold text-gray-700">المستحقات النهائية المحفوظة</span>
+          <span class="font-mono font-bold text-success-600">{{ endEmploymentBreakdown.final_settlement | number:'1.2-2' }} ج.م</span>
         </div>
       </div>
 
-      <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">هل تريد أيضاً تعطيل حساب الدخول الخاص بهذا الموظف؟</p>
+      <p class="text-sm font-medium text-gray-700 mb-4">هل تريد أيضاً تعطيل حساب الدخول الخاص بهذا الموظف؟</p>
       <div class="flex gap-3">
         <button type="button" (click)="confirmDeactivateAfterLeaving(true)"
           class="flex-1 h-10 rounded-lg bg-error-500 hover:bg-error-600 text-sm font-medium text-white transition-colors">نعم</button>
         <button type="button" (click)="confirmDeactivateAfterLeaving(false)"
-          class="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">لا</button>
+          class="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">لا</button>
       </div>
     }
   </div>

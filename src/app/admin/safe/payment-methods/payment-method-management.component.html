@@ -2,96 +2,97 @@
 
 <div class="mb-6 flex items-center justify-between">
   <div>
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">وسائل الدفع</h2>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">إدارة وسائل الدفع المتاحة عند البيع (نقدي، فيزا، فودافون كاش، إنستاباي...) ورسوم المعالجة على البطاقات.</p>
+    <h2 class="text-xl font-semibold text-gray-800">وسائل الدفع</h2>
+    <p class="text-sm text-gray-500 mt-0.5">إدارة وسائل الدفع المتاحة عند البيع (نقدي، فيزا، فودافون كاش، إنستاباي...) ورسوم المعالجة على البطاقات.</p>
   </div>
-  <button (click)="openCreate()"
-    class="flex items-center gap-2 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-xl transition-colors">
-    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+  <app-button variant="primary" size="sm" (btnClick)="openCreate()">
+    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
     </svg>
     إضافة وسيلة دفع
-  </button>
+  </app-button>
 </div>
 
 @if (alert.show) {
   <div class="mb-5"><app-alert [variant]="alert.type" [message]="alert.message"></app-alert></div>
 }
 
-<div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] overflow-hidden">
-  <table class="min-w-full">
-    <thead class="border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
-      <tr>
-        <th class="px-5 py-3 text-start text-xs font-medium text-gray-400 uppercase">الاسم</th>
-        <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">البنك</th>
-        <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">رقم المحفظة</th>
-        <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">النوع</th>
-        <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">العملة</th>
-        <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">رسوم المعالجة</th>
-        <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">الخزنة المرتبطة</th>
-        <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">الفروع المتاحة</th>
-        <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">الحالة</th>
-        <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">إجراءات</th>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
-      @for (m of methods; track m.id) {
-        <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-          <td class="px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300">{{ m.name }}</td>
-          <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ isCard(m.type) ? (m.bank || '—') : '—' }}</td>
-          <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400 font-mono">{{ m.type === 'mobile_wallet' ? (m.wallet_phone || '—') : '—' }}</td>
-          <td class="px-4 py-4">
-            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400">
-              {{ typeLabel(m.type) }}
-            </span>
-          </td>
-          <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400 font-mono">{{ m.currency?.code }}</td>
-          <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400 font-mono">
-            {{ isCard(m.type) ? (m.processing_fee_percent + '%') : '—' }}
-          </td>
-          <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
-            {{ m.safe ? (m.safe.shop?.name || 'الخزنة الرئيسية') : 'تلقائي (خزنة الفرع)' }}
-          </td>
-          <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
-            @if (m.shops && m.shops.length) {
-              <span class="text-xs">{{ m.shops.length }} فرع محدد</span>
-            } @else {
-              <span class="text-xs text-success-600 dark:text-success-400">كل الفروع</span>
-            }
-          </td>
-          <td class="px-4 py-4">
-            @if (m.is_active) {
-              <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400">مفعّلة</span>
-            } @else {
-              <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-white/[0.05] dark:text-gray-400">معطّلة</span>
-            }
-          </td>
-          <td class="px-4 py-4">
-            <div class="flex items-center gap-3">
-              <button (click)="openEdit(m)" class="text-sm text-brand-500 hover:text-brand-700 font-medium transition-colors">تعديل</button>
-              <button (click)="toggle(m)" class="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors">
-                {{ m.is_active ? 'إيقاف' : 'تفعيل' }}
-              </button>
-            </div>
-          </td>
+<div class="ds-card overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="ds-table">
+      <thead class="ds-table-head bg-gray-50/50">
+        <tr>
+          <th class="ds-th">الاسم</th>
+          <th class="ds-th">البنك</th>
+          <th class="ds-th">رقم المحفظة</th>
+          <th class="ds-th">النوع</th>
+          <th class="ds-th">العملة</th>
+          <th class="ds-th">رسوم المعالجة</th>
+          <th class="ds-th">الخزنة المرتبطة</th>
+          <th class="ds-th">الفروع المتاحة</th>
+          <th class="ds-th">الحالة</th>
+          <th class="ds-th">إجراءات</th>
         </tr>
-      }
-      @if (!loading && methods.length === 0) {
-        <tr><td colspan="10" class="px-5 py-16 text-center text-sm text-gray-400">لا توجد وسائل دفع بعد</td></tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (m of methods; track m.id) {
+          <tr class="ds-tr">
+            <td class="ds-td font-medium text-gray-700">{{ m.name }}</td>
+            <td class="ds-td text-gray-600">{{ isCard(m.type) ? (m.bank || '—') : '—' }}</td>
+            <td class="ds-td text-gray-600 font-mono">{{ m.type === 'mobile_wallet' ? (m.wallet_phone || '—') : '—' }}</td>
+            <td class="ds-td">
+              <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                {{ typeLabel(m.type) }}
+              </span>
+            </td>
+            <td class="ds-td text-gray-600 font-mono">{{ m.currency?.code }}</td>
+            <td class="ds-td text-gray-600 font-mono">
+              {{ isCard(m.type) ? (m.processing_fee_percent + '%') : '—' }}
+            </td>
+            <td class="ds-td text-gray-600">
+              {{ m.safe ? (m.safe.shop?.name || 'الخزنة الرئيسية') : 'تلقائي (خزنة الفرع)' }}
+            </td>
+            <td class="ds-td text-gray-600">
+              @if (m.shops && m.shops.length) {
+                <span class="text-xs">{{ m.shops.length }} فرع محدد</span>
+              } @else {
+                <span class="text-xs text-success-600">كل الفروع</span>
+              }
+            </td>
+            <td class="ds-td">
+              @if (m.is_active) {
+                <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-700">مفعّلة</span>
+              } @else {
+                <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">معطّلة</span>
+              }
+            </td>
+            <td class="ds-td">
+              <div class="flex items-center gap-3">
+                <button (click)="openEdit(m)" class="text-sm text-brand-500 hover:text-brand-700 font-medium transition-colors">تعديل</button>
+                <button (click)="toggle(m)" class="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors">
+                  {{ m.is_active ? 'إيقاف' : 'تفعيل' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+        @if (!loading && methods.length === 0) {
+          <tr><td colspan="10" class="px-5 py-16 text-center text-sm text-gray-400">لا توجد وسائل دفع بعد</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <app-modal [isOpen]="showModal" (close)="showModal = false" className="max-w-md m-4">
   <div class="p-6">
-    <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">
+    <h3 class="text-base font-semibold text-gray-800 mb-5">
       {{ modalMode === 'create' ? 'إضافة وسيلة دفع' : 'تعديل وسيلة الدفع' }}
     </h3>
 
     @if (modalError) {
-      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-        <p class="text-sm text-error-600 dark:text-error-400">{{ modalError }}</p>
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200">
+        <p class="text-sm text-error-600">{{ modalError }}</p>
       </div>
     }
 
@@ -99,36 +100,28 @@
       <div class="space-y-4">
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            الاسم <span class="text-error-500">*</span>
-          </label>
-          <input type="text" formControlName="name" placeholder="مثال: Visa CIB"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
-            [class]="isInvalid('name')
-              ? 'border-error-400 focus:ring-error-500/20'
-              : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+          <app-label for="name">الاسم <span class="text-error-500">*</span></app-label>
+          <input type="text" id="name" formControlName="name" placeholder="مثال: Visa CIB"
+            class="lux-input"
+            [class.lux-input-error]="isInvalid('name')" />
           @if (isInvalid('name')) { <p class="mt-1 text-xs text-error-500">الاسم مطلوب</p> }
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">النوع <span class="text-error-500">*</span></label>
-          <select formControlName="type"
-            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2"
-            [class]="isInvalid('type')
-              ? 'border-error-400 focus:ring-error-500/20'
-              : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700'">
+          <app-label for="type">النوع <span class="text-error-500">*</span></app-label>
+          <select id="type" formControlName="type"
+            class="lux-input"
+            [class.lux-input-error]="isInvalid('type')">
             @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
           </select>
           @if (isInvalid('type')) { <p class="mt-1 text-xs text-error-500">النوع مطلوب</p> }
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">العملة <span class="text-error-500">*</span></label>
-          <select formControlName="currency_id"
-            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2"
-            [class]="isInvalid('currency_id')
-              ? 'border-error-400 focus:ring-error-500/20'
-              : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700'">
+          <app-label for="currency_id">العملة <span class="text-error-500">*</span></app-label>
+          <select id="currency_id" formControlName="currency_id"
+            class="lux-input"
+            [class.lux-input-error]="isInvalid('currency_id')">
             <option [ngValue]="null" disabled>اختر العملة</option>
             @for (c of currencies; track c.id) { <option [ngValue]="c.id">{{ c.code }}</option> }
           </select>
@@ -137,33 +130,32 @@
 
         @if (isWalletType) {
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">رقم تليفون المحفظة</label>
-            <input type="tel" formControlName="wallet_phone" placeholder="مثال: 01012345678"
-              class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+            <app-label for="wallet_phone">رقم تليفون المحفظة</app-label>
+            <input type="tel" id="wallet_phone" formControlName="wallet_phone" placeholder="مثال: 01012345678"
+              class="lux-input" />
             <p class="mt-1 text-xs text-gray-400">الرقم المسجّلة عليه المحفظة الإلكترونية.</p>
           </div>
         }
 
         @if (isCardType) {
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">البنك</label>
-            <input type="text" formControlName="bank" placeholder="مثال: CIB, QNB, بنك مصر، HSBC"
-              class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+            <app-label for="bank">البنك</app-label>
+            <input type="text" id="bank" formControlName="bank" placeholder="مثال: CIB, QNB, بنك مصر، HSBC"
+              class="lux-input" />
             <p class="mt-1 text-xs text-gray-400">البنك المُصدر للبطاقة — يُستخدم في تقارير "الرسوم حسب البنك".</p>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">نسبة رسوم المعالجة %</label>
-            <input type="number" formControlName="processing_fee_percent" step="0.01" min="0" max="100" placeholder="2.00"
-              class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+            <app-label for="processing_fee_percent">نسبة رسوم المعالجة %</app-label>
+            <input type="number" id="processing_fee_percent" formControlName="processing_fee_percent" step="0.01" min="0" max="100" placeholder="2.00"
+              class="lux-input" />
             <p class="mt-1 text-xs text-gray-400">تُخصم هذه النسبة من صافي ما تستلمه الشركة عند البيع بهذه الوسيلة — إجمالي الفاتورة لا يتغيّر أبداً.</p>
           </div>
         }
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">الخزنة المرتبطة (اختياري)</label>
-          <select formControlName="safe_id"
-            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+          <app-label for="safe_id">الخزنة المرتبطة (اختياري)</app-label>
+          <select id="safe_id" formControlName="safe_id" class="lux-input">
             <option [ngValue]="null">تلقائي — خزنة الفرع الافتراضية</option>
             @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
           </select>
@@ -171,10 +163,10 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">الفروع المتاحة (اختياري)</label>
-          <div class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 rounded-lg border border-gray-200 dark:border-gray-700">
+          <app-label>الفروع المتاحة (اختياري)</app-label>
+          <div class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 rounded-lg border border-gray-200">
             @for (shop of shops; track shop.id) {
-              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <label class="flex items-center gap-2 text-sm text-gray-700">
                 <input type="checkbox" [checked]="isShopChecked(shop.id)" (change)="toggleShop(shop.id, $any($event.target).checked)" />
                 {{ shop.name }}
               </label>
@@ -186,22 +178,18 @@
         <div class="flex items-center gap-3">
           <label class="relative inline-flex cursor-pointer">
             <input type="checkbox" formControlName="is_active" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
           </label>
-          <span class="text-sm text-gray-700 dark:text-gray-300">مفعّلة</span>
+          <span class="text-sm text-gray-700">مفعّلة</span>
         </div>
 
       </div>
 
       <div class="flex gap-3 mt-6">
-        <button type="submit" [disabled]="modalLoading"
-          class="flex-1 h-10 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-colors disabled:opacity-60">
+        <app-button [disabled]="modalLoading" className="flex-1 justify-center" (btnClick)="submit()">
           @if (modalLoading) { جاري الحفظ... } @else { حفظ }
-        </button>
-        <button type="button" (click)="showModal = false"
-          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">
-          إلغاء
-        </button>
+        </app-button>
+        <app-button variant="outline" (btnClick)="showModal = false">إلغاء</app-button>
       </div>
     </form>
   </div>

@@ -11,33 +11,33 @@
 
 <div class="ds-card overflow-hidden">
   <!-- Header + controls -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100">
     <div>
-      <h2 class="text-base font-semibold text-gray-900 dark:text-white">إدارة الرواتب</h2>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">توليد كشوف الرواتب الشهرية (سجلات ثابتة لا تتغير) وصرفها عبر الخزنة</p>
+      <h2 class="text-base font-semibold text-gray-900">إدارة الرواتب</h2>
+      <p class="text-xs text-gray-500 mt-0.5">توليد كشوف الرواتب الشهرية (سجلات ثابتة لا تتغير) وصرفها عبر الخزنة</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <div class="w-48">
         <app-search-bar placeholder="بحث باسم الموظف..." (searchChange)="setSearch($event)"></app-search-bar>
       </div>
-      <select [(ngModel)]="month" (ngModelChange)="setMonth($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <select [(ngModel)]="month" (ngModelChange)="setMonth($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
         @for (m of months; track m) { <option [ngValue]="m">شهر {{ m }}</option> }
       </select>
-      <select [(ngModel)]="year" (ngModelChange)="setYear($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <select [(ngModel)]="year" (ngModelChange)="setYear($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
         @for (y of years; track y) { <option [ngValue]="y">{{ y }}</option> }
       </select>
-      <select [(ngModel)]="shopId" (ngModelChange)="setShopFilter($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <select [(ngModel)]="shopId" (ngModelChange)="setShopFilter($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
         <option [ngValue]="null">كل الفروع</option>
         @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
       </select>
-      <select [(ngModel)]="statusFilter" (ngModelChange)="setStatusFilter($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <select [(ngModel)]="statusFilter" (ngModelChange)="setStatusFilter($event)" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
         <option value="">كل الحالات</option>
         <option value="generated">مُولّد</option>
         <option value="paid">مدفوع</option>
       </select>
-      <button (click)="openSettings()" class="h-9 px-3 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">إعدادات الخصومات</button>
+      <button (click)="openSettings()" class="h-9 px-3 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">إعدادات الخصومات</button>
       <button (click)="generateAll()" [disabled]="generating"
-        class="h-9 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-700 px-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors disabled:opacity-50">
+        class="h-9 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">
         توليد كشوف الشهر
       </button>
       <button (click)="openBulkPay()"
@@ -49,7 +49,7 @@
 
   <div class="overflow-x-auto">
     <table class="ds-table w-full">
-      <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+      <thead class="ds-table-head bg-gray-50/50">
         <tr>
           <th class="ds-th">الموظف</th>
           <th class="ds-th">الفرع</th>
@@ -67,31 +67,31 @@
       </thead>
       <tbody>
         @for (p of list.result.data; track p.id) {
-          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-            <td class="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ p.user?.name || '—' }}</td>
-            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ p.user?.shop?.name || '—' }}</td>
-            <td class="px-4 py-3 text-sm font-mono text-gray-600 dark:text-gray-400">{{ p.base_salary | number:'1.0-2' }}</td>
-            <td class="px-4 py-3 text-sm font-mono text-success-600 dark:text-success-400">+{{ p.personal_commission_amount | number:'1.0-2' }}</td>
-            <td class="px-4 py-3 text-sm font-mono text-success-600 dark:text-success-400">+{{ p.branch_commission_amount | number:'1.0-2' }}</td>
-            <td class="px-4 py-3 text-sm font-mono text-success-600 dark:text-success-400">{{ p.bonus_total > 0 ? '+' + (p.bonus_total | number:'1.0-2') : '—' }}</td>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ p.user?.name || '—' }}</td>
+            <td class="px-4 py-3 text-sm text-gray-500">{{ p.user?.shop?.name || '—' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-gray-600">{{ p.base_salary | number:'1.0-2' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-success-600">+{{ p.personal_commission_amount | number:'1.0-2' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-success-600">+{{ p.branch_commission_amount | number:'1.0-2' }}</td>
+            <td class="px-4 py-3 text-sm font-mono text-success-600">{{ p.bonus_total > 0 ? '+' + (p.bonus_total | number:'1.0-2') : '—' }}</td>
             <td class="px-4 py-3 text-sm font-mono text-error-500">{{ p.penalty_total > 0 ? '-' + (p.penalty_total | number:'1.0-2') : '—' }}</td>
             <td class="px-4 py-3 text-sm font-mono text-error-500">{{ p.advance_deduction > 0 ? '-' + (p.advance_deduction | number:'1.0-2') : '—' }}</td>
             <td class="px-4 py-3 text-sm font-mono text-error-500">-{{ p.total_deductions | number:'1.0-2' }}</td>
-            <td class="px-4 py-3 text-sm font-mono font-bold text-gray-900 dark:text-white">{{ p.net_salary | number:'1.0-2' }}</td>
+            <td class="px-4 py-3 text-sm font-mono font-bold text-gray-900">{{ p.net_salary | number:'1.0-2' }}</td>
             <td class="px-4 py-3">
               <div class="flex items-center gap-1">
                 <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                  [class]="p.status === 'paid' ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400' : 'bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-gray-300'">
+                  [class]="p.status === 'paid' ? 'bg-success-50 text-success-700' : 'bg-gray-100 text-gray-600'">
                   {{ p.status === 'paid' ? 'مدفوع' : 'مُولّد' }}
                 </span>
                 @if (p.is_locked) {
-                  <span class="inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 px-2 py-0.5 text-xs">🔒 مقفول</span>
+                  <span class="inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-xs">🔒 مقفول</span>
                 }
               </div>
             </td>
             <td class="px-4 py-3">
               <div class="flex items-center justify-center gap-2 text-xs font-medium">
-                <button (click)="openDetail(p)" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">تفاصيل</button>
+                <button (click)="openDetail(p)" class="text-brand-600 hover:text-brand-700">تفاصيل</button>
                 @if (p.status !== 'paid') {
                   @if (!p.is_locked) {
                     <button (click)="lock(p)" [disabled]="busyId === p.id" class="text-amber-600 hover:text-amber-700 disabled:opacity-50">قفل</button>
@@ -118,24 +118,24 @@
 <app-modal [isOpen]="showDetail" (close)="showDetail = false" className="max-w-lg m-4 w-full">
   <div class="p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">تفاصيل كشف الراتب</h2>
-      <button type="button" (click)="showDetail = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      <h2 class="text-lg font-semibold text-gray-800">تفاصيل كشف الراتب</h2>
+      <button type="button" (click)="showDetail = false" class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
     @if (detail) {
-      <p class="text-sm font-medium text-gray-800 dark:text-white/90 mb-1">{{ detail.user?.name }}</p>
+      <p class="text-sm font-medium text-gray-800 mb-1">{{ detail.user?.name }}</p>
       <p class="text-xs text-gray-400 mb-4">شهر {{ detail.period_month }}/{{ detail.period_year }} — أيام العمل {{ detail.working_days }} · حضور {{ detail.present_days }} · تأخير {{ detail.late_days }} · غياب {{ detail.absent_days }} · نصف يوم {{ detail.half_days }} · إجازة بدون أجر {{ detail.unpaid_leave_days }}</p>
       <div class="space-y-1.5">
         @for (l of detail.lines; track l.id) {
-          <div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
-            <span class="text-gray-600 dark:text-gray-300">{{ l.label }}<span class="text-xs text-gray-400" *ngIf="l.shop"> ({{ l.shop.name }})</span></span>
-            <span class="font-mono font-medium" [class]="l.amount < 0 ? 'text-error-500' : 'text-gray-800 dark:text-white/90'">{{ l.amount | number:'1.2-2' }}</span>
+          <div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-50">
+            <span class="text-gray-600">{{ l.label }}<span class="text-xs text-gray-400" *ngIf="l.shop"> ({{ l.shop.name }})</span></span>
+            <span class="font-mono font-medium" [class]="l.amount < 0 ? 'text-error-500' : 'text-gray-800'">{{ l.amount | number:'1.2-2' }}</span>
           </div>
         }
-        <div class="flex justify-between items-center pt-3 mt-2 border-t-2 border-gray-200 dark:border-white/[0.1]">
-          <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">صافي الراتب</span>
-          <span class="text-lg font-bold font-mono text-gray-900 dark:text-white">{{ detail.net_salary | number:'1.2-2' }} ج.م</span>
+        <div class="flex justify-between items-center pt-3 mt-2 border-t-2 border-gray-200">
+          <span class="text-sm font-semibold text-gray-700">صافي الراتب</span>
+          <span class="text-lg font-bold font-mono text-gray-900">{{ detail.net_salary | number:'1.2-2' }} ج.م</span>
         </div>
       </div>
 
@@ -146,8 +146,8 @@
       }
 
       <!-- ═══ Task 6 — Cash History ═══ -->
-      <div class="mt-5 pt-4 border-t border-gray-100 dark:border-white/[0.05]">
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">سجل الحركة المالية</p>
+      <div class="mt-5 pt-4 border-t border-gray-100">
+        <p class="text-xs font-medium text-gray-500 mb-2">سجل الحركة المالية</p>
         @if (detailTransactionsLoading) {
           <p class="text-xs text-gray-400">جارِ التحميل...</p>
         } @else if (detailTransactions.length === 0) {
@@ -155,10 +155,10 @@
         } @else {
           <div class="space-y-1.5">
             @for (t of detailTransactions; track t.id) {
-              <div class="flex items-center justify-between text-xs py-1.5 border-b border-gray-50 dark:border-white/[0.04]">
+              <div class="flex items-center justify-between text-xs py-1.5 border-b border-gray-50">
                 <div>
-                  <span class="font-mono text-gray-500 dark:text-gray-400">#{{ t.id }}</span>
-                  <span class="text-gray-600 dark:text-gray-300 mr-1">{{ safeLabel(t.safe) }}</span>
+                  <span class="font-mono text-gray-500">#{{ t.id }}</span>
+                  <span class="text-gray-600 mr-1">{{ safeLabel(t.safe) }}</span>
                   <span class="text-gray-400 mr-1">— {{ t.user?.name || '—' }}</span>
                 </div>
                 <div class="flex items-center gap-2">
@@ -183,22 +183,22 @@
 <app-modal [isOpen]="showPay" (close)="showPay = false" className="max-w-sm m-4 w-full">
   <div class="p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">صرف الراتب</h2>
-      <button type="button" (click)="showPay = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      <h2 class="text-lg font-semibold text-gray-800">صرف الراتب</h2>
+      <button type="button" (click)="showPay = false" class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
     @if (payTarget) {
-      <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">{{ payTarget.user?.name }}</p>
-      <p class="text-lg font-mono font-bold text-gray-900 dark:text-white mb-4">{{ payTarget.net_salary | number:'1.2-2' }} ج.م</p>
+      <p class="text-sm text-gray-600 mb-1">{{ payTarget.user?.name }}</p>
+      <p class="text-lg font-mono font-bold text-gray-900 mb-4">{{ payTarget.net_salary | number:'1.2-2' }} ج.م</p>
     }
     @if (payError) {
-      <div class="mb-3 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-        <p class="text-sm text-error-600 dark:text-error-400">{{ payError }}</p>
+      <div class="mb-3 p-3 rounded-lg bg-error-50 border border-error-200">
+        <p class="text-sm text-error-600">{{ payError }}</p>
       </div>
     }
-    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">الخزنة</label>
-    <select [(ngModel)]="paySafeId" class="w-full h-10 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-4">
+    <label class="block text-xs text-gray-500 mb-1">الخزنة</label>
+    <select [(ngModel)]="paySafeId" class="w-full h-10 rounded-lg border border-gray-300 px-2 text-sm bg-transparent mb-4">
       <option [ngValue]="null" disabled>اختر الخزنة</option>
       @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
     </select>
@@ -215,21 +215,21 @@
 <app-modal [isOpen]="showBulkPay" (close)="showBulkPay = false" className="max-w-md m-4 w-full">
   <div class="p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">دفع كل المرتبات المعلّقة</h2>
-      <button type="button" (click)="showBulkPay = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      <h2 class="text-lg font-semibold text-gray-800">دفع كل المرتبات المعلّقة</h2>
+      <button type="button" (click)="showBulkPay = false" class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
     @if (!bulkResult) {
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">سيتم صرف كل المرتبات المعلّقة لشهر {{ month }}/{{ year }}{{ shopId ? ' (الفرع المحدد فقط)' : '' }} من خزنة واحدة.</p>
+      <p class="text-sm text-gray-500 mb-4">سيتم صرف كل المرتبات المعلّقة لشهر {{ month }}/{{ year }}{{ shopId ? ' (الفرع المحدد فقط)' : '' }} من خزنة واحدة.</p>
       @if (bulkError) {
-        <div class="mb-3 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-          <p class="text-sm text-error-600 dark:text-error-400">{{ bulkError }}</p>
+        <div class="mb-3 p-3 rounded-lg bg-error-50 border border-error-200">
+          <p class="text-sm text-error-600">{{ bulkError }}</p>
         </div>
       }
-      <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">الخزنة</label>
-      <select [(ngModel)]="bulkSafeId" class="w-full h-10 rounded-lg border border-gray-300 px-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 mb-4">
+      <label class="block text-xs text-gray-500 mb-1">الخزنة</label>
+      <select [(ngModel)]="bulkSafeId" class="w-full h-10 rounded-lg border border-gray-300 px-2 text-sm bg-transparent mb-4">
         <option [ngValue]="null" disabled>اختر الخزنة</option>
         @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
       </select>
@@ -239,21 +239,21 @@
         @if (bulkLoading) { جارِ الصرف... } @else { تأكيد صرف الكل }
       </button>
     } @else {
-      <div class="mb-4 p-3 rounded-lg bg-success-50 border border-success-200 dark:bg-success-500/10 dark:border-success-500/20">
-        <p class="text-sm text-success-600 dark:text-success-400">تم صرف {{ bulkResult.paid.length }} راتب بنجاح.</p>
+      <div class="mb-4 p-3 rounded-lg bg-success-50 border border-success-200">
+        <p class="text-sm text-success-600">تم صرف {{ bulkResult.paid.length }} راتب بنجاح.</p>
       </div>
       @if (bulkResult.failed.length > 0) {
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">لم يتم صرف {{ bulkResult.failed.length }} راتب:</p>
+        <p class="text-xs font-medium text-gray-500 mb-2">لم يتم صرف {{ bulkResult.failed.length }} راتب:</p>
         <div class="space-y-1.5 mb-4">
           @for (f of bulkResult.failed; track f.payroll_id) {
-            <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-error-50 dark:bg-error-500/10">
-              <span class="text-gray-700 dark:text-gray-300">{{ f.employee }}</span>
-              <span class="text-error-600 dark:text-error-400">{{ f.reason }}</span>
+            <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-error-50">
+              <span class="text-gray-700">{{ f.employee }}</span>
+              <span class="text-error-600">{{ f.reason }}</span>
             </div>
           }
         </div>
       }
-      <button (click)="showBulkPay = false" class="w-full h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">إغلاق</button>
+      <button (click)="showBulkPay = false" class="w-full h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">إغلاق</button>
     }
   </div>
 </app-modal>
@@ -263,21 +263,21 @@
 <app-modal [isOpen]="showSettings" (close)="showSettings = false" className="max-w-lg m-4 w-full">
   <div class="p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">إعدادات الخصومات</h2>
-      <button type="button" (click)="showSettings = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      <h2 class="text-lg font-semibold text-gray-800">إعدادات الخصومات</h2>
+      <button type="button" (click)="showSettings = false" class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
     <p class="text-xs text-gray-400 mb-4">«نسبة من اليومي» = القيمة × (الراتب ÷ أيام الشهر). «ثابت» = مبلغ لكل مرة.</p>
     <div class="space-y-3">
       @for (s of settings; track s.id) {
-        <div class="flex items-center gap-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-2 p-3 rounded-lg border border-gray-200">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ s.label }}</p>
+            <p class="text-sm font-medium text-gray-800">{{ s.label }}</p>
             <p class="text-[11px] text-gray-400 font-mono">{{ s.code }}</p>
           </div>
-          <input type="number" min="0" step="0.01" [(ngModel)]="s.value" class="h-9 w-20 rounded-lg border border-gray-300 px-2 text-sm text-center bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800" />
-          <select [(ngModel)]="s.mode" class="h-9 rounded-lg border border-gray-300 px-1 text-xs bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800">
+          <input type="number" min="0" step="0.01" [(ngModel)]="s.value" class="h-9 w-20 rounded-lg border border-gray-300 px-2 text-sm text-center bg-transparent" />
+          <select [(ngModel)]="s.mode" class="h-9 rounded-lg border border-gray-300 px-1 text-xs bg-transparent">
             <option value="daily_fraction">نسبة من اليومي</option>
             <option value="fixed">ثابت</option>
           </select>

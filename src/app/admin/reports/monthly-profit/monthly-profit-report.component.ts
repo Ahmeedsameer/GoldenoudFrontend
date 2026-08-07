@@ -12,9 +12,11 @@ import { MonthlyProfitService, MonthlyProfitData } from '../../../services/month
 import { ShopService } from '../../../services/shop.service';
 
 /**
- * Revenue vs. estimated cost per month, ties Sales data with the Pricing
- * module's tracked purchase_cost. "Estimated" because no COGS is captured
- * at sale time anywhere in this schema — matches Branch Comparison's method.
+ * Revenue vs. real cost per month — cost/profit come straight from each sale's
+ * own frozen InvoiceItem.line_cost/line_profit snapshot (the exact FIFO batch
+ * consumed at sale time, see SalesService::processItem()), never a live/
+ * current product cost — so this is real historical COGS, not an estimate;
+ * a batch's price changing later can never alter what a past month reports.
  *
  * First report retrofitted onto the shared reporting foundation (KPI cards,
  * chart wrapper, loading skeleton, empty state) — the template for every
@@ -79,7 +81,7 @@ export class MonthlyProfitReportComponent implements OnInit {
         this.chartCategories = d.months.map((m) => m.month);
         this.chartSeries = [
           { name: 'الإيرادات', data: d.months.map((m) => m.revenue) },
-          { name: 'الربح التقديري', data: d.months.map((m) => m.estimated_profit) },
+          { name: 'الربح الفعلي', data: d.months.map((m) => m.estimated_profit) },
         ];
       },
       error: () => {

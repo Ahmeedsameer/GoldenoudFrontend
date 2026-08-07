@@ -70,6 +70,21 @@
       <app-form-error [control]="categoryForm.get('minimum_sell_price')"></app-form-error>
     </div>
 
+    <div>
+      <app-label>السعر الافتراضي عند تسعير دفعة جديدة (اختياري)</app-label>
+      <app-input-field
+        type="number"
+        [value]="categoryForm.get('default_selling_price')?.value"
+        [error]="!!(categoryForm.get('default_selling_price')?.invalid && categoryForm.get('default_selling_price')?.touched)"
+        (valueChange)="categoryForm.get('default_selling_price')?.setValue($event)"
+        placeholder="0.00"
+      />
+      <p class="text-xs mt-1" style="color: #9CA3AF; font-family: 'Inter', system-ui, sans-serif;">
+        يُملأ تلقائياً عند تسعير أول دفعة لأي منتج من هذه الفئة — يمكن تعديله يدوياً، لكن لا يمكن أن يكون أقل من الحد الأدنى.
+      </p>
+      <app-form-error [control]="categoryForm.get('default_selling_price')"></app-form-error>
+    </div>
+
     <!-- Fixed price toggle (rendered after load so the switch reflects saved value) -->
     @if (!loading) {
       <div>

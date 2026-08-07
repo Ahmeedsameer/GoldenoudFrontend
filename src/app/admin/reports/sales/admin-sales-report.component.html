@@ -3,8 +3,8 @@
 <!-- ══ Page header ══════════════════════════════════════════════════════ -->
 <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
   <div>
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">تقارير المبيعات</h2>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+    <h2 class="text-xl font-semibold text-gray-800">تقارير المبيعات</h2>
+    <p class="text-sm text-gray-500 mt-0.5">
       @if (summary) { الفترة: {{ summary.period.from }} — {{ summary.period.to }} }
     </p>
   </div>
@@ -16,7 +16,7 @@
 
     <!-- Shop filter -->
     <select (change)="setShop($any($event.target).value ? +$any($event.target).value : null)"
-      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
       <option value="">كل الفروع</option>
       @for (s of shops; track s.id) {
         <option [value]="s.id" [selected]="selectedShopId === s.id">{{ s.name }}</option>
@@ -24,13 +24,13 @@
     </select>
 
     <!-- Period presets -->
-    <div class="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-white/[0.05]">
+    <div class="flex items-center gap-1 p-1 rounded-xl bg-gray-100">
       @for (p of periods; track p.key) {
         <button type="button" (click)="setPeriod(p.key)" [disabled]="customRangeActive"
           class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
           [class]="period === p.key && !customRangeActive
-            ? 'bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 shadow-sm'
-            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'">
+            ? 'bg-white text-brand-600 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'">
           {{ p.label }}
         </button>
       }
@@ -40,8 +40,8 @@
     <button type="button" (click)="showCustomPicker = !showCustomPicker"
       class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors"
       [class]="customRangeActive
-        ? 'bg-brand-50 dark:bg-brand-500/10 border-brand-300 dark:border-brand-500/40 text-brand-700 dark:text-brand-300'
-        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50'">
+        ? 'bg-brand-50 border-brand-300 text-brand-700'
+        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'">
       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -52,7 +52,7 @@
 
     @if (customRangeActive) {
       <button type="button" (click)="clearGlobalRange()"
-        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors">
+        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium border border-error-200 text-error-600 hover:bg-error-50 transition-colors">
         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -64,13 +64,13 @@
 
 <!-- Custom date picker panel -->
 @if (showCustomPicker && !customRangeActive) {
-  <div class="mb-5 flex flex-wrap items-end gap-3 p-4 rounded-2xl border border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10">
+  <div class="mb-5 flex flex-wrap items-end gap-3 p-4 rounded-2xl border border-brand-200 bg-brand-50">
     <div>
-      <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">من تاريخ</label>
+      <label class="block text-xs font-medium text-gray-600 mb-1">من تاريخ</label>
       <app-date-picker id="sales-rep-from" [value]="globalFrom" (valueChange)="globalFrom = $event"></app-date-picker>
     </div>
     <div>
-      <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">إلى تاريخ</label>
+      <label class="block text-xs font-medium text-gray-600 mb-1">إلى تاريخ</label>
       <app-date-picker id="sales-rep-to" [value]="globalTo" (valueChange)="globalTo = $event"></app-date-picker>
     </div>
     <button type="button" (click)="applyGlobalRange()" [disabled]="!globalFrom || !globalTo"
@@ -96,53 +96,53 @@
 <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
 
   <!-- Total Revenue -->
-  <div class="xl:col-span-2 rounded-2xl border border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 p-5 shadow-sm">
-    <p class="text-xs font-medium text-brand-700 dark:text-brand-400 mb-1">إجمالي الإيرادات</p>
-    <p class="text-2xl font-bold font-mono text-brand-800 dark:text-brand-200">
+  <div class="xl:col-span-2 rounded-2xl border border-brand-200 bg-brand-50 p-5 shadow-sm">
+    <p class="text-xs font-medium text-brand-700 mb-1">إجمالي الإيرادات</p>
+    <p class="text-2xl font-bold font-mono text-brand-800">
       {{ summary.total_revenue | number:'1.2-2' }}<span class="text-sm font-normal mr-1">ج.م</span>
     </p>
-    <p class="text-xs text-brand-600 dark:text-brand-400 mt-1">{{ summary.active_shops }} فرع نشط</p>
+    <p class="text-xs text-brand-600 mt-1">{{ summary.active_shops }} فرع نشط</p>
   </div>
 
   <!-- Invoice Count -->
-  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">عدد الفواتير</p>
-    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ summary.invoice_count | number }}</p>
+  <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <p class="text-xs font-medium text-gray-500 mb-1">عدد الفواتير</p>
+    <p class="text-2xl font-bold text-gray-900">{{ summary.invoice_count | number }}</p>
     <p class="text-xs text-gray-400 mt-1">متوسط {{ summary.avg_invoice | number:'1.2-2' }} ج.م</p>
   </div>
 
   <!-- Max Invoice -->
-  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">أعلى فاتورة</p>
-    <p class="text-2xl font-bold font-mono text-gray-900 dark:text-white">{{ summary.max_invoice | number:'1.2-2' }}</p>
+  <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <p class="text-xs font-medium text-gray-500 mb-1">أعلى فاتورة</p>
+    <p class="text-2xl font-bold font-mono text-gray-900">{{ summary.max_invoice | number:'1.2-2' }}</p>
     <p class="text-xs text-gray-400 mt-1">أدنى: {{ summary.min_invoice | number:'1.2-2' }} ج.م</p>
   </div>
 
   <!-- Items Sold -->
-  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">وحدات مباعة</p>
-    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ summary.total_items_sold | number:'1.0-1' }}</p>
+  <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <p class="text-xs font-medium text-gray-500 mb-1">وحدات مباعة</p>
+    <p class="text-2xl font-bold text-gray-900">{{ summary.total_items_sold | number:'1.0-1' }}</p>
     <p class="text-xs text-gray-400 mt-1">وحدة / وزن / حجم</p>
   </div>
 
   <!-- Customers -->
-  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">عملاء</p>
-    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ summary.unique_customers | number }}</p>
+  <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <p class="text-xs font-medium text-gray-500 mb-1">عملاء</p>
+    <p class="text-2xl font-bold text-gray-900">{{ summary.unique_customers | number }}</p>
     <p class="text-xs text-gray-400 mt-1">+ {{ summary.walk_in_count | number }} عابر</p>
   </div>
 
   <!-- Pending -->
   @if (summary.pending_count > 0) {
-    <div class="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-5 shadow-sm">
-      <p class="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">قيد المراجعة</p>
-      <p class="text-2xl font-bold text-amber-800 dark:text-amber-300">{{ summary.pending_count }}</p>
-      <p class="text-xs text-amber-600 dark:text-amber-400 mt-1 font-mono">{{ summary.pending_value | number:'1.2-2' }} ج.م</p>
+    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+      <p class="text-xs font-medium text-amber-700 mb-1">قيد المراجعة</p>
+      <p class="text-2xl font-bold text-amber-800">{{ summary.pending_count }}</p>
+      <p class="text-xs text-amber-600 mt-1 font-mono">{{ summary.pending_value | number:'1.2-2' }} ج.م</p>
     </div>
   } @else {
-    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">قيد المراجعة</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-xs font-medium text-gray-500 mb-1">قيد المراجعة</p>
+      <p class="text-2xl font-bold text-gray-900">0</p>
       <p class="text-xs text-gray-400 mt-1">لا توجد فواتير معلقة</p>
     </div>
   }
@@ -155,9 +155,9 @@
 <div id="trend" class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-6">
 
   <!-- Daily trend (2/3 width) -->
-  <div class="xl:col-span-2 rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
+  <div class="xl:col-span-2 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+      <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
         <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
         </svg>
@@ -179,8 +179,8 @@
   </div>
 
   <!-- Hourly (1/3 width) -->
-  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2 mb-3">
+  <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-3">
       <svg class="w-4 h-4 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
       </svg>
@@ -199,10 +199,10 @@
 <!-- SECTION 3 — SHOP PERFORMANCE                                     -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 @if (shopStats.length > 0) {
-<div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm mb-6">
+<div class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm mb-6">
 
-  <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex items-center justify-between">
-    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+  <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
       <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
@@ -226,8 +226,8 @@
   <!-- Table -->
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
-      <thead class="bg-gray-50 dark:bg-white/[0.02]">
-        <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+      <thead class="bg-gray-50">
+        <tr class="border-b border-gray-100">
           <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
           <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الفرع</th>
           <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الإيرادات</th>
@@ -238,25 +238,25 @@
           <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الحصة %</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+      <tbody class="divide-y divide-gray-50">
         @for (s of shopStats; track s.shop_id; let i = $index) {
-          <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
+          <tr class="hover:bg-gray-50/50 transition-colors">
             <td class="py-3 px-4">
               <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold inline-flex"
                 [class]="rankBadgeClass(i)">{{ i + 1 }}</span>
             </td>
-            <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90">{{ s.shop_name }}</td>
-            <td class="py-3 px-4 font-bold font-mono text-gray-900 dark:text-white">{{ s.total_revenue | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
-            <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ s.invoice_count | number }}</td>
-            <td class="py-3 px-4 font-mono text-gray-700 dark:text-gray-300">{{ s.avg_invoice | number:'1.2-2' }}</td>
-            <td class="py-3 px-4 font-mono text-gray-700 dark:text-gray-300">{{ s.max_invoice | number:'1.2-2' }}</td>
+            <td class="py-3 px-4 font-medium text-gray-800">{{ s.shop_name }}</td>
+            <td class="py-3 px-4 font-bold font-mono text-gray-900">{{ s.total_revenue | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
+            <td class="py-3 px-4 text-gray-700">{{ s.invoice_count | number }}</td>
+            <td class="py-3 px-4 font-mono text-gray-700">{{ s.avg_invoice | number:'1.2-2' }}</td>
+            <td class="py-3 px-4 font-mono text-gray-700">{{ s.max_invoice | number:'1.2-2' }}</td>
             <td class="py-3 px-4 text-gray-500">{{ s.seller_count }}</td>
             <td class="py-3 px-4">
               <div class="flex items-center gap-2">
-                <div class="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-white/[0.06] overflow-hidden">
+                <div class="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                   <div class="h-full rounded-full bg-amber-400 transition-all" [style.width.%]="s.share"></div>
                 </div>
-                <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-10 shrink-0">{{ s.share }}%</span>
+                <span class="text-xs font-medium text-gray-600 w-10 shrink-0">{{ s.share }}%</span>
               </div>
             </td>
           </tr>
@@ -271,11 +271,11 @@
 <!-- SECTION 4 — SELLERS                                               -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 @if (sellerStats.length > 0) {
-<div id="sellers" class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm mb-6">
+<div id="sellers" class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm mb-6">
 
-  <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
+  <div class="px-5 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+      <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
         <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -294,8 +294,8 @@
   } @else {
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-white/[0.02]">
-          <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+        <thead class="bg-gray-50">
+          <tr class="border-b border-gray-100">
             <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
             <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">البائع</th>
             <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الفرع</th>
@@ -307,25 +307,25 @@
             <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الحصة</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+        <tbody class="divide-y divide-gray-50">
           @for (s of paginatedSellers; track s.seller_id; let i = $index) {
-            <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
+            <tr class="hover:bg-gray-50/50">
               <td class="py-3 px-4">
                 <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold inline-flex"
                   [class]="rankBadgeClass((sellersPage - 1) * pageSize + i)">
                   {{ (sellersPage - 1) * pageSize + i + 1 }}
                 </span>
               </td>
-              <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90">{{ s.seller_name }}</td>
-              <td class="py-3 px-4"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-600 dark:text-gray-400">{{ s.shop_name }}</span></td>
-              <td class="py-3 px-4 font-bold font-mono text-gray-900 dark:text-white">{{ s.total_revenue | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
+              <td class="py-3 px-4 font-medium text-gray-800">{{ s.seller_name }}</td>
+              <td class="py-3 px-4"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ s.shop_name }}</span></td>
+              <td class="py-3 px-4 font-bold font-mono text-gray-900">{{ s.total_revenue | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
               <td class="py-3 px-4">{{ s.invoice_count | number }}</td>
-              <td class="py-3 px-4 font-mono text-gray-600 dark:text-gray-400 text-xs">{{ s.avg_invoice | number:'1.2-2' }}</td>
-              <td class="py-3 px-4 font-mono text-gray-600 dark:text-gray-400 text-xs">{{ s.max_invoice | number:'1.2-2' }}</td>
+              <td class="py-3 px-4 font-mono text-gray-600 text-xs">{{ s.avg_invoice | number:'1.2-2' }}</td>
+              <td class="py-3 px-4 font-mono text-gray-600 text-xs">{{ s.max_invoice | number:'1.2-2' }}</td>
               <td class="py-3 px-4 text-gray-500">{{ s.unique_customers }}</td>
               <td class="py-3 px-4">
                 <div class="flex items-center gap-2 min-w-[90px]">
-                  <div class="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-white/[0.06]">
+                  <div class="flex-1 h-1.5 rounded-full bg-gray-100">
                     <div class="h-full rounded-full bg-brand-400 transition-all" [style.width.%]="s.share"></div>
                   </div>
                   <span class="text-xs text-gray-500 w-8 shrink-0">{{ s.share }}%</span>
@@ -337,14 +337,14 @@
       </table>
     </div>
     @if (sellersPageCount > 1) {
-      <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+      <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100">
         <p class="text-xs text-gray-500">{{ (sellersPage-1)*pageSize+1 }}–{{ pageEnd(sellersPage,filteredSellers.length) }} من {{ filteredSellers.length }}</p>
         <div class="flex items-center gap-1">
           <button type="button" (click)="sellersPage = sellersPage - 1" [disabled]="sellersPage === 1"
-            class="px-3 py-1 rounded-lg text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] disabled:opacity-40">السابق</button>
+            class="px-3 py-1 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">السابق</button>
           <span class="px-3 py-1 text-xs text-gray-500">{{ sellersPage }} / {{ sellersPageCount }}</span>
           <button type="button" (click)="sellersPage = sellersPage + 1" [disabled]="sellersPage === sellersPageCount"
-            class="px-3 py-1 rounded-lg text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] disabled:opacity-40">التالي</button>
+            class="px-3 py-1 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">التالي</button>
         </div>
       </div>
     }
@@ -356,11 +356,11 @@
 <!-- SECTION 5 — PRODUCTS                                              -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 @if (productStats.length > 0) {
-<div id="products" class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm mb-6">
+<div id="products" class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm mb-6">
 
-  <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
+  <div class="px-5 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+      <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
         <svg class="w-4 h-4 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
         </svg>
@@ -378,8 +378,8 @@
   } @else {
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-white/[0.02]">
-          <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+        <thead class="bg-gray-50">
+          <tr class="border-b border-gray-100">
             <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
             <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">المنتج</th>
             <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الفئة</th>
@@ -391,9 +391,9 @@
             <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الحصة</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+        <tbody class="divide-y divide-gray-50">
           @for (p of paginatedProducts; track p.product_id; let i = $index) {
-            <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
+            <tr class="hover:bg-gray-50/50">
               <td class="py-3 px-4">
                 <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold inline-flex"
                   [class]="rankBadgeClass((productsPage - 1) * pageSize + i)">
@@ -401,22 +401,22 @@
                 </span>
               </td>
               <td class="py-3 px-4">
-                <p class="font-medium text-gray-800 dark:text-white/90">{{ p.product_name }}</p>
+                <p class="font-medium text-gray-800">{{ p.product_name }}</p>
                 <p class="text-[10px] font-mono text-gray-400">{{ p.sku }}</p>
               </td>
               <td class="py-3 px-4 text-xs text-gray-500">{{ p.category_name }}</td>
-              <td class="py-3 px-4 font-bold font-mono text-gray-900 dark:text-white">{{ p.total_revenue | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
-              <td class="py-3 px-4 font-mono text-xs text-gray-600 dark:text-gray-400">{{ p.total_qty | number:'1.0-3' }} {{ p.scalar }}</td>
-              <td class="py-3 px-4 font-mono text-xs text-gray-600 dark:text-gray-400">{{ p.avg_price | number:'1.2-2' }}</td>
+              <td class="py-3 px-4 font-bold font-mono text-gray-900">{{ p.total_revenue | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
+              <td class="py-3 px-4 font-mono text-xs text-gray-600">{{ p.total_qty | number:'1.0-3' }} {{ p.scalar }}</td>
+              <td class="py-3 px-4 font-mono text-xs text-gray-600">{{ p.avg_price | number:'1.2-2' }}</td>
               <td class="py-3 px-4 text-xs text-gray-500 font-mono">
-                <span class="text-success-600 dark:text-success-400">{{ p.max_price | number:'1.2-2' }}</span>
+                <span class="text-success-600">{{ p.max_price | number:'1.2-2' }}</span>
                 /
-                <span class="text-error-500 dark:text-error-400">{{ p.min_price | number:'1.2-2' }}</span>
+                <span class="text-error-500">{{ p.min_price | number:'1.2-2' }}</span>
               </td>
               <td class="py-3 px-4 text-xs text-gray-500">{{ p.shop_count }}</td>
               <td class="py-3 px-4">
                 <div class="flex items-center gap-2 min-w-[80px]">
-                  <div class="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-white/[0.06]">
+                  <div class="flex-1 h-1.5 rounded-full bg-gray-100">
                     <div class="h-full rounded-full bg-success-400 transition-all" [style.width.%]="p.share"></div>
                   </div>
                   <span class="text-xs text-gray-500 w-8 shrink-0">{{ p.share }}%</span>
@@ -428,14 +428,14 @@
       </table>
     </div>
     @if (productsPageCount > 1) {
-      <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+      <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100">
         <p class="text-xs text-gray-500">{{ (productsPage-1)*pageSize+1 }}–{{ pageEnd(productsPage,filteredProducts.length) }} من {{ filteredProducts.length }}</p>
         <div class="flex items-center gap-1">
           <button type="button" (click)="productsPage = productsPage - 1" [disabled]="productsPage === 1"
-            class="px-3 py-1 rounded-lg text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] disabled:opacity-40">السابق</button>
+            class="px-3 py-1 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">السابق</button>
           <span class="px-3 py-1 text-xs text-gray-500">{{ productsPage }} / {{ productsPageCount }}</span>
           <button type="button" (click)="productsPage = productsPage + 1" [disabled]="productsPage === productsPageCount"
-            class="px-3 py-1 rounded-lg text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] disabled:opacity-40">التالي</button>
+            class="px-3 py-1 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">التالي</button>
         </div>
       </div>
     }
@@ -447,9 +447,9 @@
 <!-- SECTION 6 — CATEGORY BREAKDOWN                                   -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 @if (categoryStats.length > 0) {
-<div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm mb-6">
-  <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05]">
-    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+<div class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm mb-6">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
       <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
       </svg>
@@ -476,7 +476,7 @@
           <div class="w-3 h-3 rounded-sm shrink-0"
             [style.background-color]="['#465fff','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#14b8a6'][i % 8]">
           </div>
-          <span class="text-xs text-gray-600 dark:text-gray-400">{{ cat.category_name }} <span class="font-medium">{{ cat.share }}%</span></span>
+          <span class="text-xs text-gray-600">{{ cat.category_name }} <span class="font-medium">{{ cat.share }}%</span></span>
         </div>
       }
     </div>
@@ -485,8 +485,8 @@
   <!-- Table -->
   <div class="overflow-x-auto mt-2">
     <table class="w-full text-sm">
-      <thead class="bg-gray-50 dark:bg-white/[0.02]">
-        <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+      <thead class="bg-gray-50">
+        <tr class="border-b border-gray-100">
           <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الفئة</th>
           <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الإيرادات</th>
           <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الكمية الكلية</th>
@@ -495,24 +495,24 @@
           <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الحصة</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+      <tbody class="divide-y divide-gray-50">
         @for (cat of categoryStats; track cat.category_id; let i = $index) {
-          <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
+          <tr class="hover:bg-gray-50/50">
             <td class="py-3 px-4">
               <div class="flex items-center gap-2">
                 <div class="w-3 h-3 rounded-sm shrink-0"
                   [style.background-color]="['#465fff','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#14b8a6'][i % 8]">
                 </div>
-                <span class="font-medium text-gray-800 dark:text-white/90">{{ cat.category_name }}</span>
+                <span class="font-medium text-gray-800">{{ cat.category_name }}</span>
               </div>
             </td>
-            <td class="py-3 px-4 font-bold font-mono text-gray-900 dark:text-white">{{ cat.total_revenue | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
-            <td class="py-3 px-4 font-mono text-xs text-gray-600 dark:text-gray-400">{{ cat.total_qty | number:'1.0-1' }}</td>
-            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">{{ cat.product_count }}</td>
-            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">{{ cat.invoice_count | number }}</td>
+            <td class="py-3 px-4 font-bold font-mono text-gray-900">{{ cat.total_revenue | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
+            <td class="py-3 px-4 font-mono text-xs text-gray-600">{{ cat.total_qty | number:'1.0-1' }}</td>
+            <td class="py-3 px-4 text-gray-600">{{ cat.product_count }}</td>
+            <td class="py-3 px-4 text-gray-600">{{ cat.invoice_count | number }}</td>
             <td class="py-3 px-4">
               <div class="flex items-center gap-2 min-w-[90px]">
-                <div class="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-white/[0.06]">
+                <div class="flex-1 h-1.5 rounded-full bg-gray-100">
                   <div class="h-full rounded-full transition-all"
                     [style.width.%]="cat.share"
                     [style.background-color]="['#465fff','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#14b8a6'][i % 8]">
@@ -537,33 +537,33 @@
 
   <!-- KPI row -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">عملاء مسجلون</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ customerData.unique_registered | number }}</p>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-xs font-medium text-gray-500 mb-1">عملاء مسجلون</p>
+      <p class="text-2xl font-bold text-gray-900">{{ customerData.unique_registered | number }}</p>
       <p class="text-xs text-gray-400 mt-1">{{ customerData.registered_invoices | number }} فاتورة</p>
     </div>
-    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">عابرون (غير مسجل)</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ customerData.walk_in_invoices | number }}</p>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-xs font-medium text-gray-500 mb-1">عابرون (غير مسجل)</p>
+      <p class="text-2xl font-bold text-gray-900">{{ customerData.walk_in_invoices | number }}</p>
       <p class="text-xs text-gray-400 mt-1">فاتورة بدون حساب</p>
     </div>
-    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">إيرادات المسجلين</p>
-      <p class="text-2xl font-bold font-mono text-gray-900 dark:text-white">{{ customerData.registered_revenue | number:'1.0-0' }}</p>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-xs font-medium text-gray-500 mb-1">إيرادات المسجلين</p>
+      <p class="text-2xl font-bold font-mono text-gray-900">{{ customerData.registered_revenue | number:'1.0-0' }}</p>
       <p class="text-xs text-gray-400 mt-1">ج.م</p>
     </div>
-    <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 p-5 shadow-sm">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">إيرادات العابرين</p>
-      <p class="text-2xl font-bold font-mono text-gray-900 dark:text-white">{{ customerData.walk_in_revenue | number:'1.0-0' }}</p>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-xs font-medium text-gray-500 mb-1">إيرادات العابرين</p>
+      <p class="text-2xl font-bold font-mono text-gray-900">{{ customerData.walk_in_revenue | number:'1.0-0' }}</p>
       <p class="text-xs text-gray-400 mt-1">ج.م</p>
     </div>
   </div>
 
   <!-- Top customers table -->
-  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
-    <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
+  <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+    <div class="px-5 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+        <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
           <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
@@ -582,8 +582,8 @@
     } @else {
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="bg-gray-50 dark:bg-white/[0.02]">
-            <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+          <thead class="bg-gray-50">
+            <tr class="border-b border-gray-100">
               <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
               <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">العميل</th>
               <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الهاتف</th>
@@ -593,24 +593,24 @@
               <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">أعلى / أدنى فاتورة</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+          <tbody class="divide-y divide-gray-50">
             @for (c of paginatedCustomers; track c.customer_id; let i = $index) {
-              <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
+              <tr class="hover:bg-gray-50/50">
                 <td class="py-3 px-4">
                   <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold inline-flex"
                     [class]="rankBadgeClass((customersPage - 1) * pageSize + i)">
                     {{ (customersPage - 1) * pageSize + i + 1 }}
                   </span>
                 </td>
-                <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90">{{ c.customer_name }}</td>
+                <td class="py-3 px-4 font-medium text-gray-800">{{ c.customer_name }}</td>
                 <td class="py-3 px-4 font-mono text-xs text-gray-500">{{ c.customer_phone }}</td>
-                <td class="py-3 px-4 font-bold font-mono text-gray-900 dark:text-white">{{ c.total_spent | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
-                <td class="py-3 px-4 text-gray-600 dark:text-gray-400">{{ c.visit_count }}</td>
-                <td class="py-3 px-4 font-mono text-xs text-gray-600 dark:text-gray-400">{{ c.avg_spent | number:'1.2-2' }}</td>
+                <td class="py-3 px-4 font-bold font-mono text-gray-900">{{ c.total_spent | number:'1.2-2' }} <span class="text-xs font-normal text-gray-400">ج.م</span></td>
+                <td class="py-3 px-4 text-gray-600">{{ c.visit_count }}</td>
+                <td class="py-3 px-4 font-mono text-xs text-gray-600">{{ c.avg_spent | number:'1.2-2' }}</td>
                 <td class="py-3 px-4 text-xs font-mono">
-                  <span class="text-success-600 dark:text-success-400">{{ c.max_invoice | number:'1.2-2' }}</span>
+                  <span class="text-success-600">{{ c.max_invoice | number:'1.2-2' }}</span>
                   /
-                  <span class="text-error-500 dark:text-error-400">{{ c.min_invoice | number:'1.2-2' }}</span>
+                  <span class="text-error-500">{{ c.min_invoice | number:'1.2-2' }}</span>
                 </td>
               </tr>
             }
@@ -618,14 +618,14 @@
         </table>
       </div>
       @if (customersPageCount > 1) {
-        <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
+        <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100">
           <p class="text-xs text-gray-500">{{ (customersPage-1)*pageSize+1 }}–{{ pageEnd(customersPage,filteredCustomers.length) }} من {{ filteredCustomers.length }}</p>
           <div class="flex items-center gap-1">
             <button type="button" (click)="customersPage = customersPage - 1" [disabled]="customersPage === 1"
-              class="px-3 py-1 rounded-lg text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] disabled:opacity-40">السابق</button>
+              class="px-3 py-1 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">السابق</button>
             <span class="px-3 py-1 text-xs text-gray-500">{{ customersPage }} / {{ customersPageCount }}</span>
             <button type="button" (click)="customersPage = customersPage + 1" [disabled]="customersPage === customersPageCount"
-              class="px-3 py-1 rounded-lg text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] disabled:opacity-40">التالي</button>
+              class="px-3 py-1 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">التالي</button>
           </div>
         </div>
       }
@@ -637,11 +637,11 @@
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <!-- SECTION 8 — INVOICE EXPLORER                                     -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
-<div id="invoices" class="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+<div id="invoices" class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
 
   <!-- Header -->
-  <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05]">
-    <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
       <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -654,14 +654,14 @@
   </div>
 
   <!-- Invoice-specific filter panel -->
-  <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+  <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
     <div class="flex flex-wrap items-end gap-3">
 
       <!-- Status -->
       <div>
-        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الحالة</label>
+        <label class="block text-xs font-medium text-gray-500 mb-1">الحالة</label>
         <select [(ngModel)]="invoiceStatus"
-          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
           <option value="">كل الحالات</option>
           <option value="approved">مقبولة</option>
           <option value="pending">معلقة</option>
@@ -671,9 +671,9 @@
       <!-- Seller filter -->
       @if (sellerStats.length > 0) {
         <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">البائع</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1">البائع</label>
           <select [(ngModel)]="invoiceSellerId"
-            class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
             <option [ngValue]="null">كل البائعين</option>
             @for (s of sellerStats; track s.seller_id) {
               <option [ngValue]="s.seller_id">{{ s.seller_name }} ({{ s.shop_name }})</option>
@@ -684,19 +684,19 @@
 
       <!-- Amount range -->
       <div>
-        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">المبلغ من</label>
+        <label class="block text-xs font-medium text-gray-500 mb-1">المبلغ من</label>
         <input type="number" [(ngModel)]="invoiceMinAmount" placeholder="0"
-          class="w-24 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          class="w-24 px-3 py-1.5 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">إلى</label>
+        <label class="block text-xs font-medium text-gray-500 mb-1">إلى</label>
         <input type="number" [(ngModel)]="invoiceMaxAmount" placeholder="∞"
-          class="w-24 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          class="w-24 px-3 py-1.5 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500"/>
       </div>
 
       <!-- Customer search -->
       <div>
-        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">العميل</label>
+        <label class="block text-xs font-medium text-gray-500 mb-1">العميل</label>
         <div class="w-36">
           <app-search-bar placeholder="اسم أو هاتف..." (searchChange)="invoiceCustomerSearch = $event"></app-search-bar>
         </div>
@@ -708,7 +708,7 @@
         تطبيق
       </button>
       <button type="button" (click)="resetInvoiceFilters()"
-        class="px-4 py-1.5 rounded-lg text-sm font-medium border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors">
+        class="px-4 py-1.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors">
         إعادة تعيين
       </button>
 
@@ -723,8 +723,8 @@
     } @else {
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="bg-gray-50 dark:bg-white/[0.02]">
-            <tr class="border-b border-gray-100 dark:border-white/[0.05]">
+          <thead class="bg-gray-50">
+            <tr class="border-b border-gray-100">
               <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
               <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">التاريخ</th>
               <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الفرع</th>
@@ -735,23 +735,23 @@
               <th class="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">الحالة</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+          <tbody class="divide-y divide-gray-50">
             @for (inv of invoices; track inv.id) {
-              <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
+              <tr class="hover:bg-gray-50/50 transition-colors">
                 <td class="py-3 px-4 font-mono text-xs text-gray-400">#{{ inv.id }}</td>
-                <td class="py-3 px-4 text-xs font-mono text-gray-600 dark:text-gray-400">{{ inv.date }}</td>
+                <td class="py-3 px-4 text-xs font-mono text-gray-600">{{ inv.date }}</td>
                 <td class="py-3 px-4">
-                  <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-600 dark:text-gray-400">{{ inv.shop_name }}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ inv.shop_name }}</span>
                 </td>
-                <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ inv.seller_name }}</td>
+                <td class="py-3 px-4 text-gray-700">{{ inv.seller_name }}</td>
                 <td class="py-3 px-4">
-                  <p class="text-gray-700 dark:text-gray-300">{{ inv.customer_name }}</p>
+                  <p class="text-gray-700">{{ inv.customer_name }}</p>
                   @if (inv.customer_phone !== '—') {
                     <p class="text-[10px] font-mono text-gray-400">{{ inv.customer_phone }}</p>
                   }
                 </td>
                 <td class="py-3 px-4 text-center text-gray-500">{{ inv.items_count }}</td>
-                <td class="py-3 px-4 font-bold font-mono text-gray-900 dark:text-white">
+                <td class="py-3 px-4 font-bold font-mono text-gray-900">
                   {{ inv.total_amount | number:'1.2-2' }}<span class="text-xs font-normal text-gray-400 mr-1">ج.م</span>
                 </td>
                 <td class="py-3 px-4">
@@ -767,17 +767,17 @@
 
       <!-- Invoice pagination -->
       @if (invoiceMeta && invoiceMeta.last_page > 1) {
-        <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-white/[0.05]">
-          <p class="text-xs text-gray-500 dark:text-gray-400">
+        <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100">
+          <p class="text-xs text-gray-500">
             صفحة {{ invoiceMeta.current_page }} من {{ invoiceMeta.last_page }}
             · {{ invoiceMeta.total | number }} فاتورة
           </p>
           <div class="flex items-center gap-1">
             <button type="button" (click)="invoicePrevPage()" [disabled]="invoicePage === 1"
-              class="px-3 py-1 rounded-lg text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] disabled:opacity-40">السابق</button>
+              class="px-3 py-1 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">السابق</button>
             <span class="px-3 py-1 text-xs text-gray-500">{{ invoicePage }} / {{ invoiceMeta.last_page }}</span>
             <button type="button" (click)="invoiceNextPage()" [disabled]="invoicePage === invoiceMeta.last_page"
-              class="px-3 py-1 rounded-lg text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.05] disabled:opacity-40">التالي</button>
+              class="px-3 py-1 rounded-lg text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40">التالي</button>
           </div>
         </div>
       }

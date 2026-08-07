@@ -63,6 +63,9 @@ export interface PricingDetail extends PricingRow {
   latest_purchase_price?: number | null;
   average_purchase_price?: number | null;
   batches?: PricingBatch[];
+  /** Batch-priced products only — category pricing helpers (see PricingService::listBatches). */
+  category_minimum_price?: number | null;
+  category_default_price?: number | null;
 }
 
 export interface PriceUpdateChange {
@@ -82,7 +85,7 @@ export interface PriceHistoryRow {
   new_cost: number | null;
   old_selling_price: number | null;
   new_selling_price: number | null;
-  type: 'cost_update' | 'price_edit';
+  type: 'cost_update' | 'price_edit' | 'batch_pricing' | 'batch_price_edit';
   reason: string | null;
   updated_by: { id: number; name: string } | null;
   created_at: string;
@@ -131,6 +134,13 @@ export class PricingService {
   priceBatch(id: number, supplyItemId: number, sellingPrice: number, reason?: string): Observable<PricingDetail> {
     return this.http
       .put<any>(`${API_BASE}/pricing/${id}/batches/${supplyItemId}/price`, { selling_price: sellingPrice, reason: reason || null })
+      .pipe(map((res) => res.data));
+  }
+
+  /** Edits an ALREADY-priced batch's selling price — future sales only, past invoices unaffected. */
+  updateBatchPrice(id: number, supplyItemId: number, sellingPrice: number, reason?: string): Observable<PricingDetail> {
+    return this.http
+      .patch<any>(`${API_BASE}/pricing/${id}/batches/${supplyItemId}/price`, { selling_price: sellingPrice, reason: reason || null })
       .pipe(map((res) => res.data));
   }
 

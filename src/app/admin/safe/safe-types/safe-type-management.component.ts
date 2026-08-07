@@ -6,10 +6,11 @@ import { SafeType } from '../../../models/safe.model';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
+import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
 
 @Component({
   selector: 'app-safe-type-management',
-  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent],
+  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, ButtonComponent],
   templateUrl: './safe-type-management.component.html',
 })
 export class SafeTypeManagementComponent implements OnInit {

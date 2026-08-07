@@ -4,14 +4,14 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-5">
       <div>
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">صانع المنتج</h2>
+        <h2 class="text-lg font-semibold text-gray-800">صانع المنتج</h2>
         @if (product) {
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            المنتج: <span class="font-semibold text-gray-800 dark:text-white/90">{{ product.name }}</span>
+          <p class="text-sm text-gray-500 mt-0.5">
+            المنتج: <span class="font-semibold text-gray-800">{{ product.name }}</span>
           </p>
         }
       </div>
-      <button type="button" (click)="close()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      <button type="button" (click)="close()" class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -23,17 +23,17 @@
 
         <!-- Step 1: choose oil -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">1) اختر الزيت</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">1) اختر الزيت</label>
           <div class="relative">
             <input type="text" [ngModel]="oilQuery" (ngModelChange)="onOilQueryInput($event)"
               placeholder="ابحث عن زيت…" autofocus
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
             @if (oilResults.length) {
-              <div class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
                 @for (o of oilResults; track o.id) {
                   <button type="button" (click)="selectOil(o)"
-                    class="flex w-full items-center justify-between px-3 py-2 text-right text-sm hover:bg-gray-50 dark:hover:bg-white/[0.04]">
-                    <span class="font-medium text-gray-800 dark:text-white/90">{{ o.name }}</span>
+                    class="flex w-full items-center justify-between px-3 py-2 text-right text-sm hover:bg-gray-50">
+                    <span class="font-medium text-gray-800">{{ o.name }}</span>
                     <span class="text-xs font-mono text-gray-400">{{ o.configured_unit_price | number:'1.0-2' }} ج.م/{{ o.unit }}</span>
                   </button>
                 }
@@ -47,36 +47,36 @@
 
         <!-- Step 2: oil quantity -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">2) كمية الزيت (جرام)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">2) كمية الزيت (جرام)</label>
           <input type="number" min="0.001" step="0.001" [(ngModel)]="oilQty" (ngModelChange)="onOilQtyChange()"
             placeholder="مثال: 25"
-            class="h-10 w-32 rounded-lg border border-gray-300 px-3 text-sm text-center bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            class="h-10 w-32 rounded-lg border border-gray-300 px-3 text-sm text-center bg-transparent text-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
         </div>
 
         <!-- Step 3: choose bottle -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">3) اختر الزجاجة</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">3) اختر الزجاجة</label>
           <div class="relative">
             <input type="text" [ngModel]="bottleQuery" (ngModelChange)="onBottleQueryInput($event)"
               placeholder="ابحث عن زجاجة…"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
             @if (bottleResults.length) {
-              <div class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
                 @for (b of bottleResults; track b.id) {
                   <button type="button" (click)="selectBottle(b)"
-                    class="flex w-full items-center justify-between gap-2 px-3 py-2 text-right text-sm hover:bg-gray-50 dark:hover:bg-white/[0.04]">
+                    class="flex w-full items-center justify-between gap-2 px-3 py-2 text-right text-sm hover:bg-gray-50">
                     <span class="flex items-center gap-2 min-w-0">
                       @if (b.image) {
-                        <img [src]="b.image" [alt]="b.name" class="w-8 h-8 rounded-lg object-cover border border-gray-200 dark:border-white/10 shrink-0" />
+                        <img [src]="b.image" [alt]="b.name" class="w-8 h-8 rounded-lg object-cover border border-gray-200 shrink-0" />
                       } @else {
-                        <span class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/[0.05] flex items-center justify-center shrink-0">
+                        <span class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                           <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                         </span>
                       }
-                      <span class="font-medium text-gray-800 dark:text-white/90 truncate">{{ b.name }}</span>
+                      <span class="font-medium text-gray-800 truncate">{{ b.name }}</span>
                     </span>
                     <span class="text-xs font-mono text-gray-400 shrink-0">{{ b.capacity_ml }}ml · {{ b.configured_unit_price | number:'1.0-2' }} ج.م</span>
                   </button>
@@ -87,7 +87,7 @@
           @if (selectedBottle) {
             <div class="flex items-center gap-2 mt-1.5">
               @if (selectedBottle.image) {
-                <img [src]="selectedBottle.image" [alt]="selectedBottle.name" class="w-8 h-8 rounded-lg object-cover border border-gray-200 dark:border-white/10" />
+                <img [src]="selectedBottle.image" [alt]="selectedBottle.name" class="w-8 h-8 rounded-lg object-cover border border-gray-200" />
               }
               <p class="text-[11px] text-gray-400">السعة: {{ selectedBottle.capacity_ml }}ml · المتاح: {{ selectedBottle.shop_stock }} قطعة</p>
             </div>
@@ -96,17 +96,17 @@
 
         <!-- Step 4: choose alcohol + quantity (auto-suggested from bottle capacity − oil qty) -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">4) اختر الكحول</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">4) اختر الكحول</label>
           <div class="relative">
             <input type="text" [ngModel]="alcoholQuery" (ngModelChange)="onAlcoholQueryInput($event)"
               placeholder="ابحث عن كحول…"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
             @if (alcoholResults.length) {
-              <div class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
                 @for (a of alcoholResults; track a.id) {
                   <button type="button" (click)="selectAlcohol(a)"
-                    class="flex w-full items-center justify-between px-3 py-2 text-right text-sm hover:bg-gray-50 dark:hover:bg-white/[0.04]">
-                    <span class="font-medium text-gray-800 dark:text-white/90">{{ a.name }}</span>
+                    class="flex w-full items-center justify-between px-3 py-2 text-right text-sm hover:bg-gray-50">
+                    <span class="font-medium text-gray-800">{{ a.name }}</span>
                     <span class="text-xs font-mono text-gray-400">{{ a.configured_unit_price | number:'1.0-2' }} ج.م/{{ a.unit }}</span>
                   </button>
                 }
@@ -117,10 +117,10 @@
             <p class="text-[11px] text-gray-400 mt-1">المتاح: {{ selectedAlcohol.shop_stock }} {{ selectedAlcohol.unit }}</p>
           }
 
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-3">كمية الكحول (مل)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5 mt-3">كمية الكحول (مل)</label>
           <input type="number" min="0.001" step="0.001" [(ngModel)]="alcoholQty" (ngModelChange)="onAlcoholQtyChange()"
             placeholder="مقترحة تلقائياً من سعة الزجاجة"
-            class="h-10 w-32 rounded-lg border border-gray-300 px-3 text-sm text-center bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            class="h-10 w-32 rounded-lg border border-gray-300 px-3 text-sm text-center bg-transparent text-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
           <p class="text-[11px] text-gray-400 mt-1">اقتراح تلقائي = سعة الزجاجة − كمية الزيت. يمكنك تعديله بحرية — الكحول مادة تشغيلية فقط ولا يؤثر على سعر البيع.</p>
         </div>
 
@@ -128,17 +128,17 @@
              Oil/Alcohol quantities above are always PER BOTTLE; everything (materials
              deducted + the invoice line) is multiplied by this automatically. -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">5) كمية التصنيع (عدد الزجاجات)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">5) كمية التصنيع (عدد الزجاجات)</label>
           <input type="number" min="1" step="1" [(ngModel)]="manufacturingQty" (ngModelChange)="onManufacturingQtyChange()"
             placeholder="1"
-            class="h-10 w-32 rounded-lg border border-gray-300 px-3 text-sm text-center bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+            class="h-10 w-32 rounded-lg border border-gray-300 px-3 text-sm text-center bg-transparent text-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
           <p class="text-[11px] text-gray-400 mt-1">عدد الزجاجات المتطابقة المطلوب تصنيعها — يتم ضرب كمية الزيت والكحول تلقائياً بهذا الرقم.</p>
         </div>
 
         <!-- Capacity validation error -->
         @if (pricingError) {
-          <div class="p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-            <p class="text-sm text-error-600 dark:text-error-400">{{ pricingError }}</p>
+          <div class="p-3 rounded-lg bg-error-50 border border-error-200">
+            <p class="text-sm text-error-600">{{ pricingError }}</p>
           </div>
         }
 
@@ -146,27 +146,27 @@
           <p class="text-sm text-gray-400 text-center py-2">جارٍ التحقق من المخزون والتسعير…</p>
         } @else if (pricing) {
           @if (!pricing.stock_ok) {
-            <div class="p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-              <p class="text-sm text-error-600 dark:text-error-400 text-center">المخزون غير كافٍ للكمية المطلوب تصنيعها.</p>
+            <div class="p-3 rounded-lg bg-error-50 border border-error-200">
+              <p class="text-sm text-error-600 text-center">المخزون غير كافٍ للكمية المطلوب تصنيعها.</p>
             </div>
           }
           @if (pricing.stock_ok && !materialsPriced) {
-            <div class="p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-              <p class="text-sm text-error-600 dark:text-error-400 text-center">يجب تسعير هذا الزيت والزجاجة أولاً من إدارة الأسعار.</p>
+            <div class="p-3 rounded-lg bg-error-50 border border-error-200">
+              <p class="text-sm text-error-600 text-center">يجب تسعير هذا الزيت والزجاجة أولاً من إدارة الأسعار.</p>
             </div>
           }
           @if (pricing.stock_ok && materialsPriced && (!selectedAlcohol || !alcoholQty || +alcoholQty <= 0)) {
-            <div class="p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-              <p class="text-sm text-error-600 dark:text-error-400 text-center">يجب اختيار الكحول وتحديد كميته لإتمام الإضافة للفاتورة.</p>
+            <div class="p-3 rounded-lg bg-error-50 border border-error-200">
+              <p class="text-sm text-error-600 text-center">يجب اختيار الكحول وتحديد كميته لإتمام الإضافة للفاتورة.</p>
             </div>
           }
           @if (autoPrice != null) {
             <!-- Read-only — resolved automatically from Pricing Management (Oil +
                  Bottle real price). Not editable here; the cashier can still change
                  the effective price later from the invoice cart itself. -->
-            <div class="rounded-xl bg-gray-50 dark:bg-white/[0.03] p-4 flex items-center justify-between">
-              <span class="text-sm text-gray-500 dark:text-gray-400">السعر التلقائي (للزجاجة الواحدة)</span>
-              <span class="text-lg font-bold font-mono text-gray-800 dark:text-white/90">{{ autoPrice | number:'1.2-2' }} ج.م</span>
+            <div class="rounded-xl bg-gray-50 p-4 flex items-center justify-between">
+              <span class="text-sm text-gray-500">السعر التلقائي (للزجاجة الواحدة)</span>
+              <span class="text-lg font-bold font-mono text-gray-800">{{ autoPrice | number:'1.2-2' }} ج.م</span>
             </div>
           }
         }
@@ -175,11 +175,11 @@
         <div class="flex gap-3 pt-2">
           <button type="button" (click)="addToInvoice()" [disabled]="!canAdd"
             class="flex-1 h-11 rounded-xl font-medium text-sm transition-colors"
-            [class]="canAdd ? 'bg-brand-500 hover:bg-brand-600 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-white/[0.05]'">
+            [class]="canAdd ? 'bg-brand-500 hover:bg-brand-600 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
             إضافة للفاتورة
           </button>
           <button type="button" (click)="close()"
-            class="px-5 h-11 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">
+            class="px-5 h-11 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
             إلغاء
           </button>
         </div>

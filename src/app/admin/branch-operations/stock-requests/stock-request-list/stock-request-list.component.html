@@ -4,8 +4,8 @@
 
   <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">طلبات المخزون من المخزن الرئيسي</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ meta?.total ?? 0 }} طلب</p>
+      <h1 class="text-2xl font-bold text-gray-900">طلبات المخزون من المخزن الرئيسي</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ meta?.total ?? 0 }} طلب</p>
     </div>
     @if (isManager) {
       <a routerLink="/dashboard/branch-operations/stock-requests/create"
@@ -17,7 +17,7 @@
 
   <div class="mb-5 flex flex-wrap items-center gap-2">
     <select [(ngModel)]="statusFilter" (change)="applyFilters()"
-      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
       @for (s of statuses; track s.key) { <option [value]="s.key">{{ s.label }}</option> }
     </select>
   </div>

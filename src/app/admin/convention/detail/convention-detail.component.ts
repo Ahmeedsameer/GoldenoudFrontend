@@ -13,10 +13,11 @@ import { ModalComponent } from '../../../shared/components/ui/modal/modal.compon
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { PaginationComponent } from '../../../pagination/pagination.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-convention-detail',
-  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, PaginationComponent, DatePickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, PaginationComponent, DatePickerComponent, SearchBarComponent],
   templateUrl: './convention-detail.component.html',
 })
 export class ConventionDetailComponent implements OnInit, OnDestroy {

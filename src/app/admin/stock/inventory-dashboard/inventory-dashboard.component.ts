@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AdminStockIntelligenceService, InventoryDashboard } from '../../../services/admin-stock-intelligence.service';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
+import { ReportKpiCardComponent } from '../../../shared/components/reports/report-kpi-card/report-kpi-card.component';
 
 /**
  * The main inventory overview — one screen answering "how much do we have,
@@ -12,7 +13,7 @@ import { ReportToolbarComponent } from '../../../shared/components/common/report
  */
 @Component({
   selector: 'app-inventory-dashboard',
-  imports: [CommonModule, RouterLink, LoadingComponent, ReportToolbarComponent],
+  imports: [CommonModule, RouterLink, LoadingComponent, ReportToolbarComponent, ReportKpiCardComponent],
   templateUrl: './inventory-dashboard.component.html',
 })
 export class InventoryDashboardComponent implements OnInit {

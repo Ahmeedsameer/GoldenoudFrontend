@@ -15,7 +15,7 @@
     <!-- Status filter -->
     <select
       [ngModel]="statusFilter" (ngModelChange)="setStatusFilter($event)"
-      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10 dark:bg-white/[0.03] dark:text-gray-300 dark:border-gray-700"
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/10"
     >
       <option value="all">الكل</option>
       <option value="active">نشط</option>
@@ -27,13 +27,13 @@
 
 <!-- Summary cards -->
 <div class="grid grid-cols-2 sm:grid-cols-2 gap-4 mb-5">
-  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+  <div class="rounded-2xl border border-gray-200 bg-white p-4">
     <p class="text-xs text-gray-400 mb-1">الحسابات النشطة</p>
-    <p class="text-2xl font-bold text-success-600 dark:text-success-400">{{ activeCount }}</p>
+    <p class="text-2xl font-bold text-success-600">{{ activeCount }}</p>
   </div>
-  <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-4">
+  <div class="rounded-2xl border border-gray-200 bg-white p-4">
     <p class="text-xs text-gray-400 mb-1">الحسابات المعطّلة</p>
-    <p class="text-2xl font-bold text-gray-500 dark:text-gray-400">{{ inactiveCount }}</p>
+    <p class="text-2xl font-bold text-gray-500">{{ inactiveCount }}</p>
   </div>
 </div>
 
@@ -76,8 +76,8 @@
             <td>
               <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
                 [class]="user.status === 'inactive'
-                  ? 'bg-gray-100 text-gray-500 dark:bg-white/[0.05] dark:text-gray-400'
-                  : 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400'">
+                  ? 'bg-gray-100 text-gray-500'
+                  : 'bg-success-50 text-success-700'">
                 {{ user.status === 'inactive' ? 'معطّل' : 'نشط' }}
               </span>
             </td>

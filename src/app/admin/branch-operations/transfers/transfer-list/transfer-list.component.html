@@ -4,8 +4,8 @@
 
   <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">طلبات النقل بين الفروع</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ meta?.total ?? 0 }} طلب</p>
+      <h1 class="text-2xl font-bold text-gray-900">طلبات النقل بين الفروع</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ meta?.total ?? 0 }} طلب</p>
     </div>
     <a routerLink="/dashboard/branch-operations/transfers/create"
       class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors">
@@ -18,11 +18,11 @@
       <app-search-bar placeholder="بحث برقم الطلب أو المنتج..." (searchChange)="setSearch($event)"></app-search-bar>
     </div>
     <select [(ngModel)]="statusFilter" (change)="applyFilters()"
-      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
       @for (s of statuses; track s.key) { <option [value]="s.key">{{ s.label }}</option> }
     </select>
     <select (change)="shopFilter = $any($event.target).value ? +$any($event.target).value : null; applyFilters()"
-      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
       <option value="">كل الفروع</option>
       @for (s of shops; track s.id) { <option [value]="s.id">{{ s.name }}</option> }
     </select>

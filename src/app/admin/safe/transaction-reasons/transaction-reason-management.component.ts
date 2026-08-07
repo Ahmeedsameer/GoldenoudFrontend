@@ -6,10 +6,12 @@ import { TransactionReason } from '../../../models/safe.model';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
+import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
+import { LabelComponent } from '../../../shared/components/form/label/label.component';
 
 @Component({
   selector: 'app-transaction-reason-management',
-  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent],
+  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, ButtonComponent, LabelComponent],
   templateUrl: './transaction-reason-management.component.html',
 })
 export class TransactionReasonManagementComponent implements OnInit {

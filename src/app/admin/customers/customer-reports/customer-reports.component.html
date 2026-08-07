@@ -4,18 +4,18 @@
 </div>
 
 <!-- Tabs -->
-<div class="inline-flex rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden mb-5">
+<div class="inline-flex rounded-xl border border-gray-200 overflow-hidden mb-5">
   <button type="button" (click)="setTab('top')"
-    [class]="tab === 'top' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
+    [class]="tab === 'top' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600'"
     class="px-4 py-2 text-sm font-medium transition-colors">الأكثر شراءً</button>
   <button type="button" (click)="setTab('new')"
-    [class]="tab === 'new' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
+    [class]="tab === 'new' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600'"
     class="px-4 py-2 text-sm font-medium transition-colors">عملاء جدد</button>
   <button type="button" (click)="setTab('inactive')"
-    [class]="tab === 'inactive' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
+    [class]="tab === 'inactive' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600'"
     class="px-4 py-2 text-sm font-medium transition-colors">عملاء غير نشطين</button>
   <button type="button" (click)="setTab('history')"
-    [class]="tab === 'history' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600 dark:text-gray-300'"
+    [class]="tab === 'history' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-600'"
     class="px-4 py-2 text-sm font-medium transition-colors">سجل مشتريات عميل</button>
 </div>
 
@@ -24,7 +24,7 @@
   <app-loading [loading]="topLoading"></app-loading>
   <div class="flex items-center gap-2 mb-4">
     <select [(ngModel)]="topPeriod" (ngModelChange)="loadTopCustomers()"
-      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
       <option value="today">اليوم</option>
       <option value="week">هذا الأسبوع</option>
       <option value="month">هذا الشهر</option>
@@ -66,11 +66,11 @@
   <app-loading [loading]="newLoading"></app-loading>
   <div class="flex flex-wrap items-center gap-2 mb-4">
     <div class="flex items-center gap-2">
-      <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">من:</label>
+      <label class="text-xs text-gray-500 whitespace-nowrap">من:</label>
       <app-date-picker id="new-customers-from" [value]="newDateFrom" (valueChange)="newDateFrom = $event"></app-date-picker>
     </div>
     <div class="flex items-center gap-2">
-      <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">إلى:</label>
+      <label class="text-xs text-gray-500 whitespace-nowrap">إلى:</label>
       <app-date-picker id="new-customers-to" [value]="newDateTo" (valueChange)="newDateTo = $event"></app-date-picker>
     </div>
     <button type="button" (click)="loadNewCustomers()"
@@ -106,9 +106,9 @@
 @if (tab === 'inactive') {
   <app-loading [loading]="inactiveLoading"></app-loading>
   <div class="flex flex-wrap items-center gap-2 mb-4">
-    <label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">لم يشترِ منذ (أيام):</label>
+    <label class="text-xs text-gray-500 whitespace-nowrap">لم يشترِ منذ (أيام):</label>
     <input type="number" min="1" [(ngModel)]="inactiveDays"
-      class="h-9 w-24 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90" />
+      class="h-9 w-24 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm" />
     <button type="button" (click)="loadInactiveCustomers()"
       class="h-9 px-4 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium transition-colors">بحث</button>
     <span class="text-xs text-gray-400">الإجمالي: {{ inactiveTotal }}</span>
@@ -141,7 +141,7 @@
 
 <!-- ═══ Customer Purchase History (search → existing Customer Detail page) ═══ -->
 @if (tab === 'history') {
-  <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">ابحث عن عميل لعرض سجل مشترياته الكامل — الإجمالي والمتوسط وعدد الفواتير تُعرض في صفحة تفاصيل العميل.</p>
+  <p class="text-sm text-gray-500 mb-3">ابحث عن عميل لعرض سجل مشترياته الكامل — الإجمالي والمتوسط وعدد الفواتير تُعرض في صفحة تفاصيل العميل.</p>
   <div class="w-72 mb-4">
     <app-search-bar placeholder="بحث بالاسم أو الهاتف..." (searchChange)="searchHistory($event)"></app-search-bar>
   </div>

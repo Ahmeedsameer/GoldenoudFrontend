@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SalesService } from '../../../services/sales.service';
 import { Invoice, PAYMENT_METHOD_TYPE_LABELS, PaymentMethodType } from '../../../models/sales.model';
 import { BadgeComponent } from '../../../shared/components/ui/badge/badge.component';
@@ -27,6 +27,7 @@ import { NavigationHistoryService } from '../../../services/navigation-history.s
 export class InvoiceDetailComponent implements OnInit {
   private salesService = inject(SalesService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private authService = inject(AuthService);
   private navigationHistory = inject(NavigationHistoryService);
 
@@ -110,6 +111,15 @@ export class InvoiceDetailComponent implements OnInit {
    *  Manager and Seller dashboards, and neither role should see profit. */
   get isAdmin(): boolean {
     return this.authService.isAdmin();
+  }
+
+  /** Edit Invoice — Admin/Sales Manager only (see SalesService::editInvoice()); a cashier can never edit. */
+  get canEditInvoice(): boolean {
+    return (this.authService.isAdmin() || this.authService.isManager()) && this.invoice?.status !== 'cancelled';
+  }
+
+  goToEdit(): void {
+    this.router.navigate(['edit'], { relativeTo: this.route });
   }
 
   /** Profit per unit — line.profit is already the line's TOTAL profit

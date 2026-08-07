@@ -8,7 +8,7 @@
  * production API host (e.g. 'https://api.your-domain.com'), and update the
  * Reverb block to match the production REVERB_* values in the backend's .env.
  */
-const SERVER_BASE = 'https://YOUR_PRODUCTION_DOMAIN';
+const SERVER_BASE = 'https://goldenperfumes.net/api';
 const API_BASE = `${SERVER_BASE}/api`;
 
 export const environment = {
@@ -39,7 +39,7 @@ export const environment = {
   // Laravel Reverb (broadcasting) — must match the production backend's REVERB_* values.
   reverb: {
     key:     'mgypsyqghmxl8wjtpcmx',
-    wsHost:  'YOUR_PRODUCTION_DOMAIN',
+    wsHost:  'https://goldenperfumes.net/api',
     wsPort:  443,
     scheme:  'https',
   },

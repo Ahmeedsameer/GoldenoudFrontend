@@ -1,31 +1,31 @@
 <app-loading [loading]="loading"></app-loading>
 
 <div class="mb-5 flex items-center justify-between">
-  <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">خزن الفرع</h3>
+  <h3 class="text-base font-semibold text-gray-800">خزن الفرع</h3>
 </div>
 
 @if (safes.length === 0 && !loading) {
-  <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-8">لا توجد خزن لهذا الفرع</p>
+  <p class="text-sm text-gray-400 text-center py-8">لا توجد خزن لهذا الفرع</p>
 }
 
 <div class="grid gap-4 sm:grid-cols-2">
   @for (safe of safes; track safe.id) {
-    <div class="rounded-2xl border bg-white p-4 dark:bg-white/[0.03]"
+    <div class="rounded-xl border bg-white p-4"
       [class]="safe.is_active
-        ? 'border-gray-200 dark:border-white/[0.05]'
-        : 'border-dashed border-gray-300 dark:border-white/[0.08] opacity-60'">
+        ? 'border-gray-100'
+        : 'border-dashed border-gray-300 opacity-60'">
 
       <!-- Safe header -->
       <div class="flex items-center gap-2 mb-3">
-        <span class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ safeName(safe) }}</span>
-        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
+        <span class="text-sm font-semibold text-gray-800">{{ safeName(safe) }}</span>
+        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
           [class]="safe.safe_type?.kind === 'physical'
-            ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400'
-            : 'bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400'">
+            ? 'bg-blue-50 text-blue-700'
+            : 'bg-purple-50 text-purple-700'">
           {{ safe.safe_type?.kind === 'physical' ? 'نقدي' : 'إلكتروني' }}
         </span>
         @if (!safe.is_active) {
-          <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-white/[0.05] dark:text-gray-400">معطّل</span>
+          <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium bg-gray-100 text-gray-500">معطّل</span>
         }
       </div>
 
@@ -33,18 +33,18 @@
       <div class="space-y-1 mb-3">
         @if (safe.balances && safe.balances.length > 0) {
           @for (b of safe.balances; track b.currency.id) {
-            <div class="rounded-lg bg-gray-50 dark:bg-white/[0.03] overflow-hidden">
+            <div class="rounded-lg bg-gray-50 overflow-hidden">
               <div class="flex justify-between items-center py-1 px-2.5">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ b.currency.code }}</span>
+                <span class="text-xs text-gray-500">{{ b.currency.code }}</span>
                 <span class="text-sm font-bold font-mono"
-                  [class]="+b.balance < 0 ? 'text-error-600 dark:text-error-400' : 'text-gray-800 dark:text-white/90'">
+                  [class]="+b.balance < 0 ? 'text-error-600' : 'text-gray-800'">
                   {{ b.currency.symbol }} {{ +b.balance | number:'1.2-2' }}
                 </span>
               </div>
               @if (methodsFor(safe, b.currency.id).length > 0) {
                 <div class="px-2.5 pb-1.5 space-y-0.5">
                   @for (m of methodsFor(safe, b.currency.id); track m.payment_method_id) {
-                    <div class="flex justify-between items-center text-[11px] text-gray-400 dark:text-gray-500">
+                    <div class="flex justify-between items-center text-[11px] text-gray-400">
                       <span>{{ m.name }}</span>
                       <span class="font-mono">{{ m.balance | number:'1.2-2' }}</span>
                     </div>
@@ -60,7 +60,7 @@
 
       <!-- Link to detail -->
       <a [routerLink]="['/dashboard/safe', safe.id]"
-        class="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-white/[0.08] dark:text-gray-400 dark:hover:bg-white/[0.03] transition-colors">
+        class="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
         تفاصيل ومعاملات
         <svg class="w-3.5 h-3.5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

@@ -4,8 +4,8 @@
 
   <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">تقرير حركة المخزون</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+      <h1 class="text-2xl font-bold text-gray-900">تقرير حركة المخزون</h1>
+      <p class="text-sm text-gray-500 mt-0.5">
         @if (report) { الفترة: {{ report.period.from }} — {{ report.period.to }} }
       </p>
     </div>
@@ -16,25 +16,25 @@
   <div class="mb-5 flex flex-wrap items-center gap-2">
     <app-date-picker id="sm-from" [value]="from" (valueChange)="from = $event; applyFilters()"></app-date-picker>
     <app-date-picker id="sm-to" [value]="to" (valueChange)="to = $event; applyFilters()"></app-date-picker>
-    <select [(ngModel)]="shopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="shopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل الفروع</option>
       @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
     </select>
-    <select [(ngModel)]="productId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="productId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل المنتجات</option>
       @for (p of products; track p.id) { <option [ngValue]="p.id">{{ p.name }} ({{ p.sku }})</option> }
     </select>
-    <select [(ngModel)]="categoryId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="categoryId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل الفئات</option>
       @for (c of categories; track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }
     </select>
-    <select [(ngModel)]="supplierId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="supplierId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل الموردين</option>
       @for (s of suppliers; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
     </select>
     @if (from || to || shopId != null || productId || categoryId || supplierId) {
       <button type="button" (click)="from=''; to=''; shopId=null; productId=null; categoryId=null; supplierId=null; applyFilters()"
-        class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء الفلاتر</button>
+        class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 text-error-600">إلغاء الفلاتر</button>
     }
   </div>
 
@@ -46,7 +46,7 @@
     <div class="space-y-6">
 
       @if (!report.scoped_to_product) {
-        <div class="rounded-xl border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-2 text-xs text-blue-700 dark:text-blue-300">
+        <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs text-blue-700">
           حدّد منتجاً لعرض الرصيد الافتتاحي والختامي والرصيد الجاري لكل حركة (دفتر حساب لصنف واحد).
         </div>
       }
@@ -68,13 +68,13 @@
 
       <!-- Totals by movement type -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الإجمالي حسب نوع الحركة</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">الإجمالي حسب نوع الحركة</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           @for (t of totalsByTypeList; track t.key) {
-            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+            <div class="bg-white rounded-2xl border border-gray-200 p-4">
               <p class="text-xs text-gray-400 mb-1">{{ t.label }}</p>
-              <p class="text-sm font-bold font-mono text-success-600 dark:text-success-400">+{{ t.quantity_in }}</p>
-              <p class="text-sm font-bold font-mono text-error-600 dark:text-error-400">-{{ t.quantity_out }}</p>
+              <p class="text-sm font-bold font-mono text-success-600">+{{ t.quantity_in }}</p>
+              <p class="text-sm font-bold font-mono text-error-600">-{{ t.quantity_out }}</p>
             </div>
           }
         </div>

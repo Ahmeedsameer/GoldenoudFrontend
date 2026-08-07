@@ -4,8 +4,8 @@
 
   <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">جلسات جرد المخزون</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ meta?.total ?? 0 }} جلسة</p>
+      <h1 class="text-2xl font-bold text-gray-900">جلسات جرد المخزون</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ meta?.total ?? 0 }} جلسة</p>
     </div>
     <button type="button" (click)="toggleForm()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors">
       + جلسة جرد جديدة
@@ -13,33 +13,33 @@
   </div>
 
   @if (showForm) {
-    <div class="mb-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+    <div class="mb-6 bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
       @if (formError) { <app-alert variant="error" [message]="formError"></app-alert> }
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الفرع</label>
+        <label class="block text-xs font-medium text-gray-600 mb-1">الفرع</label>
         <select [(ngModel)]="form.shop_id" [disabled]="isManager"
-          class="w-full md:w-64 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-60">
+          class="w-full md:w-64 px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-900 disabled:opacity-60">
           <option [ngValue]="null">اختر الفرع</option>
           @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">الموظفون المكلّفون بالجرد</label>
+        <label class="block text-xs font-medium text-gray-600 mb-2">الموظفون المكلّفون بالجرد</label>
         <div class="flex flex-wrap gap-2">
           @for (e of employees; track e.id) {
             <button type="button" (click)="toggleEmployee(e.id)"
               class="px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
               [class]="form.employee_ids.includes(e.id)
-                ? 'bg-brand-50 dark:bg-brand-500/10 border-brand-300 dark:border-brand-500/40 text-brand-700 dark:text-brand-300'
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400'">
+                ? 'bg-brand-50 border-brand-300 text-brand-700'
+                : 'bg-white border-gray-200 text-gray-600'">
               {{ e.name }}
             </button>
           }
         </div>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">ملاحظات</label>
-        <textarea [(ngModel)]="form.notes" rows="2" class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"></textarea>
+        <label class="block text-xs font-medium text-gray-600 mb-1">ملاحظات</label>
+        <textarea [(ngModel)]="form.notes" rows="2" class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-900"></textarea>
       </div>
       <button type="button" (click)="submitForm()" [disabled]="saving" class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-50">
         بدء الجرد
@@ -51,7 +51,7 @@
     <div class="w-64">
       <app-search-bar placeholder="بحث برقم الجلسة أو المنتج أو SKU أو الباركود..." (searchChange)="setSearch($event)"></app-search-bar>
     </div>
-    <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option value="">كل الحالات</option>
       <option value="counting">جاري الجرد</option>
       <option value="review">قيد المراجعة</option>
@@ -60,7 +60,7 @@
     </select>
     @if (!isManager) {
       <select (change)="shopFilter = $any($event.target).value ? +$any($event.target).value : null; applyFilters()"
-        class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+        class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
         <option value="">كل الفروع</option>
         @for (s of shops; track s.id) { <option [value]="s.id">{{ s.name }}</option> }
       </select>

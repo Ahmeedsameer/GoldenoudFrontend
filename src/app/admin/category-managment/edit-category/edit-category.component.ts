@@ -38,6 +38,7 @@ export class EditCategoryComponent implements OnInit {
     description: [''],
     image: [''],
     minimum_sell_price: [0, [Validators.required, Validators.min(0)]],
+    default_selling_price: [null],
     is_fixed: [false],
     value_percentage: [null],
   });
@@ -60,6 +61,7 @@ export class EditCategoryComponent implements OnInit {
           name: data.name,
           description: data.description || '',
           minimum_sell_price: data.minimum_sell_price ?? 0,
+          default_selling_price: data.default_selling_price ?? null,
           is_fixed: data.is_fixed ?? false,
           value_percentage: data.value_percentage ?? null,
         });

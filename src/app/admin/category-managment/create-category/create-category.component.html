@@ -15,8 +15,8 @@
     <div>
       <app-label for="product_type_id">نوع المنتج <span style="color: #DC2626;">*</span></app-label>
       <select formControlName="product_type_id"
-        class="h-11 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800"
-        [class]="categoryForm.get('product_type_id')?.invalid && categoryForm.get('product_type_id')?.touched ? 'border-error-400' : 'border-gray-300 dark:border-gray-700'">
+        class="h-11 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+        [class]="categoryForm.get('product_type_id')?.invalid && categoryForm.get('product_type_id')?.touched ? 'border-error-400' : 'border-gray-300'">
         <option [ngValue]="null" disabled>اختر نوع المنتج أولاً…</option>
         @for (t of productTypes; track t.id) {
           <option [ngValue]="t.id">{{ t.name }}</option>
@@ -39,27 +39,40 @@
         <app-form-error [control]="categoryForm.get('name')"></app-form-error>
       </div>
 
-      <!-- Oil-only pricing: minimum selling price + price per gram -->
+      <!-- Minimum/default selling price — the floor + auto-fill used whenever a
+           batch of any product in this category is priced (Pricing Management).
+           Required for oil-like (category-priced) types; optional helper for
+           every other type, which prices per-batch instead. -->
+      <div>
+        <app-label>
+          الحد الأدنى لسعر بيع الدفعة
+          @if (isOilType) { <span style="color: #DC2626;">*</span> } @else { (اختياري) }
+        </app-label>
+        <app-input-field
+          type="number"
+          [value]="categoryForm.get('minimum_sell_price')?.value"
+          [error]="!!(categoryForm.get('minimum_sell_price')?.invalid && categoryForm.get('minimum_sell_price')?.touched)"
+          (valueChange)="categoryForm.get('minimum_sell_price')?.setValue($event)"
+          placeholder="0.00"
+        />
+        <p class="text-xs mt-1" style="color: #9CA3AF;">أدنى سعر يُسمح به عند تسعير أي دفعة توريد لمنتج من هذه الفئة</p>
+        <app-form-error [control]="categoryForm.get('minimum_sell_price')"></app-form-error>
+      </div>
+      <div>
+        <app-label>السعر الافتراضي عند تسعير دفعة جديدة (اختياري)</app-label>
+        <app-input-field
+          type="number"
+          [value]="categoryForm.get('default_selling_price')?.value"
+          [error]="!!(categoryForm.get('default_selling_price')?.invalid && categoryForm.get('default_selling_price')?.touched)"
+          (valueChange)="categoryForm.get('default_selling_price')?.setValue($event)"
+          placeholder="0.00"
+        />
+        <p class="text-xs mt-1" style="color: #9CA3AF;">يُملأ تلقائياً عند تسعير أول دفعة لأي منتج من هذه الفئة — يمكن تعديله يدوياً، لكن لا يمكن أن يكون أقل من الحد الأدنى.</p>
+        <app-form-error [control]="categoryForm.get('default_selling_price')"></app-form-error>
+      </div>
       @if (isOilType) {
-        <div>
-          <app-label>الحد الأدنى لسعر البيع <span style="color: #DC2626;">*</span></app-label>
-          <app-input-field
-            type="number"
-            [value]="categoryForm.get('minimum_sell_price')?.value"
-            [error]="!!(categoryForm.get('minimum_sell_price')?.invalid && categoryForm.get('minimum_sell_price')?.touched)"
-            (valueChange)="categoryForm.get('minimum_sell_price')?.setValue($event)"
-            placeholder="0.00"
-          />
-          <p class="text-xs mt-1" style="color: #9CA3AF;">أدنى سعر يُسمح به — البيع بأقل ينبّه الإدارة</p>
-          <app-form-error [control]="categoryForm.get('minimum_sell_price')"></app-form-error>
-        </div>
-
-        <div class="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 px-3 py-2">
-          <p class="text-xs text-blue-700 dark:text-blue-400">سعر الجرام يُضبط على مستوى كل منتج زيت داخل هذه الفئة (من نموذج إنشاء/تعديل المنتج).</p>
-        </div>
-      } @else {
-        <div class="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-3 py-2">
-          <p class="text-xs text-amber-700 dark:text-amber-400">لا تُضبط الأسعار على مستوى الفئة لهذا النوع — يُحدَّد سعر البيع على مستوى المنتج.</p>
+        <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+          <p class="text-xs text-blue-700">سعر الجرام يُضبط على مستوى كل منتج زيت داخل هذه الفئة (من نموذج إنشاء/تعديل المنتج).</p>
         </div>
       }
 

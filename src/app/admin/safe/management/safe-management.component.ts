@@ -8,10 +8,11 @@ import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { ShopService } from '../../../services/shop.service';
+import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
 
 @Component({
   selector: 'app-safe-management',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LoadingComponent, ModalComponent, AlertComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LoadingComponent, ModalComponent, AlertComponent, ButtonComponent],
   templateUrl: './safe-management.component.html',
 })
 export class SafeManagementComponent implements OnInit {

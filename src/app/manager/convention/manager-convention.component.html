@@ -3,8 +3,8 @@
 <!-- Header -->
 <div class="mb-6 flex items-center justify-between">
   <div>
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">إدارة العهدة</h2>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">عرض رصيد العهدة الخاصة بفرعك وتسجيل المصروفات</p>
+    <h2 class="text-xl font-semibold text-gray-800">إدارة العهدة</h2>
+    <p class="text-sm text-gray-500 mt-0.5">عرض رصيد العهدة الخاصة بفرعك وتسجيل المصروفات</p>
   </div>
 </div>
 
@@ -17,7 +17,7 @@
     <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: #D1CEC5;">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m3-6h7a2 2 0 012 2v6a2 2 0 01-2 2h-7a2 2 0 01-2-2v-6a2 2 0 012-2z"/>
     </svg>
-    <p class="text-sm font-semibold text-gray-600 dark:text-gray-300">لا توجد عهدة مخصصة لفرعك حتى الآن</p>
+    <p class="text-sm font-semibold text-gray-600">لا توجد عهدة مخصصة لفرعك حتى الآن</p>
     <p class="text-xs text-gray-400">يرجى التواصل مع الإدارة لتخصيص عهدة</p>
   </div>
 }
@@ -30,7 +30,7 @@
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         [class]="selected?.id === c.id
           ? 'bg-brand-500 text-white'
-          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-white/[0.03] dark:border-white/[0.08] dark:text-gray-400'">
+          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'">
         عهدة #{{ c.id }}
       </button>
     }
@@ -90,9 +90,9 @@
   </div>
 
   <!-- Transaction history -->
-  <div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-    <div class="p-5 border-b border-gray-100 dark:border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">سجل العمليات</h3>
+  <div class="rounded-2xl border border-gray-200 bg-white">
+    <div class="p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+      <h3 class="text-sm font-semibold text-gray-800">سجل العمليات</h3>
       <div class="relative">
         <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
           <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
@@ -100,13 +100,13 @@
           </svg>
         </span>
         <input type="text" placeholder="ابحث بالسبب أو الملاحظة..." (input)="setSearch($any($event.target).value)"
-          class="h-9 rounded-lg border border-gray-300 bg-transparent pr-8 pl-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+          class="h-9 rounded-lg border border-gray-300 bg-transparent pr-8 pl-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
       </div>
     </div>
 
     <div class="overflow-x-auto">
       <table class="min-w-full">
-        <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+        <thead class="border-b border-gray-100">
           <tr>
             <th class="px-5 py-3 text-start text-xs font-medium text-gray-400 uppercase cursor-pointer select-none" (click)="setSort('date')">
               التاريخ
@@ -122,19 +122,19 @@
             <th class="px-4 py-3 text-start text-xs font-medium text-gray-400 uppercase">وقت الإنشاء</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+        <tbody class="divide-y divide-gray-50">
           @for (tx of list.result.data; track tx.id) {
-            <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+            <tr class="hover:bg-gray-50 transition-colors">
               <td class="px-5 py-4 text-xs font-mono text-gray-500 whitespace-nowrap">{{ tx.date | date:'yyyy/MM/dd' }}</td>
               <td class="px-4 py-4">
-                <span class="text-sm font-bold font-mono text-error-600 dark:text-error-400">−{{ tx.amount | number:'1.2-2' }}</span>
+                <span class="text-sm font-bold font-mono text-error-600">−{{ tx.amount | number:'1.2-2' }}</span>
               </td>
-              <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">{{ tx.reason || '—' }}</td>
-              <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-[180px]">
+              <td class="px-4 py-4 text-sm text-gray-700">{{ tx.reason || '—' }}</td>
+              <td class="px-4 py-4 text-sm text-gray-500 max-w-[180px]">
                 @if (tx.notes) { <span class="truncate block" [title]="tx.notes">{{ tx.notes }}</span> }
-                @else { <span class="text-gray-300 dark:text-gray-600">—</span> }
+                @else { <span class="text-gray-300">—</span> }
               </td>
-              <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{{ tx.manager?.name || '—' }}</td>
+              <td class="px-4 py-4 text-sm text-gray-600">{{ tx.manager?.name || '—' }}</td>
               <td class="px-4 py-4 text-xs font-mono text-gray-400 whitespace-nowrap">{{ tx.created_at | date:'yyyy/MM/dd HH:mm' }}</td>
             </tr>
           }
@@ -152,18 +152,18 @@
 <!-- ══ Withdraw Modal ════════════════════════════════════════ -->
 <app-modal [isOpen]="showWithdrawModal" (close)="showWithdrawModal = false" className="max-w-md m-4">
   <div class="p-6">
-    <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">سحب من العهدة</h3>
+    <h3 class="text-base font-semibold text-gray-800 mb-5">سحب من العهدة</h3>
 
     @if (selected) {
-      <div class="mb-4 rounded-lg bg-gray-50 dark:bg-white/[0.03] px-4 py-2.5 flex items-center justify-between">
-        <span class="text-xs text-gray-500 dark:text-gray-400">الرصيد المتبقي</span>
-        <span class="text-sm font-bold font-mono text-gray-800 dark:text-white/90">{{ remaining(selected) | number:'1.2-2' }}</span>
+      <div class="mb-4 rounded-lg bg-gray-50 px-4 py-2.5 flex items-center justify-between">
+        <span class="text-xs text-gray-500">الرصيد المتبقي</span>
+        <span class="text-sm font-bold font-mono text-gray-800">{{ remaining(selected) | number:'1.2-2' }}</span>
       </div>
     }
 
     @if (withdrawError) {
-      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-        <p class="text-sm text-error-600 dark:text-error-400">{{ withdrawError }}</p>
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200">
+        <p class="text-sm text-error-600">{{ withdrawError }}</p>
       </div>
     }
 
@@ -171,27 +171,27 @@
       <div class="space-y-4">
         <!-- Amount -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">المبلغ <span class="text-error-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">المبلغ <span class="text-error-500">*</span></label>
           <input type="number" formControlName="amount" min="0.01" step="0.01" placeholder="0.00"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
-            [class]="wfInvalid('amount') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 focus:outline-none focus:ring-2"
+            [class]="wfInvalid('amount') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20'" />
           @if (wfInvalid('amount')) { <p class="mt-1 text-xs text-error-500">المبلغ مطلوب ويجب أن يكون أكبر من صفر</p> }
         </div>
 
         <!-- Reason (required) -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">السبب <span class="text-error-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">السبب <span class="text-error-500">*</span></label>
           <input type="text" formControlName="reason" placeholder="سبب الصرف..."
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
-            [class]="wfInvalid('reason') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 focus:outline-none focus:ring-2"
+            [class]="wfInvalid('reason') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20'" />
           @if (wfInvalid('reason')) { <p class="mt-1 text-xs text-error-500">سبب الصرف مطلوب</p> }
         </div>
 
         <!-- Notes (optional) -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">ملاحظات <span class="text-xs text-gray-400">(اختياري)</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">ملاحظات <span class="text-xs text-gray-400">(اختياري)</span></label>
           <textarea formControlName="notes" rows="2" placeholder="ملاحظات إضافية..."
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent text-gray-800 dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 resize-none placeholder:text-gray-400"></textarea>
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent text-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 resize-none placeholder:text-gray-400"></textarea>
         </div>
       </div>
 
@@ -201,7 +201,7 @@
           @if (withdrawLoading) { جاري التنفيذ... } @else { تأكيد السحب }
         </button>
         <button type="button" (click)="showWithdrawModal = false" [disabled]="withdrawLoading"
-          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
           إلغاء
         </button>
       </div>

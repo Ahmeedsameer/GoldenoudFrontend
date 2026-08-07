@@ -3,26 +3,26 @@
 <!-- Transfer Modal -->
 <app-modal [isOpen]="showTransferModal" (close)="showTransferModal = false">
   <div class="p-6">
-    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">نقل إلى فرع</h3>
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">نقل إلى فرع</h3>
 
     @if (selectedGoods) {
-      <div class="mb-4 p-3 rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.05]">
-        <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ selectedGoods.supply_item?.product?.name }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+      <div class="mb-4 p-3 rounded-lg bg-gray-50 border border-gray-200">
+        <p class="text-sm font-medium text-gray-800">{{ selectedGoods.supply_item?.product?.name }}</p>
+        <p class="text-xs text-gray-500 mt-0.5">
           الكمية المتاحة: <span class="font-mono font-semibold">{{ selectedGoods.current_quantity }}</span>
           {{ selectedGoods.supply_item?.product?.scalar }}
         </p>
       </div>
 
       @if (transferError) {
-        <div class="mb-3 px-3 py-2 rounded-lg border border-error-300 bg-error-50 dark:bg-error-500/10 dark:border-error-500/30 text-sm text-error-600 dark:text-error-400">
+        <div class="mb-3 px-3 py-2 rounded-lg border border-error-300 bg-error-50 text-sm text-error-600">
           {{ transferError }}
         </div>
       }
 
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الكمية للنقل</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">الكمية للنقل</label>
           <input
             type="number"
             [(ngModel)]="transferQty"
@@ -30,14 +30,14 @@
             min="0.001"
             step="0.001"
             placeholder="0"
-            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الفرع الوجهة</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">الفرع الوجهة</label>
           <select
             [(ngModel)]="transferShopId"
-            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700"
+            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20"
           >
             <option [value]="null" disabled>اختر الفرع</option>
             @for (shop of shops; track shop.id) {
@@ -60,14 +60,14 @@
 
 <div>
   <!-- Search toolbar -->
-  <div class="flex items-center px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
+  <div class="flex items-center px-5 py-3 border-b border-gray-100">
     <div class="w-full sm:w-64">
       <app-search-bar placeholder="بحث بالاسم أو SKU أو الباركود..." (searchChange)="setSearch($event)"></app-search-bar>
     </div>
   </div>
 
   @if (!list.loading && list.result.data.length === 0) {
-    <div class="text-center py-14 text-gray-400 dark:text-gray-600">
+    <div class="text-center py-14 text-gray-400">
       <svg class="w-10 h-10 mx-auto mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
       </svg>
@@ -76,7 +76,7 @@
   } @else {
     <div class="overflow-x-auto">
       <table class="ds-table">
-        <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+        <thead class="ds-table-head bg-gray-50/50">
           <tr>
             <th class="ds-th">المنتج</th>
             <th class="ds-th">SKU</th>
@@ -92,24 +92,24 @@
           @if (list.result.data) {
             @for (goods of list.result.data; track goods.id) {
               <tr class="ds-tr">
-                <td class="ds-td font-medium text-gray-800 dark:text-white/90">{{ goods.supply_item?.product?.name }}</td>
-                <td class="ds-td font-mono text-xs text-gray-500 dark:text-gray-400">{{ goods.supply_item?.product?.sku || '—' }}</td>
-                <td class="ds-td text-gray-500 dark:text-gray-400">{{ goods.supply_item?.product?.scalar }}</td>
-                <td class="ds-td font-mono text-gray-600 dark:text-gray-300">{{ goods.supply_item?.quantity }}</td>
+                <td class="ds-td font-medium text-gray-800">{{ goods.supply_item?.product?.name }}</td>
+                <td class="ds-td font-mono text-xs text-gray-500">{{ goods.supply_item?.product?.sku || '—' }}</td>
+                <td class="ds-td text-gray-500">{{ goods.supply_item?.product?.scalar }}</td>
+                <td class="ds-td font-mono text-gray-600">{{ goods.supply_item?.quantity }}</td>
                 <td class="ds-td">
                   <span class="font-mono font-semibold"
-                    [ngClass]="isLow(goods) ? 'text-error-500 dark:text-error-400' : 'text-gray-800 dark:text-white/90'">
+                    [ngClass]="isLow(goods) ? 'text-error-500' : 'text-gray-800'">
                     {{ goods.current_quantity }}
                   </span>
                   @if (isLow(goods)) {
-                    <span class="mr-1.5 inline-flex items-center rounded-full bg-error-50 px-2 py-0.5 text-xs font-medium text-error-600 dark:bg-error-500/10 dark:text-error-400">منخفض</span>
+                    <span class="mr-1.5 inline-flex items-center rounded-full bg-error-50 px-2 py-0.5 text-xs font-medium text-error-600">منخفض</span>
                   }
                 </td>
-                <td class="ds-td font-mono text-gray-600 dark:text-gray-300">{{ goods.supply_item?.unit_price | number:'1.2-2' }}</td>
-                <td class="ds-td text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ goods.supply_item?.supply?.date | date:'mediumDate' }}</td>
+                <td class="ds-td font-mono text-gray-600">{{ goods.supply_item?.unit_price | number:'1.2-2' }}</td>
+                <td class="ds-td text-xs text-gray-500 whitespace-nowrap">{{ goods.supply_item?.supply?.date | date:'mediumDate' }}</td>
                 <td class="ds-td text-center">
                   <button (click)="openTransfer(goods)"
-                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10 transition-colors">نقل</button>
+                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 transition-colors">نقل</button>
                 </td>
               </tr>
             }

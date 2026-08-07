@@ -11,10 +11,12 @@ import { AlertComponent } from '../../../shared/components/ui/alert/alert.compon
 import { PaginationComponent } from '../../../pagination/pagination.component';
 import { ListManager } from '../../../services/list-manager';
 import { map } from 'rxjs/operators';
+import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-convention-management',
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, PaginationComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, PaginationComponent, ButtonComponent, SearchBarComponent],
   templateUrl: './convention-management.component.html',
 })
 export class ConventionManagementComponent implements OnInit {

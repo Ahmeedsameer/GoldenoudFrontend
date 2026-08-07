@@ -3,8 +3,8 @@
 <div class="p-4 md:p-6" dir="rtl">
 
   <div class="mb-5">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">لوحة العمليات الإدارية للفروع</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+    <h1 class="text-2xl font-bold text-gray-900">لوحة العمليات الإدارية للفروع</h1>
+    <p class="text-sm text-gray-500 mt-0.5">
       @if (data) { الفترة: {{ data.period.from }} — {{ data.period.to }} }
     </p>
   </div>
@@ -16,7 +16,7 @@
 
       <!-- Global KPIs -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">مؤشرات عامة</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">مؤشرات عامة</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <app-report-kpi-card title="تحويلات اليوم" [value]="data.transfers_today_count" icon="📅" color="brand"></app-report-kpi-card>
           <app-report-kpi-card title="تحويلات مفتوحة" [value]="data.open_transfers_count" icon="🔄" color="info"></app-report-kpi-card>
@@ -38,7 +38,7 @@
 
       <!-- Heat Map — highlights derived from the branch performance table below -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الفروع الأكثر تأثيراً</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">الفروع الأكثر تأثيراً</h2>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
           <app-report-kpi-card title="الأكثر طلباً" [value]="mostRequestedBranch?.shop_name ?? '—'" [subtitle]="mostRequestedBranch ? (mostRequestedBranch.value + ' طلب') : ''" icon="📨" color="info" [mono]="false"></app-report-kpi-card>
           <app-report-kpi-card title="الأكثر إرسالاً" [value]="mostSendingBranchRow?.shop_name ?? '—'" [subtitle]="mostSendingBranchRow ? (mostSendingBranchRow.value + ' عملية') : ''" icon="📤" color="info" [mono]="false"></app-report-kpi-card>
@@ -50,7 +50,7 @@
 
       <!-- Branch Performance -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">أداء الفروع</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">أداء الفروع</h2>
         <div class="db-tbl-card">
           <div class="db-tbl-wrap">
             <table class="db-tbl">
@@ -76,7 +76,7 @@
       <!-- Warehouse (Phase 5.5) — admin acts as the Main Warehouse's manager -->
       @if (data.warehouse) {
         <div>
-          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">المستودع الرئيسي</h2>
+          <h2 class="text-sm font-semibold text-gray-700 mb-3">المستودع الرئيسي</h2>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <app-report-kpi-card title="طلبات بانتظار الموافقة" [value]="data.warehouse.pending_requests" icon="⏳" color="warning"></app-report-kpi-card>
             <app-report-kpi-card title="طلبات مفتوحة" [value]="data.warehouse.open_requests" icon="🔄" color="info"></app-report-kpi-card>
@@ -126,12 +126,12 @@
 
       <!-- Status breakdown -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">توزيع طلبات النقل حسب الحالة</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">توزيع طلبات النقل حسب الحالة</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           @for (s of statusEntries; track s.status) {
-            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+            <div class="bg-white rounded-2xl border border-gray-200 p-4">
               <p class="text-xs text-gray-400 mb-1">{{ statusLabel(s.status) }}</p>
-              <p class="text-xl font-bold font-mono text-gray-900 dark:text-white">{{ s.count }}</p>
+              <p class="text-xl font-bold font-mono text-gray-900">{{ s.count }}</p>
             </div>
           }
         </div>
@@ -140,7 +140,7 @@
       <!-- Delayed transfers -->
       @if (data.delayed.total > 0) {
         <div>
-          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">الطلبات المتأخرة</h2>
+          <h2 class="text-sm font-semibold text-gray-700 mb-3">الطلبات المتأخرة</h2>
           <div class="db-tbl-card">
             <div class="db-tbl-wrap">
               <table class="db-tbl">
@@ -171,7 +171,7 @@
 
       <!-- Waste summary -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">ملخص الهالك حسب السبب</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">ملخص الهالك حسب السبب</h2>
         <div class="db-tbl-card">
           <div class="db-tbl-wrap">
             <table class="db-tbl">

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductService } from '../../../../services/product.service';
 import { CategoryService } from '../../../../services/category.service';
 import { FormHelperService, AlertState } from '../../../../services/form-helper.service';
@@ -9,6 +9,7 @@ import { ButtonComponent } from '../../../../shared/components/ui/button/button.
 import { LoadingComponent } from '../../../../loading/loading.component';
 import { AlertComponent } from '../../../../shared/components/ui/alert/alert.component';
 import { ComponentCardComponent } from '../../../../shared/components/common/component-card/component-card.component';
+import { baseUnitOf, pickDisplayUnit, toBaseQuantity, toDisplayQuantity } from '../../../../services/unit-conversion.util';
 
 /**
  * Ready Product — its own independent creation page (pre-bottled perfumes
@@ -29,10 +30,16 @@ export class ReadyProductCreateComponent implements OnInit {
   private categoryService = inject(CategoryService);
   private formHelperService = inject(FormHelperService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   loading = false;
+  pageLoading = false;
   alert: AlertState = { show: false, type: '', message: '' };
   selectedFile: File | null = null;
+  currentImageUrl: string | null = null;
+
+  productId: number | null = null;
+  isEdit = false;
 
   categories: { id: number; name: string }[] = [];
 
@@ -58,6 +65,31 @@ export class ReadyProductCreateComponent implements OnInit {
       next: (res) => { this.categories = res.data || []; },
       error: () => {},
     });
+
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.isEdit = true;
+      this.productId = +id;
+      this.pageLoading = true;
+      this.productService.getProductById(this.productId).subscribe({
+        next: (res) => {
+          const product = res.data || res;
+          const baseScalar = product.scalar ?? 'pcs';
+          const displayUnit = pickDisplayUnit(baseScalar, product.warning_quantity, product.critical_quantity);
+          this.form.patchValue({
+            name: product.name ?? '',
+            barcode: product.barcode ?? '',
+            category_id: product.category_id ?? '',
+            scalar: displayUnit,
+            warning_quantity: toDisplayQuantity(displayUnit, product.warning_quantity),
+            critical_quantity: toDisplayQuantity(displayUnit, product.critical_quantity),
+          });
+          this.currentImageUrl = product.image || null;
+          this.pageLoading = false;
+        },
+        error: () => { this.pageLoading = false; },
+      });
+    }
   }
 
   onSubmit(): void {
@@ -69,11 +101,18 @@ export class ReadyProductCreateComponent implements OnInit {
     this.alert = { show: false, type: '', message: '' };
 
     const value = { ...this.form.value };
-    if (value.scalar === 'kg') value.scalar = 'g';
+    const displayUnit = value.scalar;
+    value.warning_quantity = toBaseQuantity(displayUnit, value.warning_quantity);
+    value.critical_quantity = toBaseQuantity(displayUnit, value.critical_quantity);
+    value.scalar = baseUnitOf(displayUnit);
 
     const formData = this.formHelperService.createFormData(value, this.selectedFile, 'image');
 
-    this.productService.createReadyProduct(formData).subscribe({
+    const request = this.isEdit
+      ? this.productService.updateProduct(this.productId!, formData)
+      : this.productService.createReadyProduct(formData);
+
+    request.subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/dashboard/products']);

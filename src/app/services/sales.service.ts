@@ -35,9 +35,14 @@ export class SalesService {
   }
 
   // ── Catalog (finished/sellable) products — show_in_catalog=true ────────────
-  searchCatalogProducts(search: string): Observable<any[]> {
+  /** `shopId` is admin-only (browsing a specific branch's catalog, e.g. Edit
+   *  Invoice) — ignored server-side for every other role, which always
+   *  resolves their own branch regardless of what's sent here. */
+  searchCatalogProducts(search: string, shopId?: number | null): Observable<any[]> {
+    const params: Record<string, any> = { search };
+    if (shopId) params['shop_id'] = shopId;
     return this.http
-      .get<any>(`${API_BASE}/sales/catalog-products`, { params: { search } })
+      .get<any>(`${API_BASE}/sales/catalog-products`, { params })
       .pipe(map((res) => res.data || []));
   }
 

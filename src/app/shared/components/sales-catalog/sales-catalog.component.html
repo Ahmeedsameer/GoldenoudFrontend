@@ -1,0 +1,55 @@
+<div class="mb-3 max-w-xs">
+  <app-search-bar placeholder="بحث بالاسم أو SKU أو الباركود أو الفئة..." (searchChange)="setSearch($event)"></app-search-bar>
+</div>
+@if (loading) {
+  <p class="text-sm text-gray-400 text-center py-4">جارٍ التحميل…</p>
+} @else if (items.length === 0) {
+  <p class="text-sm text-gray-400 text-center py-4">{{ search ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد منتجات في الكتالوج بعد' }}</p>
+} @else {
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+    @for (p of items; track p.id) {
+      <button type="button" (click)="onCardClick(p)"
+        class="relative flex flex-col items-center text-center gap-2 rounded-xl border p-3 transition-colors"
+        [class]="isOutOfStock(p) || isMissingPrice(p) || isCompoundUnavailable(p)
+          ? 'border-gray-200 opacity-60 hover:border-error-300'
+          : 'border-gray-200 hover:border-brand-300 hover:bg-brand-50/40'">
+        @if (isOutOfStock(p)) {
+          <span class="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-error-100 text-error-600">نفد</span>
+        } @else if (isMissingPrice(p)) {
+          <span class="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">بلا سعر</span>
+        } @else if (isCompoundUnavailable(p)) {
+          <span class="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-error-100 text-error-600">غير متاح</span>
+        }
+        @if (p.image) {
+          <img [src]="p.image" alt="" class="w-12 h-12 rounded-lg object-cover" />
+        } @else {
+          <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300">
+            @if (p.product_type === 'COMPOUND') {
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
+            }
+          </div>
+        }
+        <p class="text-xs font-medium text-gray-800 line-clamp-2">{{ p.name }}</p>
+        @if (p.product_type === 'COMPOUND') {
+          @if (isCompoundUnavailable(p)) {
+            <span class="text-[10px] font-medium text-error-500">{{ p.compound_unavailable_reason }}</span>
+          } @else {
+            <span class="text-[10px] text-brand-500">عطر</span>
+          }
+        } @else if (isOutOfStock(p)) {
+          <span class="text-[10px] font-medium text-error-500">نفد من المخزون — يحتاج توريد</span>
+        } @else if (isMissingPrice(p)) {
+          <span class="text-[10px] font-medium text-amber-600">بلا سعر — أكمل التسعير</span>
+        } @else if (p.configured_unit_price != null) {
+          <span class="text-[10px] font-mono text-gray-500">{{ p.configured_unit_price | number:'1.0-2' }} ج.م</span>
+        }
+      </button>
+    }
+  </div>
+}
+
+<app-catalog-sell-dialog
+  [product]="builderProduct"
+  (closed)="closeBuilder()"
+  (added)="onCompositionAdded($event)">
+</app-catalog-sell-dialog>

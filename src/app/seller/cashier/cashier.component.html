@@ -3,8 +3,8 @@
 <!-- ─── Page header ──────────────────────────── -->
 <div class="mb-5">
   <div>
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">فاتورة جديدة</h2>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">أنشئ فاتورة مبيعات جديدة</p>
+    <h2 class="text-xl font-semibold text-gray-800">فاتورة جديدة</h2>
+    <p class="text-sm text-gray-500 mt-0.5">أنشئ فاتورة مبيعات جديدة</p>
   </div>
 </div>
 
@@ -24,28 +24,28 @@
           <input type="text" [value]="customerQuery"
             (input)="onPhoneInput($any($event.target).value)" (blur)="closeCustomerDropdown()"
             placeholder="05xxxxxxxx — ابحث بالهاتف أو الاسم" autocomplete="off"
-            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700" />
+            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20" />
         </div>
         <div>
           <app-label>اسم العميل</app-label>
           <input type="text" [value]="form.get('name')?.value"
             (input)="onNameInput($any($event.target).value)" (blur)="closeCustomerDropdown()"
             placeholder="اسم العميل — ابحث بالاسم أو الهاتف" autocomplete="off"
-            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700" />
+            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20" />
         </div>
       </div>
 
       @if (showCustomerDropdown && (customerResults.length > 0 || customerSearchedNoResults)) {
-        <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden dark:bg-gray-900 dark:border-gray-700">
+        <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
           @for (c of customerResults; track c.phone) {
-            <li (mousedown)="selectCustomer(c)" class="px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05]">
-              <span class="font-medium text-gray-800 dark:text-white/90">{{ c.name }}</span>
+            <li (mousedown)="selectCustomer(c)" class="px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50">
+              <span class="font-medium text-gray-800">{{ c.name }}</span>
               <span class="text-gray-400 font-mono text-xs mr-2">{{ c.phone }}</span>
             </li>
           }
           @if (customerSearchedNoResults) {
             <li (mousedown)="openQuickAddCustomer()"
-              class="px-4 py-2.5 text-sm cursor-pointer text-brand-600 dark:text-brand-400 font-medium hover:bg-brand-50 dark:hover:bg-brand-500/10 flex items-center gap-1.5">
+              class="px-4 py-2.5 text-sm cursor-pointer text-brand-600 font-medium hover:bg-brand-50 flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
               إضافة عميل جديد
             </li>
@@ -60,8 +60,8 @@
 <app-modal [isOpen]="showQuickAddCustomer" (close)="showQuickAddCustomer = false" className="max-w-md m-4 w-full">
   <div class="p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">إضافة عميل جديد</h2>
-      <button type="button" (click)="showQuickAddCustomer = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      <h2 class="text-lg font-semibold text-gray-800">إضافة عميل جديد</h2>
+      <button type="button" (click)="showQuickAddCustomer = false" class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
@@ -94,7 +94,7 @@
     <input #barcodeInput type="text" [(ngModel)]="barcodeValue" [ngModelOptions]="{standalone: true}"
       (keydown.enter)="onBarcodeScan()"
       placeholder="امسح الباركود أو اكتبه ثم اضغط Enter…" autocomplete="off"
-      class="w-full h-12 pr-10 pl-4 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:border-brand-400 focus:ring-1 focus:ring-brand-400" />
+      class="w-full h-12 pr-10 pl-4 rounded-xl border border-gray-300 bg-white text-gray-900 text-sm focus:border-brand-400 focus:ring-1 focus:ring-brand-400" />
   </div>
 </div>
 
@@ -104,63 +104,13 @@
      step, no button to "reveal" the catalog first. -->
 <div class="mb-5">
   <app-component-card title="كتالوج المبيعات" desc="اضغط على منتج لإضافته — العطور تفتح صانع المنتج">
-    <div class="mb-3 max-w-xs">
-      <app-search-bar placeholder="بحث بالاسم أو SKU أو الباركود أو الفئة..." (searchChange)="setCatalogSearch($event)"></app-search-bar>
-    </div>
-    @if (catalogLoading) {
-      <p class="text-sm text-gray-400 text-center py-4">جارٍ التحميل…</p>
-    } @else if (catalogItems.length === 0) {
-      <p class="text-sm text-gray-400 text-center py-4">{{ catalogSearch ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد منتجات في الكتالوج بعد' }}</p>
-    } @else {
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        @for (p of catalogItems; track p.id) {
-          <button type="button" (click)="onCatalogCardClick(p)"
-            class="relative flex flex-col items-center text-center gap-2 rounded-xl border p-3 transition-colors"
-            [class]="isOutOfStock(p) || isMissingPrice(p) || isCompoundUnavailable(p)
-              ? 'border-gray-200 dark:border-gray-700 opacity-60 hover:border-error-300'
-              : 'border-gray-200 dark:border-gray-700 hover:border-brand-300 hover:bg-brand-50/40 dark:hover:bg-brand-500/5'">
-            @if (isOutOfStock(p)) {
-              <span class="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-error-100 text-error-600 dark:bg-error-500/15 dark:text-error-400">نفد</span>
-            } @else if (isMissingPrice(p)) {
-              <span class="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">بلا سعر</span>
-            } @else if (isCompoundUnavailable(p)) {
-              <span class="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-error-100 text-error-600 dark:bg-error-500/15 dark:text-error-400">غير متاح</span>
-            }
-            @if (p.image) {
-              <img [src]="p.image" alt="" class="w-12 h-12 rounded-lg object-cover" />
-            } @else {
-              <div class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-white/[0.05] flex items-center justify-center text-gray-300">
-                @if (p.product_type === 'COMPOUND') {
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
-                }
-              </div>
-            }
-            <p class="text-xs font-medium text-gray-800 dark:text-white/90 line-clamp-2">{{ p.name }}</p>
-            @if (p.product_type === 'COMPOUND') {
-              @if (isCompoundUnavailable(p)) {
-                <span class="text-[10px] font-medium text-error-500">{{ p.compound_unavailable_reason }}</span>
-              } @else {
-                <span class="text-[10px] text-brand-500">عطر</span>
-              }
-            } @else if (isOutOfStock(p)) {
-              <span class="text-[10px] font-medium text-error-500">نفد من المخزون — يحتاج توريد</span>
-            } @else if (isMissingPrice(p)) {
-              <span class="text-[10px] font-medium text-amber-600 dark:text-amber-400">بلا سعر — أكمل التسعير</span>
-            } @else if (p.configured_unit_price != null) {
-              <span class="text-[10px] font-mono text-gray-500">{{ p.configured_unit_price | number:'1.0-2' }} ج.م</span>
-            }
-          </button>
-        }
-      </div>
-    }
+    <app-sales-catalog
+      (productSelected)="onCatalogProductSelected($event)"
+      (compositionAdded)="onCatalogCompositionAdded($event)"
+      (pickError)="onCatalogPickError($event)">
+    </app-sales-catalog>
   </app-component-card>
 </div>
-
-<app-catalog-sell-dialog
-  [product]="builderProduct"
-  (closed)="closeBuilder()"
-  (added)="onCatalogCompositionAdded($event)">
-</app-catalog-sell-dialog>
 
 <form [formGroup]="form" novalidate>
 
@@ -174,29 +124,29 @@
              either pricing mode. -->
         <div class="lg:col-span-2">
           <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <label class="block text-sm font-semibold text-gray-700">
               الإجمالي (محسوب تلقائياً)
             </label>
             <!-- Pricing mode toggle: "أسعار الأصناف" pre-fills each line's price
                  from Pricing Management (overridable); "إجمالي يدوي" (Manual Total)
                  requires the cashier to type every line's price by hand. Both
                  modes price every line directly and auto-compute the total. -->
-            <div class="inline-flex rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden text-[11px]">
+            <div class="inline-flex rounded-lg border border-gray-200 overflow-hidden text-[11px]">
               <button type="button" (click)="setPricingMode('auto')"
                 [class]="pricingMode === 'auto' ? 'bg-brand-500 text-white' : 'bg-transparent text-gray-500'"
                 class="px-2.5 py-1 font-medium transition-colors">أسعار الأصناف</button>
               <button type="button" (click)="setPricingMode('global')"
-                [class]="pricingMode === 'global' ? 'bg-gray-700 text-white dark:bg-gray-600' : 'bg-transparent text-gray-500'"
+                [class]="pricingMode === 'global' ? 'bg-gray-700 text-white' : 'bg-transparent text-gray-500'"
                 class="px-2.5 py-1 font-medium transition-colors">إجمالي يدوي</button>
             </div>
           </div>
           <div class="relative">
             <input type="number" formControlName="total_amount" min="0.01" step="0.01" placeholder="0.00"
               [readonly]="true"
-              class="h-16 w-full rounded-xl border-2 bg-white px-5 pe-16 text-2xl font-bold text-gray-900 placeholder:text-gray-300 placeholder:font-normal focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 shadow-sm border-success-300 bg-success-50/40 dark:border-success-600 dark:bg-success-500/5" />
+              class="h-16 w-full rounded-xl border-2 bg-white px-5 pe-16 text-2xl font-bold text-gray-900 placeholder:text-gray-300 placeholder:font-normal focus:outline-hidden focus:ring-3 shadow-sm border-success-300 bg-success-50/40" />
             <span class="absolute inset-y-0 end-4 flex items-center text-base font-bold text-brand-400 pointer-events-none">ج.م</span>
           </div>
-          <p class="mt-1 text-xs text-success-600 dark:text-success-400">يُحسَب تلقائياً من الأصناف: الكمية × سعر الوحدة</p>
+          <p class="mt-1 text-xs text-success-600">يُحسَب تلقائياً من الأصناف: الكمية × سعر الوحدة</p>
         </div>
 
 
@@ -204,7 +154,7 @@
         <div>
           <app-label>الخزنة</app-label>
           <select formControlName="safe_id"
-            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700">
+            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20">
             <option [ngValue]="null">تلقائي (الخزنة الرئيسية)</option>
             @for (s of shopSafes; track s.id) {
               <option [ngValue]="s.id">{{ s.safe_type?.name }}
@@ -217,7 +167,7 @@
         <!-- Date (system-generated, read-only — never user-editable) -->
         <div>
           <app-label>التاريخ</app-label>
-          <div class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-4 flex items-center text-sm text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+          <div class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-4 flex items-center text-sm text-gray-500">
             {{ todayDisplay }}
           </div>
         </div>
@@ -235,7 +185,7 @@
       <!-- Items are added exclusively from "كتالوج المبيعات" above — no
            separate all-inventory browse panel here, so there is only one
            place to pick a product from. -->
-      <p class="text-xs text-gray-400 dark:text-gray-500 mb-4 pb-3 border-b border-gray-100 dark:border-white/[0.05]">
+      <p class="text-xs text-gray-400 mb-4 pb-3 border-b border-gray-100">
         الأصناف تُضاف من كتالوج المبيعات بالأعلى
       </p>
 
@@ -243,32 +193,32 @@
         @for (item of items.controls; track $index; let i = $index) {
           @if (!isHiddenMaterialRow(i)) {
           <div [formGroup]="$any(item)"
-            class="flex flex-wrap gap-3 items-end p-4 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+            class="flex flex-wrap gap-3 items-end p-4 rounded-xl border border-gray-200 bg-gray-50">
 
             <!-- Product -->
             <div class="flex-1 min-w-[200px]">
-              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">المنتج <span class="text-error-500">*</span></label>
+              <label class="block text-xs font-medium text-gray-500 mb-1">المنتج <span class="text-error-500">*</span></label>
               @if (manufacturedName(i)) {
                 <!-- Manufactured perfume — locked identity, oil/alcohol hidden behind it -->
-                <div class="h-10 flex items-center gap-2 px-3 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-500/30 dark:bg-purple-500/10">
+                <div class="h-10 flex items-center gap-2 px-3 rounded-lg border border-purple-200 bg-purple-50">
                   <svg class="w-3.5 h-3.5 text-purple-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
                   </svg>
-                  <span class="text-sm font-medium text-purple-700 dark:text-purple-400">{{ manufacturedName(i) }}</span>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300">مُصنَّع</span>
+                  <span class="text-sm font-medium text-purple-700">{{ manufacturedName(i) }}</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-600">مُصنَّع</span>
                 </div>
               } @else {
               <div class="relative">
                 <input type="text" [value]="productQueries[i]"
                   (input)="onProductInput(i, $any($event.target).value)" (blur)="closeProductDropdown(i)"
                   placeholder="ابحث عن منتج..." autocomplete="off"
-                  class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                  class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20"
                   [class.border-error-500]="item.get('product_id')?.invalid && item.get('product_id')?.touched" />
                 @if (showProductDropdown[i]) {
-                  <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
+                  <ul class="absolute z-50 top-full right-0 left-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
                     @for (g of productResults[i]; track g.id) {
-                      <li (mousedown)="selectProduct(i, g)" class="px-3 py-2.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05]">
-                        <span class="font-medium text-gray-800 dark:text-white/90">{{ g.supply_item.product.name }}</span>
+                      <li (mousedown)="selectProduct(i, g)" class="px-3 py-2.5 text-sm cursor-pointer hover:bg-gray-50">
+                        <span class="font-medium text-gray-800">{{ g.supply_item.product.name }}</span>
                         <span class="text-xs text-gray-400 font-mono mr-2">{{ g.supply_item.product.sku }}</span>
                       </li>
                     }
@@ -280,20 +230,20 @@
 
             <!-- Quantity -->
             <div class="w-28">
-              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">الكمية <span class="text-error-500">*</span></label>
+              <label class="block text-xs font-medium text-gray-500 mb-1">الكمية <span class="text-error-500">*</span></label>
               @if (manufacturedName(i)) {
                 <!-- Locked — set via Manufacturing Quantity in the Product Builder, not editable here -->
-                <div class="h-10 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-sm font-mono font-bold text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+                <div class="h-10 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-sm font-mono font-bold text-gray-700">
                   {{ manufacturedQty(i) }}
                 </div>
               } @else {
               <input type="number" formControlName="quantity" min="0.001" step="0.001" placeholder="0"
-                class="h-10 w-full rounded-lg border bg-white px-3 text-sm text-gray-800 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-white/90"
+                class="h-10 w-full rounded-lg border bg-white px-3 text-sm text-gray-800 focus:outline-hidden focus:ring-3"
                 [class]="exceedsStock(i)
                   ? 'border-error-500 focus:border-error-500 focus:ring-error-500/20'
-                  : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700'" />
+                  : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20'" />
               @if (selectedGoods[i] && exceedsStock(i)) {
-                <p class="mt-1 text-[11px] font-medium text-error-600 dark:text-error-400">
+                <p class="mt-1 text-[11px] font-medium text-error-600">
                   المتاح {{ stockAvailable(i) }} {{ itemUnit(i) }} فقط
                 </p>
               }
@@ -302,7 +252,7 @@
 
             <!-- Unit price — editable by hand (prefilled from the product price) -->
             <div class="w-44">
-              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">سعر الوحدة</label>
+              <label class="block text-xs font-medium text-gray-500 mb-1">سعر الوحدة</label>
 
               @if (manufacturedName(i)) {
                 <!-- Manufactured perfume: default = real Oil + Bottle price (Pricing
@@ -317,11 +267,11 @@
                     [readonly]="pricingMode === 'auto'"
                     class="h-10 w-full rounded-lg border ps-3 pe-9 text-sm font-mono font-bold focus:outline-hidden focus:ring-3"
                     [class]="pricingMode === 'auto'
-                      ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed dark:bg-white/[0.03] dark:text-gray-400 dark:border-white/10'
-                      : 'bg-white text-gray-800 dark:bg-gray-800 dark:text-white/90 border-success-300 focus:border-success-500 focus:ring-success-500/20 dark:border-success-500/40'" />
+                      ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed'
+                      : 'bg-white text-gray-800 border-success-300 focus:border-success-500 focus:ring-success-500/20'" />
                   <span class="absolute inset-y-0 end-3 flex items-center text-[11px] text-gray-400 pointer-events-none">/ {{ itemUnit(i) }}</span>
                 </div>
-                <p class="mt-1 text-xs text-success-600 dark:text-success-400 font-medium">
+                <p class="mt-1 text-xs text-success-600 font-medium">
                   {{ manufacturedQty(i) }} × {{ manufacturedUnitPrice(i) | number:'1.2-2' }} = <span class="font-bold">{{ manufacturedLineTotal(i) | number:'1.2-2' }} ج.م</span>
                 </p>
               } @else if (selectedGoods[i]) {
@@ -336,14 +286,14 @@
                     [readonly]="pricingMode === 'auto'"
                     class="h-10 w-full rounded-lg border ps-3 pe-9 text-sm font-mono font-bold focus:outline-hidden focus:ring-3"
                     [class]="pricingMode === 'auto'
-                      ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed dark:bg-white/[0.03] dark:text-gray-400 dark:border-white/10'
+                      ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed'
                       : (itemConfigured(i)
-                          ? 'bg-white text-gray-800 dark:bg-gray-800 dark:text-white/90 border-success-300 focus:border-success-500 focus:ring-success-500/20 dark:border-success-500/40'
-                          : 'bg-white text-gray-800 dark:bg-gray-800 dark:text-white/90 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700')" />
+                          ? 'bg-white text-gray-800 border-success-300 focus:border-success-500 focus:ring-success-500/20'
+                          : 'bg-white text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20')" />
                   <span class="absolute inset-y-0 end-3 flex items-center text-[11px] text-gray-400 pointer-events-none">/ {{ itemUnit(i) }}</span>
                 </div>
                 @if (itemConfigured(i)) {
-                  <p class="mt-1 text-xs text-success-600 dark:text-success-400 font-medium">
+                  <p class="mt-1 text-xs text-success-600 font-medium">
                     {{ (items.at(i).get('quantity')?.value || 0) }} {{ itemUnit(i) }} × {{ lineUnitPrice(i) | number:'1.2-2' }} = <span class="font-bold">{{ lineTotal(i) | number:'1.2-2' }} ج.م</span>
                   </p>
                 } @else {
@@ -352,19 +302,19 @@
 
               } @else if (isFixedItem(i)) {
                 <!-- Fixed-price category -->
-                <div class="h-10 flex items-center gap-2 px-3 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10">
+                <div class="h-10 flex items-center gap-2 px-3 rounded-lg border border-amber-200 bg-amber-50">
                   <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
-                  <span class="text-sm font-mono font-bold text-amber-700 dark:text-amber-400">{{ fixedPrice(i) | number:'1.2-2' }} ج.م</span>
+                  <span class="text-sm font-mono font-bold text-amber-700">{{ fixedPrice(i) | number:'1.2-2' }} ج.م</span>
                 </div>
-                <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">سعر ثابت من الفئة</p>
+                <p class="mt-1 text-xs text-amber-600">سعر ثابت من الفئة</p>
 
               } @else if (selectedGoods[i]) {
                 <!-- Weighted category: show live estimate -->
                 @if (totalAmount > 0) {
                   <div class="h-10 flex items-center gap-2 px-3 rounded-lg border"
                     [class]="isPriceWarning(i)
-                      ? 'border-error-300 bg-error-50 dark:border-error-500/40 dark:bg-error-500/10'
-                      : 'border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10'">
+                      ? 'border-error-300 bg-error-50'
+                      : 'border-blue-200 bg-blue-50'">
                     @if (isPriceWarning(i)) {
                       <svg class="w-3.5 h-3.5 text-error-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
@@ -375,7 +325,7 @@
                       </svg>
                     }
                     <span class="text-sm font-mono font-bold"
-                      [class]="isPriceWarning(i) ? 'text-error-700 dark:text-error-400' : 'text-blue-700 dark:text-blue-400'">
+                      [class]="isPriceWarning(i) ? 'text-error-700' : 'text-blue-700'">
                       ~{{ estimatedUnitPrice(i) | number:'1.2-2' }} ج.م
                     </span>
                   </div>
@@ -387,14 +337,14 @@
                     <p class="mt-1 text-xs text-blue-500">تقدير مبدئي — يُحسم عند الحفظ</p>
                   }
                 } @else {
-                  <div class="h-10 flex items-center gap-2 px-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10">
+                  <div class="h-10 flex items-center gap-2 px-3 rounded-lg border border-blue-200 bg-blue-50">
                     <span class="text-xs text-blue-500">أدخل الإجمالي أولاً</span>
                   </div>
                 }
 
               } @else {
                 <!-- No product selected yet -->
-                <div class="h-10 flex items-center px-3 rounded-lg border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-gray-800">
+                <div class="h-10 flex items-center px-3 rounded-lg border border-gray-200 bg-white">
                   <span class="text-xs text-gray-400">اختر منتجاً أولاً</span>
                 </div>
               }
@@ -402,7 +352,7 @@
 
             <!-- Remove (removes the whole manufacturing operation together, if grouped) -->
             <button type="button" (click)="removeComposedRow(i)" [disabled]="visibleItemCount === 1"
-              class="h-10 w-10 flex items-center justify-center rounded-lg border border-error-200 text-error-400 hover:bg-error-50 hover:text-error-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors dark:border-error-500/30 dark:hover:bg-error-500/10">
+              class="h-10 w-10 flex items-center justify-center rounded-lg border border-error-200 text-error-400 hover:bg-error-50 hover:text-error-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
 
@@ -420,49 +370,49 @@
       </div>
 
       <!-- Summary row -->
-      <div class="flex flex-wrap justify-between items-center pt-4 border-t border-gray-100 dark:border-white/[0.05] gap-4">
-        <span class="text-sm text-gray-500 dark:text-gray-400">
-          عدد الأصناف: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ visibleItemCount }}</span>
+      <div class="flex flex-wrap justify-between items-center pt-4 border-t border-gray-100 gap-4">
+        <span class="text-sm text-gray-500">
+          عدد الأصناف: <span class="font-semibold text-gray-700">{{ visibleItemCount }}</span>
         </span>
-        <div class="flex items-center gap-4 px-5 py-3 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+        <div class="flex items-center gap-4 px-5 py-3 rounded-xl border border-gray-200 bg-gray-50">
           <div class="text-right">
             @if (fixedItemsTotal > 0) {
               <p class="text-xs text-gray-400 mb-0.5">ثابت: <span class="font-mono">{{ fixedItemsTotal | number:'1.2-2' }} ج.م</span></p>
             }
-            <span class="text-sm text-gray-500 dark:text-gray-400">إجمالي الفاتورة</span>
+            <span class="text-sm text-gray-500">إجمالي الفاتورة</span>
           </div>
-          <span class="text-xl font-bold font-mono text-gray-800 dark:text-white/90">{{ totalAmount | number:'1.2-2' }} ج.م</span>
+          <span class="text-xl font-bold font-mono text-gray-800">{{ totalAmount | number:'1.2-2' }} ج.م</span>
         </div>
       </div>
 
       <!-- Live cost summary (cashier/admin only — never printed, never seen by the customer) -->
       @if (cartItemCount > 0) {
         <div class="mt-4 grid grid-cols-4 gap-3">
-          <div class="rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] p-3 text-center">
+          <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 text-center">
             <span class="block text-xs text-gray-400 mb-1">إجمالي الأصناف</span>
-            <span class="font-mono font-bold text-gray-800 dark:text-white/90">{{ cartItemsTotal | number:'1.2-2' }}</span>
+            <span class="font-mono font-bold text-gray-800">{{ cartItemsTotal | number:'1.2-2' }}</span>
           </div>
-          <div class="rounded-xl border border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10 p-3 text-center">
-            <span class="block text-xs text-amber-600 dark:text-amber-400 mb-1">التكلفة</span>
-            <span class="font-mono font-bold text-amber-700 dark:text-amber-400 transition-opacity"
+          <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center">
+            <span class="block text-xs text-amber-600 mb-1">التكلفة</span>
+            <span class="font-mono font-bold text-amber-700 transition-opacity"
               [class.opacity-50]="cartCostLoading">
               {{ cartCost | number:'1.2-2' }}
             </span>
           </div>
           <div class="rounded-xl border p-3 text-center"
-            [class]="expectedProfit >= 0 ? 'border-success-200 dark:border-success-500/20 bg-success-50 dark:bg-success-500/10' : 'border-error-200 dark:border-error-500/20 bg-error-50 dark:bg-error-500/10'">
-            <span class="block text-xs mb-1" [class]="expectedProfit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">الربح المتوقع</span>
+            [class]="expectedProfit >= 0 ? 'border-success-200 bg-success-50' : 'border-error-200 bg-error-50'">
+            <span class="block text-xs mb-1" [class]="expectedProfit >= 0 ? 'text-success-600' : 'text-error-600'">الربح المتوقع</span>
             <span class="font-mono font-bold transition-opacity"
-              [class]="(expectedProfit >= 0 ? 'text-success-700 dark:text-success-400' : 'text-error-700 dark:text-error-400')"
+              [class]="(expectedProfit >= 0 ? 'text-success-700' : 'text-error-700')"
               [class.opacity-50]="cartCostLoading">
               {{ expectedProfit | number:'1.2-2' }}
             </span>
           </div>
           <div class="rounded-xl border p-3 text-center"
-            [class]="(marginPercent ?? 0) >= 0 ? 'border-success-200 dark:border-success-500/20 bg-success-50 dark:bg-success-500/10' : 'border-error-200 dark:border-error-500/20 bg-error-50 dark:bg-error-500/10'">
-            <span class="block text-xs mb-1" [class]="(marginPercent ?? 0) >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">الهامش %</span>
+            [class]="(marginPercent ?? 0) >= 0 ? 'border-success-200 bg-success-50' : 'border-error-200 bg-error-50'">
+            <span class="block text-xs mb-1" [class]="(marginPercent ?? 0) >= 0 ? 'text-success-600' : 'text-error-600'">الهامش %</span>
             <span class="font-mono font-bold transition-opacity"
-              [class]="((marginPercent ?? 0) >= 0 ? 'text-success-700 dark:text-success-400' : 'text-error-700 dark:text-error-400')"
+              [class]="((marginPercent ?? 0) >= 0 ? 'text-success-700' : 'text-error-700')"
               [class.opacity-50]="cartCostLoading">
               {{ marginPercent != null ? (marginPercent | number:'1.1-1') + '%' : '—' }}
             </span>
@@ -479,11 +429,11 @@
       <app-component-card title="تفاصيل الدفع المستلم">
 
         <!-- Info banner -->
-        <div class="flex items-start gap-3 p-4 mb-5 rounded-xl bg-blue-50 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/25">
+        <div class="flex items-start gap-3 p-4 mb-5 rounded-xl bg-blue-50 border border-blue-200">
           <svg class="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <p class="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
+          <p class="text-sm text-blue-700 leading-relaxed">
             الخزنة نقدية — أدخل المبالغ الفعلية المستلمة من العميل بكل عملة.
             إجمالي الفاتورة: <span class="font-bold font-mono">{{ totalAmount | number:'1.2-2' }} ج.م</span>
           </p>
@@ -493,19 +443,19 @@
         @if (payments.length > 0) {
           <div class="flex items-center justify-between px-4 py-3 mb-4 rounded-xl border"
             [class]="isPaymentBalanced
-              ? 'border-success-200 bg-success-50 dark:border-success-500/30 dark:bg-success-500/10'
-              : 'border-error-200 bg-error-50 dark:border-error-500/30 dark:bg-error-500/10'">
+              ? 'border-success-200 bg-success-50'
+              : 'border-error-200 bg-error-50'">
             <div class="flex items-center gap-2">
               @if (isPaymentBalanced) {
                 <svg class="w-4 h-4 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span class="text-sm font-medium text-success-700 dark:text-success-400">المبالغ متوازنة</span>
+                <span class="text-sm font-medium text-success-700">المبالغ متوازنة</span>
               } @else {
                 <svg class="w-4 h-4 text-error-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                <span class="text-sm font-medium text-error-700 dark:text-error-400">الفرق: {{ (paymentsEgpTotal - totalAmount) | number:'1.2-2' }} ج.م</span>
+                <span class="text-sm font-medium text-error-700">الفرق: {{ (paymentsEgpTotal - totalAmount) | number:'1.2-2' }} ج.م</span>
               }
             </div>
             <div class="text-sm font-mono font-semibold"
-              [class]="isPaymentBalanced ? 'text-success-700 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
+              [class]="isPaymentBalanced ? 'text-success-700' : 'text-error-600'">
               {{ paymentsEgpTotal | number:'1.2-2' }} ج.م
               <span class="text-xs font-normal text-gray-400 mr-1">مُحوَّل</span>
             </div>
@@ -515,24 +465,24 @@
         <!-- Payment rows -->
         <div class="space-y-3 mb-4">
           @for (payment of payments.controls; track $index; let pi = $index) {
-            <div [formGroup]="$any(payment)" class="p-4 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
+            <div [formGroup]="$any(payment)" class="p-4 rounded-xl border border-gray-200 bg-gray-50">
               <div class="flex items-end gap-3 flex-wrap">
                 <div class="w-40">
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">طريقة الدفع <span class="text-error-500">*</span></label>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">طريقة الدفع <span class="text-error-500">*</span></label>
                   <select formControlName="payment_method_id"
-                    class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:bg-gray-800 dark:text-white/90 dark:border-gray-700">
+                    class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden">
                     @for (m of paymentMethods; track m.id) {
                       <option [ngValue]="m.id">{{ m.name }}</option>
                     }
                   </select>
                   @if (methodFeePercent(payment) > 0) {
-                    <p class="text-[11px] text-warning-600 dark:text-warning-400 mt-1">رسوم معالجة {{ methodFeePercent(payment) }}%</p>
+                    <p class="text-[11px] text-warning-600 mt-1">رسوم معالجة {{ methodFeePercent(payment) }}%</p>
                   }
                 </div>
                 <div class="w-44">
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">العملة <span class="text-error-500">*</span></label>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">العملة <span class="text-error-500">*</span></label>
                   <select formControlName="currency_id"
-                    class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                    class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden"
                     [class.border-error-500]="payment.get('currency_id')?.invalid && payment.get('currency_id')?.touched">
                     <option [ngValue]="null" disabled>اختر العملة</option>
                     @for (c of currencies; track c.id) {
@@ -541,7 +491,7 @@
                   </select>
                 </div>
                 <div class="flex-1 min-w-[8rem]">
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  <label class="block text-xs font-medium text-gray-500 mb-1">
                     المبلغ المستلم
                     @if (currencySymbol(payment.get('currency_id')?.value)) {
                       <span class="text-gray-400">({{ currencySymbol(payment.get('currency_id')?.value) }})</span>
@@ -549,11 +499,11 @@
                     <span class="text-error-500">*</span>
                   </label>
                   <input type="number" formControlName="amount" min="0.01" step="0.01" placeholder="0.00"
-                    class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                    class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden"
                     [class.border-error-500]="payment.get('amount')?.invalid && payment.get('amount')?.touched" />
                 </div>
                 <button type="button" (click)="removePayment(pi)" [disabled]="payments.length === 1"
-                  class="h-10 w-10 flex items-center justify-center rounded-lg border border-error-200 text-error-400 hover:bg-error-50 hover:text-error-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors dark:border-error-500/30 dark:hover:bg-error-500/10">
+                  class="h-10 w-10 flex items-center justify-center rounded-lg border border-error-200 text-error-400 hover:bg-error-50 hover:text-error-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               </div>
@@ -561,9 +511,9 @@
               <!-- Visa (and future electronic methods): transaction number -->
               @if (methodNeedsTxn(payment)) {
                 <div class="mt-3">
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">رقم عملية الفيزا <span class="text-error-500">*</span></label>
+                  <label class="block text-xs font-medium text-gray-500 mb-1">رقم عملية الفيزا <span class="text-error-500">*</span></label>
                   <input type="text" formControlName="transaction_number" placeholder="أدخل رقم عملية الفيزا / الإيصال"
-                    class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:bg-gray-800 dark:text-white/90 dark:border-gray-700"
+                    class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden"
                     [class.border-error-500]="payment.get('transaction_number')?.invalid && payment.get('transaction_number')?.touched" />
                   @if (payment.get('transaction_number')?.invalid && payment.get('transaction_number')?.touched) {
                     <p class="mt-1 text-xs text-error-500">رقم عملية الفيزا مطلوب</p>
@@ -576,24 +526,24 @@
 
         <!-- Card fee preview (Part 3) — informational only, never changes the invoice total -->
         @if (hasAnyCardFee) {
-          <div class="mb-4 p-4 rounded-xl border border-warning-200 dark:border-warning-500/25 bg-warning-50 dark:bg-warning-500/10">
-            <p class="text-xs font-semibold text-warning-700 dark:text-warning-400 mb-3">معاينة رسوم البنك (لا تُغيّر إجمالي الفاتورة)</p>
+          <div class="mb-4 p-4 rounded-xl border border-warning-200 bg-warning-50">
+            <p class="text-xs font-semibold text-warning-700 mb-3">معاينة رسوم البنك (لا تُغيّر إجمالي الفاتورة)</p>
             <div class="space-y-1.5 mb-3">
               @for (payment of payments.controls; track $index) {
                 @if (methodFeePercent(payment) > 0 && +(payment.get('amount')?.value || 0) > 0) {
                   <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600 dark:text-gray-400">
+                    <span class="text-gray-600">
                       {{ methodName(payment) }} ({{ payment.get('amount')?.value | number:'1.2-2' }})
                     </span>
-                    <span class="font-mono text-error-600 dark:text-error-400">- {{ lineFeeAmount(payment) | number:'1.2-2' }}</span>
+                    <span class="font-mono text-error-600">- {{ lineFeeAmount(payment) | number:'1.2-2' }}</span>
                   </div>
                 }
               }
             </div>
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-warning-200 dark:border-warning-500/20 text-sm">
-              <div><span class="text-gray-500 dark:text-gray-400">إجمالي الفاتورة</span> <span class="font-mono font-semibold">{{ totalAmount | number:'1.2-2' }}</span></div>
-              <div><span class="text-gray-500 dark:text-gray-400">رسوم البنك</span> <span class="font-mono font-semibold text-error-600 dark:text-error-400">- {{ totalCardFee | number:'1.2-2' }}</span></div>
-              <div><span class="text-gray-500 dark:text-gray-400">تستلم الشركة</span> <span class="font-mono font-bold text-success-600 dark:text-success-400">{{ totalCompanyReceives | number:'1.2-2' }}</span></div>
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-warning-200 text-sm">
+              <div><span class="text-gray-500">إجمالي الفاتورة</span> <span class="font-mono font-semibold">{{ totalAmount | number:'1.2-2' }}</span></div>
+              <div><span class="text-gray-500">رسوم البنك</span> <span class="font-mono font-semibold text-error-600">- {{ totalCardFee | number:'1.2-2' }}</span></div>
+              <div><span class="text-gray-500">تستلم الشركة</span> <span class="font-mono font-bold text-success-600">{{ totalCompanyReceives | number:'1.2-2' }}</span></div>
             </div>
           </div>
         }
@@ -605,7 +555,7 @@
             إضافة عملة أخرى
           </button>
           <button type="button" (click)="fillPaymentFromTotal()"
-            class="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors dark:text-gray-400 dark:hover:text-gray-200">
+            class="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             ملء بإجمالي الفاتورة (ج.م)
           </button>
@@ -619,23 +569,23 @@
   @if (overrideState !== 'none') {
     <div class="mt-5">
       @if (overrideState === 'needed') {
-        <div class="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-5">
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <div class="flex items-start gap-3 mb-4">
-            <div class="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
               </svg>
             </div>
             <div>
-              <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">يلزم طلب موافقة المدير</p>
-              <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+              <p class="text-sm font-semibold text-amber-800">يلزم طلب موافقة المدير</p>
+              <p class="text-xs text-amber-700 mt-0.5">
                 بعض الأصناف أقل من الحد الأدنى للسعر. أدخل مبرراً وأرسل الطلب للمدير للموافقة.
               </p>
             </div>
           </div>
           <textarea [(ngModel)]="overrideJustification" [ngModelOptions]="{standalone: true}" rows="2"
             placeholder="مبرر طلب السعر المنخفض..."
-            class="w-full rounded-lg border border-amber-300 bg-white dark:bg-gray-800 dark:border-amber-500/40 px-3 py-2 text-sm text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 resize-none mb-3"></textarea>
+            class="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 resize-none mb-3"></textarea>
           <div class="flex items-center gap-3">
             <button type="button" (click)="submitOverrideRequest()"
               [disabled]="overrideSubmitting || !overrideJustification.trim()"
@@ -654,7 +604,7 @@
               }
             </button>
             <button type="button" (click)="cancelOverrideRequest()"
-              class="px-4 h-10 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] transition-colors">
+              class="px-4 h-10 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
               إلغاء
             </button>
           </div>
@@ -662,18 +612,18 @@
       }
 
       @if (overrideState === 'polling') {
-        <div class="rounded-2xl border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 p-5">
+        <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
           <div class="flex items-center gap-3">
             <svg class="w-5 h-5 text-blue-500 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
             <div class="flex-1">
-              <p class="text-sm font-semibold text-blue-800 dark:text-blue-300">في انتظار موافقة المدير...</p>
-              <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">يُفحص تلقائياً كل 5 ثوانٍ</p>
+              <p class="text-sm font-semibold text-blue-800">في انتظار موافقة المدير...</p>
+              <p class="text-xs text-blue-600 mt-0.5">يُفحص تلقائياً كل 5 ثوانٍ</p>
             </div>
             <button type="button" (click)="cancelOverrideRequest()"
-              class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 font-medium transition-colors shrink-0">
+              class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors shrink-0">
               إلغاء
             </button>
           </div>
@@ -681,38 +631,38 @@
       }
 
       @if (overrideState === 'approved') {
-        <div class="rounded-2xl border border-success-200 dark:border-success-500/30 bg-success-50 dark:bg-success-500/10 p-5">
+        <div class="rounded-2xl border border-success-200 bg-success-50 p-5">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-full bg-success-100 dark:bg-success-500/20 flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4 text-success-600 dark:text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="w-9 h-9 rounded-full bg-success-100 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-success-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
               </svg>
             </div>
             <div>
-              <p class="text-sm font-semibold text-success-800 dark:text-success-300">وافق المدير — يمكنك حفظ الفاتورة الآن</p>
-              <p class="text-xs text-success-600 dark:text-success-400 mt-0.5">انقر زر الحفظ أدناه لإتمام العملية</p>
+              <p class="text-sm font-semibold text-success-800">وافق المدير — يمكنك حفظ الفاتورة الآن</p>
+              <p class="text-xs text-success-600 mt-0.5">انقر زر الحفظ أدناه لإتمام العملية</p>
             </div>
           </div>
         </div>
       }
 
       @if (overrideState === 'rejected') {
-        <div class="rounded-2xl border border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 p-5">
+        <div class="rounded-2xl border border-error-200 bg-error-50 p-5">
           <div class="flex items-start gap-3">
-            <div class="w-9 h-9 rounded-full bg-error-100 dark:bg-error-500/20 flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4 text-error-600 dark:text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="w-9 h-9 rounded-full bg-error-100 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-error-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </div>
             <div class="flex-1">
-              <p class="text-sm font-semibold text-error-800 dark:text-error-300">تم رفض الطلب من المدير</p>
+              <p class="text-sm font-semibold text-error-800">تم رفض الطلب من المدير</p>
               @if (overrideRejectionNote) {
-                <p class="mt-2 text-xs text-error-700 dark:text-error-400 p-2 rounded-lg bg-error-100 dark:bg-error-500/20">
+                <p class="mt-2 text-xs text-error-700 p-2 rounded-lg bg-error-100">
                   {{ overrideRejectionNote }}
                 </p>
               }
               <button type="button" (click)="cancelOverrideRequest()"
-                class="mt-3 flex items-center gap-1.5 text-xs text-error-600 dark:text-error-400 hover:text-error-800 font-medium transition-colors">
+                class="mt-3 flex items-center gap-1.5 text-xs text-error-600 hover:text-error-800 font-medium transition-colors">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>

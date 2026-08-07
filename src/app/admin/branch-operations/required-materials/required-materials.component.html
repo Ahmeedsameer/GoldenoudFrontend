@@ -2,16 +2,16 @@
 
 <div class="p-4 md:p-6" dir="rtl">
 
-  <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <div class="crud-page-head">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">المواد المطلوبة</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">مساعد ذكي يعرض ما ينقص فرعك من مخزون أو تسعير — لا يستبدل صفحة المخزون.</p>
+      <h1 class="page-title">المواد المطلوبة</h1>
+      <p class="page-subtitle">مساعد ذكي يعرض ما ينقص فرعك من مخزون أو تسعير — لا يستبدل صفحة المخزون.</p>
     </div>
 
     @if (isAdminView) {
       <div class="flex items-center gap-2">
         <select [(ngModel)]="selectedShopId" (ngModelChange)="onShopChange()"
-          class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+          class="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
           @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
         </select>
         @if (selectedShopId) {
@@ -28,26 +28,26 @@
     <!-- Summary cards -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
       <button type="button" (click)="setFilter('out_of_stock')"
-        class="text-start bg-white dark:bg-gray-900 rounded-2xl border p-4 transition-colors"
-        [class]="filter === 'out_of_stock' ? 'border-error-400 ring-2 ring-error-500/20' : 'border-gray-200 dark:border-gray-800'">
-        <p class="text-xs text-gray-500 dark:text-gray-400">نفد المخزون</p>
-        <p class="text-2xl font-bold text-error-600 dark:text-error-400 mt-1">{{ data.summary.out_of_stock }}</p>
+        class="text-start bg-white rounded-2xl border p-4 transition-colors"
+        [class]="filter === 'out_of_stock' ? 'border-error-400 ring-2 ring-error-500/20' : 'border-gray-200'">
+        <p class="text-xs text-gray-500">نفد المخزون</p>
+        <p class="text-2xl font-bold text-error-600 mt-1">{{ data.summary.out_of_stock }}</p>
       </button>
       <button type="button" (click)="setFilter('low_stock')"
-        class="text-start bg-white dark:bg-gray-900 rounded-2xl border p-4 transition-colors"
-        [class]="filter === 'low_stock' ? 'border-amber-400 ring-2 ring-amber-500/20' : 'border-gray-200 dark:border-gray-800'">
-        <p class="text-xs text-gray-500 dark:text-gray-400">مخزون منخفض</p>
-        <p class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{{ data.summary.low_stock }}</p>
+        class="text-start bg-white rounded-2xl border p-4 transition-colors"
+        [class]="filter === 'low_stock' ? 'border-amber-400 ring-2 ring-amber-500/20' : 'border-gray-200'">
+        <p class="text-xs text-gray-500">مخزون منخفض</p>
+        <p class="text-2xl font-bold text-amber-600 mt-1">{{ data.summary.low_stock }}</p>
       </button>
       <button type="button" (click)="setFilter('needs_pricing')"
-        class="text-start bg-white dark:bg-gray-900 rounded-2xl border p-4 transition-colors"
-        [class]="filter === 'needs_pricing' ? 'border-blue-400 ring-2 ring-blue-500/20' : 'border-gray-200 dark:border-gray-800'">
-        <p class="text-xs text-gray-500 dark:text-gray-400">يحتاج تسعير</p>
-        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{{ data.summary.needs_pricing }}</p>
+        class="text-start bg-white rounded-2xl border p-4 transition-colors"
+        [class]="filter === 'needs_pricing' ? 'border-blue-400 ring-2 ring-blue-500/20' : 'border-gray-200'">
+        <p class="text-xs text-gray-500">يحتاج تسعير</p>
+        <p class="text-2xl font-bold text-blue-600 mt-1">{{ data.summary.needs_pricing }}</p>
       </button>
-      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
-        <p class="text-xs text-gray-500 dark:text-gray-400">طلبات قيد الانتظار</p>
-        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ data.summary.pending_requests }}</p>
+      <div class="bg-white rounded-2xl border border-gray-200 p-4">
+        <p class="text-xs text-gray-500">طلبات قيد الانتظار</p>
+        <p class="text-2xl font-bold text-gray-900 mt-1">{{ data.summary.pending_requests }}</p>
       </div>
     </div>
 
@@ -55,22 +55,22 @@
     <div class="flex flex-wrap gap-2 mb-5">
       <button type="button" (click)="setFilter('all')"
         class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-        [class]="filter === 'all' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">
+        [class]="filter === 'all' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
         الكل
       </button>
       <button type="button" (click)="setFilter('out_of_stock')"
         class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-        [class]="filter === 'out_of_stock' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">
+        [class]="filter === 'out_of_stock' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
         نفد المخزون
       </button>
       <button type="button" (click)="setFilter('low_stock')"
         class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-        [class]="filter === 'low_stock' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">
+        [class]="filter === 'low_stock' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
         مخزون منخفض
       </button>
       <button type="button" (click)="setFilter('needs_pricing')"
         class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-        [class]="filter === 'needs_pricing' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">
+        [class]="filter === 'needs_pricing' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
         يحتاج تسعير
       </button>
     </div>
@@ -78,50 +78,50 @@
     <!-- Groups -->
     @for (group of visibleGroups; track group) {
       @if (rowsFor(group).length > 0) {
-        <div class="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] overflow-hidden mb-5">
-          <div class="px-5 py-3 border-b border-gray-100 dark:border-white/[0.05]">
-            <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ groupLabels[group] }} ({{ rowsFor(group).length }})</h3>
+        <div class="db-tbl-card mb-5">
+          <div class="db-tbl-head">
+            <h3 class="text-sm font-semibold text-gray-800">{{ groupLabels[group] }} ({{ rowsFor(group).length }})</h3>
           </div>
-          <div class="overflow-x-auto">
-            <table class="min-w-full">
-              <thead class="bg-gray-50 dark:bg-white/[0.02]">
+          <div class="db-tbl-wrap">
+            <table class="db-tbl">
+              <thead>
                 <tr>
-                  <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">المنتج</th>
-                  <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">الفئة</th>
-                  <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">رصيد الفرع</th>
-                  <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">الحد الأدنى</th>
-                  <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">رصيد المخزن الرئيسي</th>
-                  <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">آخر سعر شراء</th>
-                  <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase">الحالة</th>
-                  <th class="px-4 py-2.5 text-start text-xs font-medium text-gray-400 uppercase"></th>
+                  <th>المنتج</th>
+                  <th>الفئة</th>
+                  <th>رصيد الفرع</th>
+                  <th>الحد الأدنى</th>
+                  <th>رصيد المخزن الرئيسي</th>
+                  <th>آخر سعر شراء</th>
+                  <th>الحالة</th>
+                  <th></th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-50 dark:divide-white/[0.03]">
+              <tbody>
                 @for (row of rowsFor(group); track row.product_id) {
-                  <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td class="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ row.name }}</td>
-                    <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ row.category || '—' }}</td>
-                    <td class="px-4 py-3 text-sm font-mono" [class]="row.branch_qty <= 0 ? 'text-error-600 dark:text-error-400 font-bold' : 'text-gray-700 dark:text-gray-300'">
+                  <tr>
+                    <td class="font-medium" style="color:#1F2937">{{ row.name }}</td>
+                    <td style="color:#6B7280">{{ row.category || '—' }}</td>
+                    <td class="font-mono text-sm" [class]="row.branch_qty <= 0 ? 'text-error-600 font-bold' : 'text-gray-700'">
                       {{ row.branch_qty | number:'1.0-3' }}
                     </td>
-                    <td class="px-4 py-3 text-sm font-mono text-gray-500 dark:text-gray-400">{{ row.minimum_quantity != null ? (row.minimum_quantity | number:'1.0-3') : '—' }}</td>
-                    <td class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{{ row.warehouse_qty | number:'1.0-3' }}</td>
-                    <td class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{{ row.last_purchase_price != null ? (row.last_purchase_price | number:'1.2-2') : '—' }}</td>
-                    <td class="px-4 py-3">
+                    <td class="font-mono" style="color:#6B7280">{{ row.minimum_quantity != null ? (row.minimum_quantity | number:'1.0-3') : '—' }}</td>
+                    <td class="font-mono" style="color:#374151">{{ row.warehouse_qty | number:'1.0-3' }}</td>
+                    <td class="font-mono" style="color:#374151">{{ row.last_purchase_price != null ? (row.last_purchase_price | number:'1.2-2') : '—' }}</td>
+                    <td>
                       @if (group === 'out_of_stock') {
-                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400">نفد المخزون</span>
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-50 text-error-700">نفد المخزون</span>
                       } @else if (group === 'low_stock') {
-                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">مخزون منخفض</span>
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">مخزون منخفض</span>
                       } @else {
-                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400">يحتاج تسعير</span>
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">يحتاج تسعير</span>
                       }
                     </td>
-                    <td class="px-4 py-3">
+                    <td>
                       @if (!row.is_priced) {
                         <span class="text-xs text-gray-400">لا يمكن الطلب قبل استكمال التسعير</span>
                       } @else if (row.existing_request) {
                         <button type="button" (click)="goToRequest(row)"
-                          class="inline-flex px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400 hover:bg-blue-100">
+                          class="inline-flex px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
                           طلب حالي: {{ row.existing_request.status_label }}
                         </button>
                       } @else if (group !== 'needs_pricing') {
@@ -141,8 +141,8 @@
     }
 
     @if (data.summary.out_of_stock === 0 && data.summary.low_stock === 0 && data.summary.needs_pricing === 0) {
-      <div class="rounded-2xl border border-gray-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.03] p-12 text-center">
-        <p class="text-sm text-gray-500 dark:text-gray-400">لا توجد مواد تحتاج انتباهك حالياً — كل شيء متوفر ومُسعّر.</p>
+      <div class="db-tbl-card p-12 text-center">
+        <p class="text-sm text-gray-500">لا توجد مواد تحتاج انتباهك حالياً — كل شيء متوفر ومُسعّر.</p>
       </div>
     }
 

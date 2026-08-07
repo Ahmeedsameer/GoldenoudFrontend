@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductService } from '../../../../services/product.service';
 import { CategoryService } from '../../../../services/category.service';
 import { FormHelperService, AlertState } from '../../../../services/form-helper.service';
@@ -27,10 +27,16 @@ export class PackagingCreateComponent implements OnInit {
   private categoryService = inject(CategoryService);
   private formHelperService = inject(FormHelperService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   loading = false;
+  pageLoading = false;
   alert: AlertState = { show: false, type: '', message: '' };
   selectedFile: File | null = null;
+  currentImageUrl: string | null = null;
+
+  productId: number | null = null;
+  isEdit = false;
 
   categories: { id: number; name: string }[] = [];
 
@@ -48,6 +54,29 @@ export class PackagingCreateComponent implements OnInit {
       next: (res) => { this.categories = res.data || []; },
       error: () => {},
     });
+
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.isEdit = true;
+      this.productId = +id;
+      this.pageLoading = true;
+      this.productService.getProductById(this.productId).subscribe({
+        next: (res) => {
+          const product = res.data || res;
+          this.form.patchValue({
+            name: product.name ?? '',
+            barcode: product.barcode ?? '',
+            category_id: product.category_id ?? '',
+            capacity_ml: product.capacity_ml ?? null,
+            warning_quantity: product.warning_quantity ?? null,
+            critical_quantity: product.critical_quantity ?? null,
+          });
+          this.currentImageUrl = product.image || null;
+          this.pageLoading = false;
+        },
+        error: () => { this.pageLoading = false; },
+      });
+    }
   }
 
   onSubmit(): void {
@@ -60,7 +89,11 @@ export class PackagingCreateComponent implements OnInit {
 
     const formData = this.formHelperService.createFormData(this.form.value, this.selectedFile, 'image');
 
-    this.productService.createPackaging(formData).subscribe({
+    const request = this.isEdit
+      ? this.productService.updateProduct(this.productId!, formData)
+      : this.productService.createPackaging(formData);
+
+    request.subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/dashboard/products']);

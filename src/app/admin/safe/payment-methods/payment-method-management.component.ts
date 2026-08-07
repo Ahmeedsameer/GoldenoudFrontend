@@ -7,6 +7,8 @@ import { PaymentMethod, PaymentMethodType, PAYMENT_METHOD_TYPE_LABELS, CARD_PAYM
 import { LoadingComponent } from '../../../loading/loading.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
+import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
+import { LabelComponent } from '../../../shared/components/form/label/label.component';
 
 const TYPES: { value: PaymentMethodType; label: string }[] = Object.entries(PAYMENT_METHOD_TYPE_LABELS)
   .map(([value, label]) => ({ value: value as PaymentMethodType, label }));
@@ -19,7 +21,7 @@ const TYPES: { value: PaymentMethodType; label: string }[] = Object.entries(PAYM
  */
 @Component({
   selector: 'app-payment-method-management',
-  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent],
+  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, ButtonComponent, LabelComponent],
   templateUrl: './payment-method-management.component.html',
 })
 export class PaymentMethodManagementComponent implements OnInit {

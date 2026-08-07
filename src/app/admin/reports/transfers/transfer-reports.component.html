@@ -4,8 +4,8 @@
 
   <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">تقارير التحويلات</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+      <h1 class="text-2xl font-bold text-gray-900">تقارير التحويلات</h1>
+      <p class="text-sm text-gray-500 mt-0.5">
         @if (summary) { الفترة: {{ summary.period.from }} — {{ summary.period.to }} }
       </p>
     </div>
@@ -13,7 +13,7 @@
       <app-date-picker id="tr-rep-from" [value]="from" (valueChange)="from = $event; applyRange()"></app-date-picker>
       <app-date-picker id="tr-rep-to" [value]="to" (valueChange)="to = $event; applyRange()"></app-date-picker>
       @if (from || to) {
-        <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء</button>
+        <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 text-error-600">إلغاء</button>
       }
     </div>
   </div>
@@ -40,7 +40,7 @@
       <!-- Warehouse KPIs (Phase 5.6) -->
       @if (summary.warehouse) {
         <div>
-          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">المستودع الرئيسي</h2>
+          <h2 class="text-sm font-semibold text-gray-700 mb-3">المستودع الرئيسي</h2>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <app-report-kpi-card title="إجمالي الطلبات" [value]="summary.warehouse.total_requests" icon="📨" color="brand"></app-report-kpi-card>
             <app-report-kpi-card title="زمن الاستجابة" [value]="formatMinutes(summary.warehouse.response_time_minutes)" icon="⏱️" color="neutral" [mono]="false"></app-report-kpi-card>
@@ -55,14 +55,14 @@
         @for (t of tabs; track t.key) {
           <button type="button" (click)="setTab(t)"
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-            [class]="activeTab.key === t.key ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400'">
+            [class]="activeTab.key === t.key ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600'">
             {{ t.label }}
           </button>
         }
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ activeTab.label }}</h2>
+        <h2 class="text-sm font-semibold text-gray-700">{{ activeTab.label }}</h2>
         <div class="flex items-center gap-2">
           <div class="w-56">
             <app-search-bar placeholder="بحث..." (searchChange)="setSearch($event)"></app-search-bar>

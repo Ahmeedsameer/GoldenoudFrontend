@@ -4,12 +4,12 @@
 
   <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">لوحة عمليات الفرع</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ shopName }}</p>
+      <h1 class="text-2xl font-bold text-gray-900">لوحة عمليات الفرع</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ shopName }}</p>
     </div>
     @if (!isManager) {
       <select (change)="setShop(+$any($event.target).value)"
-        class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
         @for (s of shops; track s.id) { <option [value]="s.id" [selected]="selectedShopId === s.id">{{ s.name }}</option> }
       </select>
     }
@@ -33,7 +33,7 @@
 
       <!-- Transfer Requests -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">طلبات النقل</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">طلبات النقل</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <app-report-kpi-card title="بانتظار الموافقة" [value]="data.pending_transfers" icon="⏳" color="warning"></app-report-kpi-card>
           <app-report-kpi-card title="نقل وارد" [value]="data.incoming_transfers" icon="📥" color="info"></app-report-kpi-card>
@@ -48,7 +48,7 @@
 
       <!-- Inventory Operations -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">عمليات المخزون</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">عمليات المخزون</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <app-report-kpi-card title="هالك اليوم" [value]="data.today_waste_count" [subtitle]="(data.today_waste_value | number:'1.0-0') + ' ج.م'" icon="🗑️" color="error"></app-report-kpi-card>
           @if (!isManager) {
@@ -61,7 +61,7 @@
 
       <!-- Today's KPIs -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">مؤشرات اليوم</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">مؤشرات اليوم</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <app-report-kpi-card title="تحويلات اليوم" [value]="data.today_transfers_count" icon="🔄" color="brand"></app-report-kpi-card>
           <app-report-kpi-card title="أصناف مُرسلة" [value]="data.items_sent_today" icon="📤" color="neutral"></app-report-kpi-card>
@@ -81,7 +81,7 @@
       <!-- Warehouse (Phase 5.5) — this branch's requests to/from the Main Warehouse -->
       @if (data.warehouse) {
         <div>
-          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">المستودع الرئيسي</h2>
+          <h2 class="text-sm font-semibold text-gray-700 mb-3">المستودع الرئيسي</h2>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <app-report-kpi-card title="إجمالي الطلبات" [value]="data.warehouse.requests" icon="📨" color="brand"></app-report-kpi-card>
             <app-report-kpi-card title="طلبات قيد التنفيذ" [value]="data.warehouse.pending_requests" icon="⏳" color="warning"></app-report-kpi-card>
@@ -116,7 +116,7 @@
 
       <!-- Low stock -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">منتجات منخفضة المخزون</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">منتجات منخفضة المخزون</h2>
         <div class="db-tbl-card">
           <div class="db-tbl-wrap">
             <table class="db-tbl">
@@ -138,7 +138,7 @@
 
       <!-- Recent requests -->
       <div>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">أحدث طلبات النقل</h2>
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">أحدث طلبات النقل</h2>
         <div class="db-tbl-card">
           <div class="db-tbl-wrap">
             <table class="db-tbl">

@@ -37,6 +37,9 @@ export class CreateCategoryComponent implements OnInit {
     // Only the floor lives on the category. The per-gram price now lives on
     // each Product (configured in the product form), so it's no longer here.
     minimum_sell_price: [null],
+    // Batch-pricing helper (any product type, not just oil): auto-fills a new
+    // batch's price and floors it — never the real selling price of anything.
+    default_selling_price: [null],
   });
 
   /** The selected Product Type object. */
@@ -85,7 +88,7 @@ export class CreateCategoryComponent implements OnInit {
     this.categoryService.createCategory(formData).subscribe({
       next: (response) => {
         this.alert = this.formHelperService.showSuccess('تم انشاء الفئه بنجاح');
-        this.categoryForm.reset({ product_type_id: null, minimum_sell_price: null });
+        this.categoryForm.reset({ product_type_id: null, minimum_sell_price: null, default_selling_price: null });
         this.loading = false;
       },
       error: (err) => {

@@ -1,13 +1,13 @@
-<app-loading [loading]="list.loading || formLoading || archiveLoading"></app-loading>
+<app-loading [loading]="list.loading || archiveLoading"></app-loading>
 
 <!-- ── Table card ──────────────────────────────────────────── -->
 <div class="ds-card overflow-hidden">
 
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100">
     <div>
-      <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ showingArchived ? 'المنتجات المؤرشفة' : 'المنتجات' }}</h2>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+      <h2 class="text-base font-semibold text-gray-900">{{ showingArchived ? 'المنتجات المؤرشفة' : 'المنتجات' }}</h2>
+      <p class="text-xs text-gray-500 mt-0.5">
         {{ showingArchived ? 'منتجات مؤرشفة — مخفية عن العمليات اليومية، يمكن استعادتها في أي وقت' : 'إدارة كتالوج المنتجات' }}
       </p>
     </div>
@@ -25,7 +25,7 @@
           class="h-9 inline-flex items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors"
           [class]="showingArchived
             ? 'bg-brand-500 text-white'
-            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/[0.05] dark:text-gray-300 dark:hover:bg-white/[0.08]'">
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 01-2-2V4a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
           </svg>
@@ -39,13 +39,13 @@
   </div>
 
   <!-- Type filter tabs — same 4-category classification used across the ERP -->
-  <div class="flex flex-wrap items-center gap-2 px-5 py-3 border-b border-gray-100 dark:border-white/[0.06]">
+  <div class="flex flex-wrap items-center gap-2 px-5 py-3 border-b border-gray-100">
     @for (t of filterTypes; track t.value) {
       <button type="button" (click)="setTypeFilter(t.value)"
         class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
         [class]="activeTypeFilter === t.value
           ? 'bg-brand-500 text-white'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/[0.05] dark:text-gray-300 dark:hover:bg-white/[0.08]'">
+          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
         <span>{{ t.icon }}</span>
         <span>{{ t.label }}</span>
       </button>
@@ -56,7 +56,7 @@
   <div class="overflow-x-auto">
     <div class="max-w-full">
       <table class="ds-table">
-        <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+        <thead class="ds-table-head bg-gray-50/50">
           <tr>
             <th class="ds-th w-12"></th>
             <th class="ds-th">الاسم</th>
@@ -69,16 +69,16 @@
         </thead>
         <tbody>
           @for (product of list.result.data; track product.id) {
-            <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
+            <tr class="hover:bg-gray-50 transition-colors cursor-pointer"
               [routerLink]="['view', product.id]">
 
               <!-- Image -->
               <td class="py-3 px-2">
                 @if (product.image) {
                   <img [src]="product.image" alt="{{ product.name }}"
-                    class="w-10 h-10 rounded-lg object-cover border border-gray-100 dark:border-white/[0.05]" />
+                    class="w-10 h-10 rounded-lg object-cover border border-gray-100" />
                 } @else {
-                  <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/[0.05] flex items-center justify-center">
+                  <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
                     <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -88,15 +88,15 @@
               </td>
 
               <!-- Name -->
-              <td class="py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ product.name }}</td>
+              <td class="py-3 text-sm font-medium text-gray-800">{{ product.name }}</td>
 
               <!-- SKU -->
-              <td class="px-4 py-3 text-sm font-mono text-gray-500 dark:text-gray-400">{{ product.sku || '—' }}</td>
+              <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ product.sku || '—' }}</td>
 
               <!-- Category -->
               <td class="px-4 py-3">
                 @if (product.category) {
-                  <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-white/[0.07] dark:text-gray-300">
+                  <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
                     {{ product.category.name }}
                   </span>
                 } @else {
@@ -105,22 +105,22 @@
               </td>
 
               <!-- Scalar -->
-              <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+              <td class="px-4 py-3 text-sm text-gray-600">
                 {{ product.scalar | productScalar }}
               </td>
 
               <!-- Status -->
               <td class="px-4 py-3">
                 @if (product.is_archived) {
-                  <span class="inline-flex items-center gap-1 rounded-full bg-warning-50 px-2 py-0.5 text-xs font-medium text-warning-700 dark:bg-warning-500/15 dark:text-warning-400">
+                  <span class="inline-flex items-center gap-1 rounded-full bg-warning-50 px-2 py-0.5 text-xs font-medium text-warning-700">
                     مؤرشف
                   </span>
                 } @else if (product.is_active) {
-                  <span class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-xs font-medium text-success-700 dark:bg-success-500/15 dark:text-success-400">
+                  <span class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-xs font-medium text-success-700">
                     نشط
                   </span>
                 } @else {
-                  <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-white/[0.05] dark:text-gray-400">
+                  <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
                     معطل
                   </span>
                 }
@@ -131,7 +131,7 @@
                 <div class="relative inline-block">
                   <app-table-dropdown>
                     <div dropdown-button>
-                      <button class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                      <button class="text-gray-500 hover:text-gray-700">
                         <svg class="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path fill-rule="evenodd" clip-rule="evenodd"
                             d="M5.99902 10.245C6.96552 10.245 7.74902 11.0285 7.74902 11.995V12.005C7.74902 12.9715 6.96552 13.755 5.99902 13.755C5.03253 13.755 4.24902 12.9715 4.24902 12.005V11.995C4.24902 11.0285 5.03253 10.245 5.99902 10.245ZM17.999 10.245C18.9655 10.245 19.749 11.0285 19.749 11.995V12.005C19.749 12.9715 18.9655 13.755 17.999 13.755C17.0325 13.755 16.249 12.9715 16.249 12.005V11.995C16.249 11.0285 17.0325 10.245 17.999 10.245ZM13.749 11.995C13.749 11.0285 12.9655 10.245 11.999 10.245C11.0325 10.245 10.249 11.0285 10.249 11.995V12.005C10.249 12.9715 11.0325 13.755 11.999 13.755C12.9655 13.755 13.749 12.9715 13.749 12.005V11.995Z"
@@ -144,12 +144,12 @@
                         <!-- Archived products can only be restored — editing/pricing/recipe
                              stays locked until the product is active again. -->
                         <button (click)="onRestore(product)" [disabled]="restoringId === product.id"
-                          class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-success-600 hover:bg-success-50 hover:text-success-700 dark:text-success-400 dark:hover:bg-success-500/10 disabled:opacity-50">
+                          class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-success-600 hover:bg-success-50 hover:text-success-700 disabled:opacity-50">
                           {{ restoringId === product.id ? 'جارِ الاستعادة...' : 'استعادة' }}
                         </button>
                       } @else {
-                        <button (click)="openEdit(product)"
-                          class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300">
+                        <button (click)="goToEdit(product)"
+                          class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700">
                           تعديل
                         </button>
                         @if (product.product_type !== 'COMPOUND') {
@@ -158,7 +158,7 @@
                                the seller on every sale via the Sales Catalog's
                                Product Builder, never stored on the product itself. -->
                           <button (click)="openRecipe(product)"
-                            class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-brand-600 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
+                            class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-brand-600 hover:bg-brand-50 hover:text-brand-700">
                             التركيبة (مكوّنات)
                           </button>
                         }
@@ -168,7 +168,7 @@
                                (invoices, FIFO, reports) keep working unchanged, and
                                an admin can restore it later from "عرض الأرشيف". -->
                           <button (click)="openArchive(product)"
-                            class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-error-500 hover:bg-error-50 hover:text-error-700 dark:hover:bg-error-500/10">
+                            class="text-xs flex w-full rounded-lg px-3 py-2 text-right font-medium text-error-500 hover:bg-error-50 hover:text-error-700">
                             أرشفة
                           </button>
                         }
@@ -197,11 +197,11 @@
   <div class="p-6">
     <div class="flex items-center justify-between mb-5">
       <div>
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">ما نوع المنتج الذي تريد إنشاءه؟</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">اختر النوع لتحديد الحقول المناسبة له</p>
+        <h2 class="text-lg font-semibold text-gray-800">ما نوع المنتج الذي تريد إنشاءه؟</h2>
+        <p class="text-sm text-gray-500 mt-0.5">اختر النوع لتحديد الحقول المناسبة له</p>
       </div>
       <button type="button" (click)="showTypeSelector = false"
-        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -211,235 +211,13 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       @for (t of creationTypes; track t.value) {
         <button type="button" (click)="chooseCreationType(t.value)"
-          class="text-right rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-5 hover:border-brand-400 hover:bg-brand-50/40 dark:hover:bg-brand-500/5 transition-colors">
+          class="text-right rounded-2xl border-2 border-gray-200 p-5 hover:border-brand-400 hover:bg-brand-50/40 transition-colors">
           <span class="text-3xl block mb-2">{{ t.icon }}</span>
-          <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-1">{{ t.title }}</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{{ t.desc }}</p>
+          <h3 class="text-sm font-semibold text-gray-800 mb-1">{{ t.title }}</h3>
+          <p class="text-xs text-gray-500 leading-relaxed">{{ t.desc }}</p>
         </button>
       }
     </div>
-  </div>
-</app-modal>
-
-
-<!-- ════════════════════════════════════════════════════════
-     FORM MODAL (Create / Edit)
-     ════════════════════════════════════════════════════════ -->
-<app-modal [isOpen]="showFormModal" (close)="showFormModal = false" className="max-w-2xl m-4 w-full">
-  <div class="p-6">
-
-    <!-- Modal header -->
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-          تعديل المنتج
-        </h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1.5">
-          @if (selectedCreationType) {
-            <span class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
-              {{ creationTypeLabel(selectedCreationType) }}
-            </span>
-          }
-        </p>
-      </div>
-      <button type="button" (click)="showFormModal = false"
-        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Error alert -->
-    @if (formError) {
-      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-        <p class="text-sm text-error-600 dark:text-error-400">{{ formError }}</p>
-      </div>
-    }
-
-    <!-- Form -->
-    <form [formGroup]="productForm" (ngSubmit)="onFormSubmit()">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-        <!-- Name (full width) -->
-        <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            اسم المنتج <span class="text-error-500">*</span>
-          </label>
-          <input type="text" formControlName="name" placeholder="اسم المنتج"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:placeholder:text-white/30"
-            [class]="productForm.get('name')?.invalid && productForm.get('name')?.touched
-              ? 'border-error-400 focus:border-error-400'
-              : 'border-gray-300 focus:border-brand-400 dark:border-gray-700'" />
-          @if (productForm.get('name')?.invalid && productForm.get('name')?.touched) {
-            <p class="mt-1 text-xs text-error-500">اسم المنتج مطلوب</p>
-          }
-        </div>
-
-        <!-- Category (always shown, all 4 types) -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الفئة</label>
-          <select formControlName="category_id"
-            class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800">
-            <option value="">— بدون فئة —</option>
-            @for (cat of categories; track cat.id) {
-              <option [value]="cat.id">{{ cat.name }}</option>
-            }
-          </select>
-        </div>
-
-        @if (!isCompound) {
-          <!-- Scalar / unit — not shown for Compound Products (no inventory unit) -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              الوحدة <span class="text-error-500">*</span>
-            </label>
-            <select formControlName="scalar"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800">
-              @for (opt of scalarOptions; track opt.value) {
-                <option [value]="opt.value">{{ opt.label }}</option>
-              }
-            </select>
-          </div>
-        }
-
-        @if (isPackaging) {
-          <!-- Bottle capacity (ml) — Packaging Material only -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              سعة الزجاجة (مل) <span class="text-error-500">*</span>
-            </label>
-            <input type="number" formControlName="capacity_ml" min="0" step="0.01" placeholder="مثال: 30"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-            <p class="text-[11px] text-gray-400 mt-1">سعر الزجاجة يشمل البخاخ والغطاء — لا حاجة لمنتجات منفصلة لهما.</p>
-          </div>
-        }
-
-        @if (isCompound) {
-          <!-- Default Oil (Composite Products only) — a convenience pre-selection,
-               NOT a recipe: no quantity/bottle/sprayer/cap is ever stored here, and
-               the cashier can always change the oil freely at sale time. -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الزيت الافتراضي (اختياري)</label>
-            <select formControlName="default_oil_id"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800">
-              <option [ngValue]="null">— بدون زيت افتراضي —</option>
-              @for (oil of oilOptions; track oil.id) {
-                <option [ngValue]="oil.id">{{ oil.name }}</option>
-              }
-            </select>
-            <p class="text-[11px] text-gray-400 mt-1">مجرد اختيار مبدئي يسرّع عملية البيع — الكاشير يقدر يغيّره لأي زيت آخر عند كل عملية بيع.</p>
-          </div>
-        }
-
-        @if (!isCompound) {
-          <!-- Barcode — not shown for Compound Products -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الباركود</label>
-            <input type="text" formControlName="barcode" placeholder="الباركود"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-          </div>
-        }
-
-        @if (isReadyProduct || isRawMaterial) {
-          <!-- Selling price: only for non-oil Ready/Raw items. Oil prices per gram. -->
-          @if (!selectedCategoryIsOil) {
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ priceFieldLabel }}{{ isRawMaterial ? ' (اختياري)' : '' }}</label>
-              <input type="number" formControlName="selling_price" min="0" step="0.01" placeholder="0.00"
-                class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-              <p class="text-[11px] text-gray-400 mt-1">الحد الأدنى محدَّد على مستوى الفئة؛ البيع بأقل منه ينبّه الإدارة.</p>
-            </div>
-          } @else {
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">سعر الجرام (ج.م) <span class="text-error-500">*</span></label>
-              <input type="number" formControlName="price_per_gram" min="0" step="0.01" placeholder="0.00"
-                class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-              <p class="text-[11px] text-gray-400 mt-1">يُحسَب سعر البيع تلقائياً: الكمية (جرام) × سعر الجرام. الحد الأدنى محدَّد على مستوى الفئة.</p>
-            </div>
-          }
-        }
-
-        @if (!isCompound) {
-          <!-- Purchase cost + live profit -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تكلفة الشراء (ج.م)</label>
-            <input type="number" formControlName="purchase_cost" min="0" step="0.01" placeholder="0.00"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-            @if (formProfit !== null) {
-              <p class="text-[11px] mt-1 font-medium" [class]="formProfit >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'">
-                الربح لكل وحدة: {{ formProfit | number:'1.2-2' }} ج.م
-              </p>
-            }
-          </div>
-
-          <!-- Warning threshold -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">حد التحذير (مخزون منخفض)</label>
-            <input type="number" formControlName="warning_quantity" min="0" step="0.001" placeholder="مثال: 200"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-            <p class="text-[11px] text-gray-400 mt-1">يُورَّث من الفئة تلقائياً إن تُرك فارغاً.</p>
-          </div>
-
-          <!-- Critical threshold -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحد الحرِج</label>
-            <input type="number" formControlName="critical_quantity" min="0" step="0.001" placeholder="مثال: 50"
-              class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
-          </div>
-
-          <!-- is_active -->
-          <div class="flex items-center gap-3">
-            <label class="relative inline-flex items-center cursor-pointer mt-5">
-              <input type="checkbox" formControlName="is_active" class="sr-only peer" />
-              <div class="w-10 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-brand-500/20 rounded-full peer dark:bg-gray-700 peer-checked:bg-brand-500 transition-colors"></div>
-              <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
-            </label>
-            <span class="text-sm text-gray-700 dark:text-gray-300 mt-5">منتج نشط</span>
-          </div>
-        }
-
-        <!-- Description / Notes (full width, all types) -->
-        <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ isCompound ? 'الوصف' : 'ملاحظات' }}</label>
-          <textarea formControlName="description" rows="3" placeholder="اختياري"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800 resize-none"></textarea>
-        </div>
-
-        @if (isCompound || isReadyProduct || isPackaging) {
-          <!-- Image upload (full width) — Compound + Ready Products + Packaging (bottles) -->
-          <div class="sm:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الصورة</label>
-            @if (currentImageUrl) {
-              <div class="mb-2 flex items-center gap-3">
-                <img [src]="currentImageUrl" alt="الصورة الحالية"
-                  class="w-16 h-16 rounded-lg object-cover border border-gray-200 dark:border-white/[0.05]" />
-                <span class="text-xs text-gray-500 dark:text-gray-400">الصورة الحالية — اختر صورة جديدة للاستبدال</span>
-              </div>
-            }
-            <input type="file" accept="image/*" (change)="onFileSelected($event)"
-              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100 dark:file:bg-brand-500/10 dark:file:text-brand-400 dark:text-gray-400" />
-          </div>
-        }
-
-      </div>
-
-      <!-- Footer buttons -->
-      <div class="flex gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-white/[0.05]">
-        <button type="submit" [disabled]="formLoading"
-          class="flex-1 h-10 rounded-lg font-medium text-sm transition-colors"
-          [class]="formLoading
-            ? 'bg-brand-400 text-white cursor-not-allowed'
-            : 'bg-brand-500 hover:bg-brand-600 text-white'">
-          @if (formLoading) { جاري الحفظ... } @else { تحديث المنتج }
-        </button>
-        <button type="button" (click)="showFormModal = false" [disabled]="formLoading"
-          class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
-          إلغاء
-        </button>
-      </div>
-
-    </form>
   </div>
 </app-modal>
 
@@ -451,16 +229,16 @@
   <div class="p-6">
 
     <div class="flex items-center gap-4 mb-5">
-      <div class="w-12 h-12 rounded-full bg-warning-100 flex items-center justify-center shrink-0 dark:bg-warning-500/15">
+      <div class="w-12 h-12 rounded-full bg-warning-100 flex items-center justify-center shrink-0">
         <svg class="w-6 h-6 text-warning-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 01-2-2V4a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
         </svg>
       </div>
       <div>
-        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
+        <h3 class="text-base font-semibold text-gray-800">
           أرشفة <span class="font-medium">{{ archivingProduct?.name }}</span>
         </h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+        <p class="text-sm text-gray-500 mt-1 leading-relaxed">
           سيتم أرشفة هذا المنتج. سيختفي من العمليات اليومية، لكنه سيبقى متاحاً للفواتير السابقة والتقارير وسجلات التدقيق.
           <br />
           يمكن التراجع عن هذا الإجراء لاحقاً.
@@ -477,7 +255,7 @@
         @if (archiveLoading) { جارِ الأرشفة... } @else { تأكيد الأرشفة }
       </button>
       <button type="button" (click)="showArchiveModal = false" [disabled]="archiveLoading"
-        class="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+        class="flex-1 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">
         إلغاء
       </button>
     </div>
@@ -495,14 +273,14 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-5">
       <div>
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">تركيبة المنتج (المكوّنات)</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          حدِّد مكوّنات <span class="font-medium text-gray-700 dark:text-gray-300">{{ recipeProduct?.name }}</span>
+        <h2 class="text-lg font-semibold text-gray-800">تركيبة المنتج (المكوّنات)</h2>
+        <p class="text-sm text-gray-500 mt-0.5">
+          حدِّد مكوّنات <span class="font-medium text-gray-700">{{ recipeProduct?.name }}</span>
           (زيت + زجاجة + إكسسوارات…). عند البيع يُخصَم كل مكوّن من مخزونه.
         </p>
       </div>
       <button type="button" (click)="closeRecipe()"
-        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        class="text-gray-400 hover:text-gray-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -510,8 +288,8 @@
     </div>
 
     @if (recipeError) {
-      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-        <p class="text-sm text-error-600 dark:text-error-400">{{ recipeError }}</p>
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200">
+        <p class="text-sm text-error-600">{{ recipeError }}</p>
       </div>
     }
 
@@ -519,13 +297,13 @@
     <div class="relative mb-4">
       <input type="text" [(ngModel)]="recipeSearch" (ngModelChange)="onRecipeSearch($event)"
         placeholder="ابحث عن منتج لإضافته كمكوّن (بالاسم)…"
-        class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+        class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm bg-transparent text-gray-800 placeholder:text-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
       @if (recipeResults.length) {
-        <div class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
           @for (p of recipeResults; track p.id) {
             <button type="button" (click)="addRecipeComponent(p)"
-              class="flex w-full items-center justify-between px-3 py-2 text-right text-sm hover:bg-gray-50 dark:hover:bg-white/[0.04]">
-              <span class="font-medium text-gray-800 dark:text-white/90">{{ p.name }}</span>
+              class="flex w-full items-center justify-between px-3 py-2 text-right text-sm hover:bg-gray-50">
+              <span class="font-medium text-gray-800">{{ p.name }}</span>
               <span class="text-xs font-mono text-gray-400">{{ p.sku || '—' }}</span>
             </button>
           }
@@ -535,24 +313,24 @@
 
     <!-- Component rows -->
     @if (recipeLoading) {
-      <p class="text-sm text-gray-500 dark:text-gray-400 py-6 text-center">جارٍ تحميل التركيبة…</p>
+      <p class="text-sm text-gray-500 py-6 text-center">جارٍ تحميل التركيبة…</p>
     } @else if (recipeRows.length === 0) {
-      <p class="text-sm text-gray-400 py-6 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+      <p class="text-sm text-gray-400 py-6 text-center border border-dashed border-gray-200 rounded-lg">
         لا توجد مكوّنات بعد — ابحث بالأعلى لإضافة أول مكوّن.
       </p>
     } @else {
       <div class="space-y-2">
         @for (row of recipeRows; track row.component_product_id; let i = $index) {
-          <div class="rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700">
+          <div class="rounded-lg border border-gray-200 px-3 py-2">
             <div class="flex items-center gap-3">
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">{{ row.name }}</p>
+                <p class="text-sm font-medium text-gray-800 truncate">{{ row.name }}</p>
                 <p class="text-xs font-mono text-gray-400">{{ row.sku || '—' }}</p>
               </div>
               <div class="flex items-center gap-1.5">
-                <label class="text-xs text-gray-500 dark:text-gray-400">{{ row.is_variable_quantity ? 'كمية مقترحة' : 'الكمية' }}</label>
+                <label class="text-xs text-gray-500">{{ row.is_variable_quantity ? 'كمية مقترحة' : 'الكمية' }}</label>
                 <input type="number" min="0.001" step="0.001" [(ngModel)]="row.quantity"
-                  class="h-9 w-24 rounded-lg border border-gray-300 px-2 text-sm text-center bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800" />
+                  class="h-9 w-24 rounded-lg border border-gray-300 px-2 text-sm text-center bg-transparent text-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
               </div>
               <button type="button" (click)="removeRecipeRow(i)"
                 class="text-error-500 hover:text-error-700 shrink-0">
@@ -561,15 +339,15 @@
                 </svg>
               </button>
             </div>
-            <div class="flex items-center gap-4 mt-2 pt-2 border-t border-dashed border-gray-100 dark:border-white/[0.06]">
-              <label class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="row.is_variable_quantity" class="rounded border-gray-300 dark:border-gray-600" />
+            <div class="flex items-center gap-4 mt-2 pt-2 border-t border-dashed border-gray-100">
+              <label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="row.is_variable_quantity" class="rounded border-gray-300" />
                 البائع يُدخل الكمية عند البيع (مثل جرامات الزيت)
               </label>
               <div class="flex items-center gap-1.5">
-                <label class="text-xs text-gray-500 dark:text-gray-400">مجموعة اختيار</label>
+                <label class="text-xs text-gray-500">مجموعة اختيار</label>
                 <input type="text" [(ngModel)]="row.component_group" placeholder="مثال: bottle"
-                  class="h-7 w-28 rounded border border-gray-300 px-2 text-xs bg-transparent text-gray-800 dark:text-white/90 focus:border-brand-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800" />
+                  class="h-7 w-28 rounded border border-gray-300 px-2 text-xs bg-transparent text-gray-800 focus:border-brand-400 focus:outline-none" />
               </div>
             </div>
           </div>
@@ -581,14 +359,14 @@
     }
 
     <!-- Footer -->
-    <div class="flex gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-white/[0.05]">
+    <div class="flex gap-3 mt-6 pt-5 border-t border-gray-100">
       <button type="button" (click)="saveRecipe()" [disabled]="recipeSaving"
         class="flex-1 h-10 rounded-lg font-medium text-sm transition-colors"
         [class]="recipeSaving ? 'bg-brand-400 text-white cursor-not-allowed' : 'bg-brand-500 hover:bg-brand-600 text-white'">
         @if (recipeSaving) { جاري الحفظ... } @else { حفظ التركيبة }
       </button>
       <button type="button" (click)="closeRecipe()" [disabled]="recipeSaving"
-        class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+        class="px-6 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">
         إلغاء
       </button>
     </div>

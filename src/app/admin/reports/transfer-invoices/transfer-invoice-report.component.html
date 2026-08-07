@@ -2,8 +2,8 @@
 
   <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">تقرير فواتير النقل الداخلية</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">كل فواتير النقل الداخلية مع فلاتر كاملة — لا تظهر أبداً في تقارير المبيعات أو الإيرادات</p>
+      <h1 class="text-2xl font-bold text-gray-900">تقرير فواتير النقل الداخلية</h1>
+      <p class="text-sm text-gray-500 mt-0.5">كل فواتير النقل الداخلية مع فلاتر كاملة — لا تظهر أبداً في تقارير المبيعات أو الإيرادات</p>
     </div>
     <app-report-toolbar exportPath="/branch-operations/reports/transfer-invoices/export" [params]="exportParams" fileName="تقرير-فواتير-النقل-الداخلية" [showRefresh]="true" (refresh)="load()"></app-report-toolbar>
   </div>
@@ -14,39 +14,39 @@
       <app-search-bar placeholder="بحث برقم الفاتورة أو الطلب..." (searchChange)="search = $event; applyFilters()"></app-search-bar>
     </div>
 
-    <select [(ngModel)]="sourceShopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="sourceShopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل مصادر النقل</option>
       @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
     </select>
 
-    <select [(ngModel)]="destinationShopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="destinationShopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل وجهات النقل</option>
       @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
     </select>
 
-    <select [(ngModel)]="transferType" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="transferType" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option value="">كل الأنواع</option>
       <option value="branch_branch">فرع إلى فرع</option>
       <option value="warehouse_branch">المستودع إلى فرع</option>
       <option value="emergency">نقل طارئ</option>
     </select>
 
-    <select [(ngModel)]="status" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="status" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option value="">كل الحالات</option>
       @for (s of statusOptions; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
     </select>
 
-    <select [(ngModel)]="creatorId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="creatorId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل من أنشأ</option>
       @for (u of users; track u.id) { <option [ngValue]="u.id">{{ u.name }}</option> }
     </select>
 
-    <select [(ngModel)]="approverId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="approverId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل من اعتمد</option>
       @for (u of users; track u.id) { <option [ngValue]="u.id">{{ u.name }}</option> }
     </select>
 
-    <select [(ngModel)]="receiverId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="receiverId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل من استلم</option>
       @for (u of users; track u.id) { <option [ngValue]="u.id">{{ u.name }}</option> }
     </select>
@@ -54,7 +54,7 @@
     <app-date-picker id="inv-rep-from" [value]="from" (valueChange)="from = $event; applyFilters()"></app-date-picker>
     <app-date-picker id="inv-rep-to" [value]="to" (valueChange)="to = $event; applyFilters()"></app-date-picker>
     @if (from || to) {
-      <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء التاريخ</button>
+      <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 text-error-600">إلغاء التاريخ</button>
     }
   </div>
 

@@ -1,21 +1,21 @@
 <app-loading [loading]="loading"></app-loading>
 
 <div class="ds-card overflow-hidden">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100">
     <div>
-      <h2 class="text-base font-semibold text-gray-900 dark:text-white">تقرير أقساط السلف</h2>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">إجمالي الأقساط في هذا الاختيار: {{ totalAmount | number:'1.2-2' }} ج.م</p>
+      <h2 class="text-base font-semibold text-gray-900">تقرير أقساط السلف</h2>
+      <p class="text-xs text-gray-500 mt-0.5">إجمالي الأقساط في هذا الاختيار: {{ totalAmount | number:'1.2-2' }} ج.م</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <select [(ngModel)]="month" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <select [(ngModel)]="month" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
         <option [ngValue]="null">كل الأشهر</option>
         @for (m of months; track m) { <option [ngValue]="m">شهر {{ m }}</option> }
       </select>
-      <select [(ngModel)]="year" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <select [(ngModel)]="year" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
         <option [ngValue]="null">كل السنوات</option>
         @for (y of years; track y) { <option [ngValue]="y">{{ y }}</option> }
       </select>
-      <select [(ngModel)]="status" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90">
+      <select [(ngModel)]="status" (ngModelChange)="load()" class="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm">
         <option value="">كل الحالات</option>
         @for (s of statusOptions; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
       </select>
@@ -25,7 +25,7 @@
 
   <div class="overflow-x-auto">
     <table class="ds-table w-full">
-      <thead class="ds-table-head bg-gray-50/50 dark:bg-white/[0.02]">
+      <thead class="ds-table-head bg-gray-50/50">
         <tr>
           <th class="ds-th">الموظف</th>
           <th class="ds-th">رقم السلفة</th>
@@ -38,14 +38,14 @@
       </thead>
       <tbody>
         @for (r of rows; track r.id) {
-          <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-            <td class="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ r.employee_name }}</td>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ r.employee_name }}</td>
             <td class="px-4 py-3 text-sm font-mono text-gray-500">#{{ r.advance_id }}</td>
             <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ r.period }}</td>
             <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ r.sequence }}</td>
-            <td class="px-4 py-3 text-sm font-mono font-medium text-gray-800 dark:text-white/90">{{ r.amount | number:'1.2-2' }}</td>
+            <td class="px-4 py-3 text-sm font-mono font-medium text-gray-800">{{ r.amount | number:'1.2-2' }}</td>
             <td class="px-4 py-3">
-              <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-gray-300">{{ r.status_label }}</span>
+              <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600">{{ r.status_label }}</span>
             </td>
             <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ r.deducted_at ? (r.deducted_at | date:'yyyy-MM-dd') : '—' }}</td>
           </tr>

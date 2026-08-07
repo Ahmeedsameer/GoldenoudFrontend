@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { LoadingComponent } from '../../../loading/loading.component';
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { ReportToolbarComponent } from '../../../shared/components/common/report-toolbar/report-toolbar.component';
+import { SearchBarComponent } from '../../../shared/components/common/search-bar/search-bar.component';
 import {
   TransferRequestService, GlobalMaterialStatusByBranch, MaterialAcrossBranches, RequiredMaterialRow,
 } from '../../../services/transfer-request.service';
@@ -22,7 +23,7 @@ type StatusFilter = 'all' | 'out_of_stock' | 'low_stock' | 'needs_pricing' | 'pe
 @Component({
   selector: 'app-global-material-status',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportToolbarComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, ReportToolbarComponent, SearchBarComponent],
   templateUrl: './global-material-status.component.html',
 })
 export class GlobalMaterialStatusComponent implements OnInit {

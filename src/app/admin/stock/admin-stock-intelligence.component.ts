@@ -17,11 +17,14 @@ import { ShopService } from '../../services/shop.service';
 import { LoadingComponent } from '../../loading/loading.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
 import { DatePickerComponent } from '../../shared/components/form/date-picker/date-picker.component';
+import { ReportKpiCardComponent } from '../../shared/components/reports/report-kpi-card/report-kpi-card.component';
+import { ReportLoadingSkeletonComponent } from '../../shared/components/reports/report-loading-skeleton/report-loading-skeleton.component';
+import { ReportEmptyStateComponent } from '../../shared/components/reports/report-empty-state/report-empty-state.component';
 
 @Component({
   selector: 'app-admin-stock-intelligence',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, DatePickerComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, AlertComponent, DatePickerComponent, ReportKpiCardComponent, ReportLoadingSkeletonComponent, ReportEmptyStateComponent],
   templateUrl: './admin-stock-intelligence.component.html',
 })
 export class AdminStockIntelligenceComponent implements OnInit {

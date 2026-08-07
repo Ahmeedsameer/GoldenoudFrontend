@@ -4,8 +4,8 @@
 
   <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">دفتر حساب المخزون</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">السجل الزمني الكامل لكل حركة على صنف واحد</p>
+      <h1 class="text-2xl font-bold text-gray-900">دفتر حساب المخزون</h1>
+      <p class="text-sm text-gray-500 mt-0.5">السجل الزمني الكامل لكل حركة على صنف واحد</p>
     </div>
     @if (productId) {
       <app-report-toolbar exportPath="/branch-operations/reports/stock-movement/export" [params]="exportParams" fileName="دفتر-حساب-المخزون" [showRefresh]="false"></app-report-toolbar>
@@ -14,19 +14,19 @@
 
   <!-- Product picker + filters -->
   <div class="mb-5 flex flex-wrap items-center gap-2">
-    <select [(ngModel)]="productId" (change)="setProduct(productId)" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 min-w-[220px]">
+    <select [(ngModel)]="productId" (change)="setProduct(productId)" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700 min-w-[220px]">
       <option [ngValue]="null">اختر منتجاً</option>
       @for (p of products; track p.id) { <option [ngValue]="p.id">{{ p.name }} ({{ p.sku }})</option> }
     </select>
     @if (productId) {
       <app-date-picker id="ledger-from" [value]="from" (valueChange)="from = $event; applyFilters()"></app-date-picker>
       <app-date-picker id="ledger-to" [value]="to" (valueChange)="to = $event; applyFilters()"></app-date-picker>
-      <select [(ngModel)]="shopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <select [(ngModel)]="shopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
         <option [ngValue]="null">كل الفروع</option>
         @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
       </select>
       @if (from || to) {
-        <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء التاريخ</button>
+        <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 text-error-600">إلغاء التاريخ</button>
       }
     }
   </div>
@@ -41,24 +41,24 @@
     <div class="space-y-6">
 
       <!-- Product header -->
-      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+      <div class="bg-white rounded-2xl border border-gray-200 p-5">
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-          <div><p class="text-xs text-gray-400 mb-0.5">المنتج</p><p class="font-semibold text-gray-800 dark:text-white/90">{{ product.general.name }}</p></div>
-          <div><p class="text-xs text-gray-400 mb-0.5">الكود</p><p class="font-mono text-gray-700 dark:text-gray-300">{{ product.general.sku || '—' }}</p></div>
-          <div><p class="text-xs text-gray-400 mb-0.5">الباركود</p><p class="font-mono text-gray-700 dark:text-gray-300">{{ product.general.barcode || '—' }}</p></div>
-          <div><p class="text-xs text-gray-400 mb-0.5">الفئة</p><p class="text-gray-700 dark:text-gray-300">{{ product.general.category || '—' }}</p></div>
-          <div><p class="text-xs text-gray-400 mb-0.5">النوع</p><p class="text-gray-700 dark:text-gray-300">{{ product.general.product_type }}</p></div>
+          <div><p class="text-xs text-gray-400 mb-0.5">المنتج</p><p class="font-semibold text-gray-800">{{ product.general.name }}</p></div>
+          <div><p class="text-xs text-gray-400 mb-0.5">الكود</p><p class="font-mono text-gray-700">{{ product.general.sku || '—' }}</p></div>
+          <div><p class="text-xs text-gray-400 mb-0.5">الباركود</p><p class="font-mono text-gray-700">{{ product.general.barcode || '—' }}</p></div>
+          <div><p class="text-xs text-gray-400 mb-0.5">الفئة</p><p class="text-gray-700">{{ product.general.category || '—' }}</p></div>
+          <div><p class="text-xs text-gray-400 mb-0.5">النوع</p><p class="text-gray-700">{{ product.general.product_type }}</p></div>
         </div>
         @if (product.inventory) {
-          <div class="grid grid-cols-2 md:grid-cols-2 gap-4 text-sm mt-3 pt-3 border-t border-gray-100 dark:border-white/[0.05]">
-            <div><p class="text-xs text-gray-400 mb-0.5">الرصيد الحالي (النظام)</p><p class="font-bold font-mono text-gray-900 dark:text-white">{{ product.inventory.current_stock }}</p></div>
-            <div><p class="text-xs text-gray-400 mb-0.5">القيمة الحالية</p><p class="font-bold font-mono text-gray-900 dark:text-white">{{ product.inventory.inventory_value | number:'1.0-2' }} ج.م</p></div>
+          <div class="grid grid-cols-2 md:grid-cols-2 gap-4 text-sm mt-3 pt-3 border-t border-gray-100">
+            <div><p class="text-xs text-gray-400 mb-0.5">الرصيد الحالي (النظام)</p><p class="font-bold font-mono text-gray-900">{{ product.inventory.current_stock }}</p></div>
+            <div><p class="text-xs text-gray-400 mb-0.5">القيمة الحالية</p><p class="font-bold font-mono text-gray-900">{{ product.inventory.inventory_value | number:'1.0-2' }} ج.م</p></div>
           </div>
         }
       </div>
 
       @if (!report.scoped_to_product) {
-        <div class="rounded-xl border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-2 text-xs text-blue-700 dark:text-blue-300">
+        <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs text-blue-700">
           هذه الصفحة مخصصة لصنف واحد فقط — لعرض حركة المخزون عبر كل المنتجات استخدم تقرير حركة المخزون.
         </div>
       }

@@ -2,8 +2,8 @@
 
   <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">تقرير سلف الرواتب</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">كل سلف الرواتب مع فلاتر كاملة — الخزنة الدافعة والخزنة المستلمة لكل سلفة</p>
+      <h1 class="text-2xl font-bold text-gray-900">تقرير سلف الرواتب</h1>
+      <p class="text-sm text-gray-500 mt-0.5">كل سلف الرواتب مع فلاتر كاملة — الخزنة الدافعة والخزنة المستلمة لكل سلفة</p>
     </div>
     <app-report-toolbar exportPath="/hr/reports/advances/export" [params]="exportParams" fileName="تقرير-سلف-الرواتب" [showRefresh]="true" (refresh)="load()"></app-report-toolbar>
   </div>
@@ -14,32 +14,32 @@
       <app-search-bar placeholder="بحث باسم الموظف أو بريده..." (searchChange)="search = $event; applyFilters()"></app-search-bar>
     </div>
 
-    <select [(ngModel)]="userId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="userId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل الموظفين</option>
       @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.name }}</option> }
     </select>
 
-    <select [(ngModel)]="shopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="shopId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل الفروع</option>
       @for (s of shops; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
     </select>
 
-    <select [(ngModel)]="payingSafeId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="payingSafeId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل الخزن الدافعة</option>
       @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
     </select>
 
-    <select [(ngModel)]="receivingSafeId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="receivingSafeId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل الخزن المستلمة</option>
       @for (s of safes; track s.id) { <option [ngValue]="s.id">{{ safeLabel(s) }}</option> }
     </select>
 
-    <select [(ngModel)]="status" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="status" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option value="">كل الحالات</option>
       @for (s of statusOptions; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
     </select>
 
-    <select [(ngModel)]="creatorId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+    <select [(ngModel)]="creatorId" (change)="applyFilters()" class="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700">
       <option [ngValue]="null">كل من اعتمد</option>
       @for (a of admins; track a.id) { <option [ngValue]="a.id">{{ a.name }}</option> }
     </select>
@@ -47,7 +47,7 @@
     <app-date-picker id="adv-rep-from" [value]="from" (valueChange)="from = $event; applyFilters()"></app-date-picker>
     <app-date-picker id="adv-rep-to" [value]="to" (valueChange)="to = $event; applyFilters()"></app-date-picker>
     @if (from || to) {
-      <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 dark:border-error-500/30 text-error-600 dark:text-error-400">إلغاء التاريخ</button>
+      <button type="button" (click)="clearRange()" class="text-xs font-medium px-2.5 py-1.5 rounded-xl border border-error-200 text-error-600">إلغاء التاريخ</button>
     }
   </div>
 

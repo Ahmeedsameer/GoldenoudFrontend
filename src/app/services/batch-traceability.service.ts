@@ -11,7 +11,16 @@ export interface BatchRow {
   purchase_date: string | null; expiry_date: string | null; product_name: string | null; sku: string | null;
   original_quantity: number; remaining_quantity: number; reserved_quantity: number;
   transferred_quantity: number; wasted_quantity: number; sold_quantity: number; net_adjustment: number;
+  purchase_cost: number; selling_price: number | null; revenue: number; gross_profit: number;
+  status: 'finished' | 'active';
 }
+
+export interface BatchMovementRow {
+  date: string; type: string; type_label: string; batch_id: number; batch_number: string;
+  reference_number: string; quantity_delta: number; shop_name: string | null; user: string | null;
+}
+
+export interface BatchMovementsData { rows: BatchMovementRow[]; total_in: number; total_out: number; }
 
 export interface BatchListMeta { current_page: number; last_page: number; total: number; per_page: number; }
 
@@ -35,6 +44,12 @@ export interface BatchDetailData {
 
 export interface BatchFilters {
   product_id?: number; supplier_id?: number; shop_id?: number; from?: string; to?: string; search?: string; page?: number; per_page?: number;
+  /** 'finished' | 'near_finished' — see near_finished_threshold (default 10). */
+  status?: 'finished' | 'near_finished';
+  near_finished_threshold?: number;
+  /** Ranks the full filtered dataset before pagination — Profit/Sales by Batch views. */
+  sort?: 'revenue' | 'profit' | 'sold' | 'remaining';
+  limit?: number;
 }
 
 export interface BatchSummary {
@@ -62,5 +77,10 @@ export class BatchTraceabilityService {
 
   show(id: number): Observable<BatchDetailData> {
     return this.http.get<any>(`${API_BASE}/${id}`).pipe(map((r) => r.data));
+  }
+
+  /** Cross-batch Movement History — every purchase/sale/transfer/waste/adjustment event, unioned across every batch matching the filters. */
+  movements(filters: BatchFilters): Observable<BatchMovementsData> {
+    return this.http.get<any>(`${API_BASE}/movements`, { params: this.clean(filters) }).pipe(map((r) => r.data));
   }
 }

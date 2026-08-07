@@ -4,8 +4,8 @@
   <div class="space-y-5">
 
     <div class="ds-card overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white">بيانات المستخدم</h2>
+      <div class="px-5 py-4 border-b border-gray-100">
+        <h2 class="text-base font-semibold text-gray-900">بيانات المستخدم</h2>
       </div>
       <div class="p-5 space-y-5">
         <div><app-user-meta-card [user]="user"/></div>
@@ -14,11 +14,11 @@
 
     <!-- ── Profile details / edit ─────────────────────────── -->
     <div class="ds-card overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06] flex items-center justify-between">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white">تفاصيل الحساب</h2>
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-base font-semibold text-gray-900">تفاصيل الحساب</h2>
         @if (isOwnProfile && !editMode) {
           <button type="button" (click)="toggleEditMode()"
-            class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">تعديل</button>
+            class="text-xs font-medium text-brand-600 hover:text-brand-700">تعديل</button>
         }
       </div>
 
@@ -33,46 +33,46 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
               <p class="text-gray-400 text-xs mb-1">البريد الإلكتروني</p>
-              <p class="text-gray-800 dark:text-white/90">{{ user.email }}</p>
+              <p class="text-gray-800">{{ user.email }}</p>
             </div>
             <div>
               <p class="text-gray-400 text-xs mb-1">الهاتف</p>
-              <p class="text-gray-800 dark:text-white/90">{{ user.phone || '—' }}</p>
+              <p class="text-gray-800">{{ user.phone || '—' }}</p>
             </div>
             <div>
               <p class="text-gray-400 text-xs mb-1">الدور</p>
-              <p class="text-gray-800 dark:text-white/90">{{ user.role }}</p>
+              <p class="text-gray-800">{{ user.role }}</p>
             </div>
             <div>
               <p class="text-gray-400 text-xs mb-1">الفرع</p>
-              <p class="text-gray-800 dark:text-white/90">{{ user.shop?.name || '—' }}</p>
+              <p class="text-gray-800">{{ user.shop?.name || '—' }}</p>
             </div>
             <div>
               <p class="text-gray-400 text-xs mb-1">تاريخ الإنشاء</p>
-              <p class="text-gray-800 dark:text-white/90">{{ user.created_at ? (user.created_at | date:'mediumDate') : '—' }}</p>
+              <p class="text-gray-800">{{ user.created_at ? (user.created_at | date:'mediumDate') : '—' }}</p>
             </div>
           </div>
         } @else {
           <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الاسم</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">الاسم</label>
                 <input type="text" formControlName="name"
-                  class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:border-gray-700"
+                  class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                   [class]="profileForm.get('name')?.invalid && profileForm.get('name')?.touched ? 'border-error-400' : 'border-gray-300'" />
                 <app-form-error [control]="profileForm.get('name')"></app-form-error>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">البريد الإلكتروني</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
                 <input type="email" formControlName="email"
-                  class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:border-gray-700"
+                  class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                   [class]="profileForm.get('email')?.invalid && profileForm.get('email')?.touched ? 'border-error-400' : 'border-gray-300'" />
                 <app-form-error [control]="profileForm.get('email')"></app-form-error>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الهاتف</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">الهاتف</label>
                 <input type="text" formControlName="phone" placeholder="اختياري"
-                  class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:border-gray-700"
+                  class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                   [class]="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched ? 'border-error-400' : 'border-gray-300'" />
                 <app-form-error [control]="profileForm.get('phone')"></app-form-error>
               </div>
@@ -84,7 +84,7 @@
                 @if (savingProfile) { جارٍ الحفظ... } @else { حفظ التغييرات }
               </button>
               <button type="button" (click)="toggleEditMode()" [disabled]="savingProfile"
-                class="h-10 px-5 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03]">
+                class="h-10 px-5 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">
                 إلغاء
               </button>
             </div>
@@ -95,8 +95,8 @@
 
     <!-- ── Password management ─────────────────────────────── -->
     <div class="ds-card overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+      <div class="px-5 py-4 border-b border-gray-100">
+        <h2 class="text-base font-semibold text-gray-900">
           {{ isOwnProfile ? 'تغيير كلمة المرور' : 'إعادة تعيين كلمة المرور' }}
         </h2>
         @if (!isOwnProfile) {
@@ -114,16 +114,16 @@
         <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">كلمة المرور الجديدة</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور الجديدة</label>
               <input type="password" formControlName="new_password"
-                class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:border-gray-700"
+                class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                 [class]="passwordForm.get('new_password')?.invalid && passwordForm.get('new_password')?.touched ? 'border-error-400' : 'border-gray-300'" />
               <app-form-error [control]="passwordForm.get('new_password')"></app-form-error>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تأكيد كلمة المرور</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">تأكيد كلمة المرور</label>
               <input type="password" formControlName="new_password_confirmation"
-                class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-800 dark:border-gray-700"
+                class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                 [class]="passwordForm.get('new_password_confirmation')?.invalid && passwordForm.get('new_password_confirmation')?.touched ? 'border-error-400' : 'border-gray-300'" />
               @if (passwordForm.get('new_password_confirmation')?.touched && passwordForm.hasError('mismatch')) {
                 <p class="mt-1 text-xs text-error-500">كلمتا المرور غير متطابقتين</p>

@@ -8,10 +8,11 @@ import { Convention } from '../../models/convention.model';
 import { LoadingComponent } from '../../loading/loading.component';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
 import { AlertComponent } from '../../shared/components/ui/alert/alert.component';
+import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 
 @Component({
   selector: 'app-convention-shop',
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, ButtonComponent],
   templateUrl: './convention-shop.component.html',
 })
 export class ConventionShopComponent implements OnInit {

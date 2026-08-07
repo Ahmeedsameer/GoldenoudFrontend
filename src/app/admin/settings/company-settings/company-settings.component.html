@@ -1,8 +1,8 @@
 <app-loading [loading]="loading"></app-loading>
 
 <div class="mb-5">
-  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">إعدادات الشركة</h2>
-  <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+  <h2 class="text-xl font-semibold text-gray-800">إعدادات الشركة</h2>
+  <p class="text-sm text-gray-500 mt-0.5">
     اسم الشركة وشعارها وبيانات التواصل — تُستخدم في الشريط الجانبي وصفحة الدخول والتقارير المصدّرة.
   </p>
 </div>
@@ -24,7 +24,7 @@
     <div>
       <app-label>شعار الشركة</app-label>
       <div class="flex items-center gap-4">
-        <div class="w-20 h-20 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-white/[0.03] shrink-0">
+        <div class="w-20 h-20 rounded-xl border border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 shrink-0">
           @if (logoPreview || currentLogoUrl) {
             <img [src]="logoPreview || currentLogoUrl" alt="شعار الشركة" class="w-full h-full object-contain p-1" />
           } @else {
@@ -33,7 +33,7 @@
         </div>
         <div>
           <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" (change)="onLogoSelected($event)"
-            class="text-xs text-gray-600 dark:text-gray-400 file:me-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-brand-50 file:text-brand-600 dark:file:bg-brand-500/10 dark:file:text-brand-400 hover:file:bg-brand-100" />
+            class="text-xs text-gray-600 file:me-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100" />
           <p class="text-[11px] text-gray-400 mt-1">PNG, JPG, SVG أو WEBP — بحد أقصى 2 ميجابايت</p>
         </div>
       </div>
@@ -68,7 +68,7 @@
     <div>
       <app-label for="co-desc">وصف الشركة (اختياري)</app-label>
       <textarea id="co-desc" rows="3" [(ngModel)]="form.description"
-        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 resize-none focus:border-brand-400 focus:outline-none"></textarea>
+        class="lux-textarea"></textarea>
     </div>
 
     <app-button (btnClick)="save()" [disabled]="loading">

@@ -78,6 +78,12 @@ export const routes: Routes = [
             { path: 'create/packaging',     loadComponent: () => import('./admin/product-managment/product-create/packaging-create/packaging-create.component').then(m => m.PackagingCreateComponent) },
             { path: 'create/ready-product', loadComponent: () => import('./admin/product-managment/product-create/ready-product-create/ready-product-create.component').then(m => m.ReadyProductCreateComponent) },
             { path: 'create/compound',      loadComponent: () => import('./admin/product-managment/product-create/compound-create/compound-create.component').then(m => m.CompoundCreateComponent) },
+            // Edit reuses the exact same create components — dual-mode (create/edit)
+            // triggered by the presence of :id, mirroring ShopFormComponent's pattern.
+            { path: 'edit/raw-material/:id',  loadComponent: () => import('./admin/product-managment/product-create/raw-material-create/raw-material-create.component').then(m => m.RawMaterialCreateComponent) },
+            { path: 'edit/packaging/:id',     loadComponent: () => import('./admin/product-managment/product-create/packaging-create/packaging-create.component').then(m => m.PackagingCreateComponent) },
+            { path: 'edit/ready-product/:id', loadComponent: () => import('./admin/product-managment/product-create/ready-product-create/ready-product-create.component').then(m => m.ReadyProductCreateComponent) },
+            { path: 'edit/compound/:id',      loadComponent: () => import('./admin/product-managment/product-create/compound-create/compound-create.component').then(m => m.CompoundCreateComponent) },
           ] },
           {
             path: 'categories',
@@ -120,6 +126,9 @@ export const routes: Routes = [
       { path: 'reports/stock-movement', loadComponent: () => import('./admin/reports/stock-movement/stock-movement-report.component').then(m => m.StockMovementReportComponent) },
       { path: 'reports/inventory-ledger', loadComponent: () => import('./admin/reports/inventory-ledger/inventory-ledger.component').then(m => m.InventoryLedgerComponent) },
       { path: 'reports/batches', loadComponent: () => import('./admin/reports/batches/batch-traceability.component').then(m => m.BatchTraceabilityComponent) },
+      { path: 'reports/batches/profit', data: { mode: 'profit' }, loadComponent: () => import('./admin/reports/batch-ranking/batch-ranking-report.component').then(m => m.BatchRankingReportComponent) },
+      { path: 'reports/batches/sales',  data: { mode: 'sales' },  loadComponent: () => import('./admin/reports/batch-ranking/batch-ranking-report.component').then(m => m.BatchRankingReportComponent) },
+      { path: 'reports/batches/movements', loadComponent: () => import('./admin/reports/batch-movements/batch-movements-report.component').then(m => m.BatchMovementsReportComponent) },
       { path: 'reports/inventory-audit', loadComponent: () => import('./admin/reports/audit/inventory-audit-report.component').then(m => m.InventoryAuditReportComponent) },
       { path: 'reports/required-materials', loadComponent: () => import('./admin/branch-operations/required-materials/required-materials.component').then(m => m.RequiredMaterialsComponent) },
       { path: 'branch-operations/dashboard',          loadComponent: () => import('./admin/branch-operations/branch-dashboard/branch-dashboard.component').then(m => m.BranchDashboardComponent) },
@@ -139,6 +148,7 @@ export const routes: Routes = [
       { path: 'pending-invoices',   loadComponent: () => import('./admin/invoices/admin-invoices.component').then(m => m.AdminInvoicesComponent) },
       { path: 'all-invoices',       loadComponent: () => import('./admin/all-invoices/all-invoices.component').then(m => m.AllInvoicesComponent) },
       { path: 'invoices/:id',       loadComponent: () => import('./seller/invoices/invoice-detail/invoice-detail.component').then(m => m.InvoiceDetailComponent) },
+      { path: 'invoices/:id/edit',  loadComponent: () => import('./seller/invoices/edit-invoice/edit-invoice.component').then(m => m.EditInvoiceComponent) },
       { path: 'hr/employees',       loadComponent: () => import('./admin/hr/employees/hr-employees.component').then(m => m.HrEmployeesComponent) },
       { path: 'hr/transfers',       loadComponent: () => import('./admin/hr/transfers/hr-transfers.component').then(m => m.HrTransfersComponent) },
       { path: 'hr/attendance',      loadComponent: () => import('./admin/hr/attendance/hr-attendance.component').then(m => m.HrAttendanceComponent) },
@@ -171,6 +181,7 @@ export const routes: Routes = [
         children: [
           { path: '', loadComponent: () => import('./seller/invoices/invoices-list/invoices-list.component').then(m => m.InvoicesListComponent) },
           { path: ':id', loadComponent: () => import('./seller/invoices/invoice-detail/invoice-detail.component').then(m => m.InvoiceDetailComponent) },
+          { path: ':id/edit', loadComponent: () => import('./seller/invoices/edit-invoice/edit-invoice.component').then(m => m.EditInvoiceComponent) },
         ],
       },
       { path: 'override-requests',  loadComponent: () => import('./manager/override-requests/override-requests.component').then(m => m.OverrideRequestsComponent) },

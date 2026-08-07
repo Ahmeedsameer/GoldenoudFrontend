@@ -13,10 +13,11 @@ import { matchesSearch } from '../../../shared/utils/text-search.util';
 type Period = 'today' | 'week' | 'month' | 'year';
 
 /**
- * Side-by-side comparison of every branch's revenue, estimated profit, top
- * seller, and top oil/bottle used — for the selected period. "Estimated
- * profit" uses each product's current purchase_cost, not a historical COGS
- * figure (none is captured at sale time anywhere in this schema).
+ * Side-by-side comparison of every branch's revenue, real profit, top
+ * seller, and top oil/bottle used — for the selected period. Profit comes
+ * straight from each sale's own frozen InvoiceItem.line_cost/line_profit
+ * snapshot (the exact FIFO batch consumed at sale time), never a live/
+ * current product cost — real historical COGS, not an estimate.
  */
 @Component({
   selector: 'app-branch-comparison-report',
@@ -114,7 +115,7 @@ export class BranchComparisonReportComponent implements OnInit {
     const branches = this.data?.branches ?? [];
     this.revenueSeries = [
       { name: 'الإيرادات', data: branches.map((b) => b.total_revenue) },
-      { name: 'الربح التقديري', data: branches.map((b) => b.estimated_profit) },
+      { name: 'الربح الفعلي', data: branches.map((b) => b.estimated_profit) },
     ];
     this.revenueOptions = { ...this.revenueOptions, xaxis: { ...this.revenueOptions.xaxis, categories: branches.map((b) => b.shop_name) } };
   }

@@ -4,20 +4,20 @@
     (click)="close()">
 
     <!-- Modal panel — stop propagation so clicking inside doesn't close -->
-    <div class="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
+    <div class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden"
       (click)="$event.stopPropagation()">
 
       <!-- Header -->
-      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.07]">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
         <div class="flex items-center gap-2">
           <svg class="w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
-          <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">فاتورة #{{ invoice.id }}</h3>
+          <h3 class="text-base font-semibold text-gray-800">فاتورة #{{ invoice.id }}</h3>
         </div>
         <button type="button" (click)="close()"
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+          class="text-gray-400 hover:text-gray-600 transition-colors">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -28,12 +28,12 @@
       <div class="px-5 py-4 max-h-[60vh] overflow-y-auto space-y-3 text-sm">
 
         <!-- Company + shop + meta -->
-        <div class="text-center pb-3 border-b border-dashed border-gray-200 dark:border-white/[0.08]">
+        <div class="text-center pb-3 border-b border-dashed border-gray-200">
           @if (companySettings.current.logo_url) {
             <img [src]="companySettings.current.logo_url" alt="" class="h-8 mx-auto mb-1" />
           }
-          <p class="text-sm font-semibold text-gray-700 dark:text-white/80">{{ companySettings.current.name }}</p>
-          <p class="text-base font-bold text-gray-900 dark:text-white">{{ invoice.shop?.name }}</p>
+          <p class="text-sm font-semibold text-gray-700">{{ companySettings.current.name }}</p>
+          <p class="text-base font-bold text-gray-900">{{ invoice.shop?.name }}</p>
           <p class="text-xs text-gray-400">فاتورة مبيعات</p>
         </div>
 
@@ -42,20 +42,20 @@
           <tbody>
             <tr>
               <td class="text-gray-400 py-0.5 w-1/3">رقم الفاتورة</td>
-              <td class="font-bold text-gray-800 dark:text-white/90">#{{ invoice.id }}</td>
+              <td class="font-bold text-gray-800">#{{ invoice.id }}</td>
             </tr>
             <tr>
               <td class="text-gray-400 py-0.5">التاريخ</td>
-              <td class="text-gray-700 dark:text-gray-300">{{ invoice.date }}</td>
+              <td class="text-gray-700">{{ invoice.date }}</td>
             </tr>
             <tr>
               <td class="text-gray-400 py-0.5">البائع</td>
-              <td class="text-gray-700 dark:text-gray-300">{{ invoice.seller?.name }}</td>
+              <td class="text-gray-700">{{ invoice.seller?.name }}</td>
             </tr>
             @if (invoice.customer?.name || invoice.customer?.phone) {
               <tr>
                 <td class="text-gray-400 py-0.5">العميل</td>
-                <td class="text-gray-700 dark:text-gray-300">
+                <td class="text-gray-700">
                   {{ invoice.customer?.name || invoice.customer?.phone }}
                 </td>
               </tr>
@@ -65,8 +65,8 @@
               <td>
                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium"
                   [class]="invoice.status === 'approved'
-                    ? 'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-300'
-                    : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'">
+                    ? 'bg-success-100 text-success-700'
+                    : 'bg-amber-100 text-amber-700'">
                   {{ invoice.status === 'approved' ? 'معتمدة' : 'قيد المراجعة' }}
                 </span>
               </td>
@@ -75,13 +75,13 @@
         </table>
 
         <!-- Items -->
-        <div class="border-t border-dashed border-gray-200 dark:border-white/[0.08] pt-3">
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">الأصناف</p>
+        <div class="border-t border-dashed border-gray-200 pt-3">
+          <p class="text-xs font-semibold text-gray-500 mb-2">الأصناف</p>
           <div class="space-y-2">
             @for (line of displayLines; track $index) {
               <div class="flex items-start justify-between gap-2">
                 <div class="flex-1 min-w-0">
-                  <p class="text-xs font-medium text-gray-800 dark:text-white/90 truncate">
+                  <p class="text-xs font-medium text-gray-800 truncate">
                     {{ line.name }}
                   </p>
                   @if (line.composed) {
@@ -96,7 +96,7 @@
                     </p>
                   }
                 </div>
-                <span class="text-xs font-bold font-mono text-gray-800 dark:text-white/90 shrink-0">
+                <span class="text-xs font-bold font-mono text-gray-800 shrink-0">
                   {{ line.lineTotal | number:'1.2-2' }} ج.م
                 </span>
               </div>
@@ -105,27 +105,27 @@
         </div>
 
         <!-- Total -->
-        <div class="border-t-2 border-gray-300 dark:border-white/[0.15] pt-3 flex items-center justify-between">
-          <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">الإجمالي الكلي</span>
-          <span class="text-xl font-bold font-mono text-gray-900 dark:text-white">
+        <div class="border-t-2 border-gray-300 pt-3 flex items-center justify-between">
+          <span class="text-sm font-semibold text-gray-600">الإجمالي الكلي</span>
+          <span class="text-xl font-bold font-mono text-gray-900">
             {{ invoice.total_amount | number:'1.2-2' }} ج.م
           </span>
         </div>
 
         <!-- Payment method(s) -->
         @if (invoice.payments?.length) {
-          <div class="border-t border-dashed border-gray-200 dark:border-white/[0.08] pt-3">
-            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">طريقة الدفع</p>
+          <div class="border-t border-dashed border-gray-200 pt-3">
+            <p class="text-xs font-semibold text-gray-500 mb-2">طريقة الدفع</p>
             <div class="space-y-1.5">
               @for (p of invoice.payments; track $index) {
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-gray-700 dark:text-gray-300">
+                  <span class="text-gray-700">
                     {{ methodLabel(p.payment_method) }}
                     @if (methodHasTxn(p.payment_method) && p.transaction_number) {
-                      <span class="text-gray-400">— رقم العملية: <span class="font-mono text-gray-600 dark:text-gray-300">{{ p.transaction_number }}</span></span>
+                      <span class="text-gray-400">— رقم العملية: <span class="font-mono text-gray-600">{{ p.transaction_number }}</span></span>
                     }
                   </span>
-                  <span class="font-mono text-gray-800 dark:text-white/90">
+                  <span class="font-mono text-gray-800">
                     {{ p.amount | number:'1.2-2' }} {{ p.currency?.code || '' }}
                   </span>
                 </div>
@@ -137,7 +137,7 @@
       </div>
 
       <!-- Action buttons -->
-      <div class="flex items-center gap-3 px-5 py-4 border-t border-gray-100 dark:border-white/[0.07]">
+      <div class="flex items-center gap-3 px-5 py-4 border-t border-gray-100">
 
         <!-- Print button -->
         <button type="button" (click)="printReceipt()"
@@ -151,7 +151,7 @@
 
         <!-- Close -->
         <button type="button" (click)="close()"
-          class="h-10 px-5 rounded-xl border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors">
+          class="h-10 px-5 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
           إغلاق
         </button>
 

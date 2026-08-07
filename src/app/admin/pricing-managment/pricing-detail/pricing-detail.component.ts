@@ -98,7 +98,8 @@ export class PricingDetailComponent implements OnInit {
 
   historyLabel(type: PriceHistoryRow['type']): string {
     if (type === 'cost_update') return 'تحديث تكلفة';
-    if ((type as string) === 'batch_pricing') return 'تسعير دفعة';
+    if (type === 'batch_pricing') return 'تسعير دفعة';
+    if (type === 'batch_price_edit') return 'تعديل سعر دفعة';
     return 'تعديل سعر';
   }
 
@@ -197,7 +198,9 @@ export class PricingDetailComponent implements OnInit {
 
   startBatchPricing(batch: PricingBatch): void {
     this.pricingBatchId = batch.id;
-    this.batchPrice = null;
+    // Editing an already-priced batch pre-fills its current price; a new
+    // (never-priced) batch pre-fills the category's default instead.
+    this.batchPrice = batch.is_priced ? batch.selling_price : (this.detail?.category_default_price ?? null);
     this.batchReason = '';
     this.batchSaveError = '';
   }
@@ -213,7 +216,11 @@ export class PricingDetailComponent implements OnInit {
     if (!this.pricingBatchId || !this.batchPrice || this.batchPrice <= 0) return;
     this.batchSaving = true;
     this.batchSaveError = '';
-    this.pricingService.priceBatch(this.productId, this.pricingBatchId, this.batchPrice, this.batchReason || undefined).subscribe({
+    const batch = this.detail?.batches?.find((b) => b.id === this.pricingBatchId);
+    const request = batch?.is_priced
+      ? this.pricingService.updateBatchPrice(this.productId, this.pricingBatchId, this.batchPrice, this.batchReason || undefined)
+      : this.pricingService.priceBatch(this.productId, this.pricingBatchId, this.batchPrice, this.batchReason || undefined);
+    request.subscribe({
       next: (d) => {
         this.detail = d;
         this.batchSaving = false;

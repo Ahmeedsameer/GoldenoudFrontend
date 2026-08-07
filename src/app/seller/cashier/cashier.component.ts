@@ -13,8 +13,9 @@ import { AlertComponent } from '../../shared/components/ui/alert/alert.component
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
-import { CatalogSellDialogComponent, ComposedLine } from './catalog-sell-dialog/catalog-sell-dialog.component';
+import { ComposedLine } from './catalog-sell-dialog/catalog-sell-dialog.component';
 import { SearchBarComponent } from '../../shared/components/common/search-bar/search-bar.component';
+import { SalesCatalogComponent } from '../../shared/components/sales-catalog/sales-catalog.component';
 import { CustomerFormComponent } from '../../shared/components/customer-form/customer-form.component';
 import { CustomerService } from '../../services/customer.service';
 import { ActivatedRoute } from '@angular/router';
@@ -47,8 +48,8 @@ export interface CatalogProduct {
     ModalComponent,
     FormsModule,
     InvoiceReceiptComponent,
-    CatalogSellDialogComponent,
     SearchBarComponent,
+    SalesCatalogComponent,
     CustomerFormComponent,
   ],
   templateUrl: './cashier.component.html',
@@ -301,75 +302,15 @@ export class CashierComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Sales Catalog — always visible, no button-gating ─────────────────────
   // "When I open the Sales screen, I see the Catalog" — this is the default,
   // primary view, not a secondary action hidden behind a button/modal.
-  catalogItems: CatalogProduct[] = [];
-  catalogLoading = false;
-  catalogSearch = '';
-
-  private loadCatalog() {
-    this.catalogLoading = true;
-    this.salesService.searchCatalogProducts(this.catalogSearch).subscribe({
-      next: (rows) => { this.catalogItems = rows; this.catalogLoading = false; },
-      error: () => { this.catalogLoading = false; },
-    });
-  }
-
-  /** Wired to the shared search-bar — already debounced (300ms), trimmed,
-   *  and lowercased by the component itself before this fires. */
-  setCatalogSearch(value: string) {
-    this.catalogSearch = value;
-    this.loadCatalog();
-  }
-
-  /** Set only while the Product Builder is open for a Compound Product. */
-  builderProduct: { id: number; name: string; default_oil_id?: number | null } | null = null;
-
-  /** Ready Products with zero stock in the active branch — Compound Products
-   *  have no fixed stock of their own (their oil+bottle availability is
-   *  checked live in the Product Builder), so this never applies to them. */
-  isOutOfStock(p: CatalogProduct): boolean {
-    return p.product_type !== 'COMPOUND' && (p.shop_stock ?? 0) <= 0;
-  }
-
-  /** A Ready Product that has been purchased/supplied but never given a
-   *  selling price in Pricing Management — must not be sellable until an
-   *  admin completes pricing. Compound Products are exempt: their price is
-   *  entered fresh in the Product Builder every sale. */
-  isMissingPrice(p: CatalogProduct): boolean {
-    return p.product_type !== 'COMPOUND' && p.configured_unit_price == null;
-  }
-
-  /** A Compound Product the shop currently cannot compose at all — no priced,
-   *  in-stock oil or bottle exists anywhere in the branch (checked shop-wide
-   *  in searchCatalogProducts(), since the Builder allows any oil/bottle). */
-  isCompoundUnavailable(p: CatalogProduct): boolean {
-    return p.product_type === 'COMPOUND' && p.compound_available === false;
-  }
+  // The actual browse/search/pick UI lives in <app-sales-catalog> (shared
+  // with Edit Invoice) — this component only reacts to what was picked.
 
   /**
-   * Clicking a catalog card. Ready Product → added directly to the invoice
-   * immediately, exactly as today (blocked if the branch has none in stock,
-   * or if no selling price has been configured yet). Compound Product → the
-   * Product Builder opens immediately, with zero intermediate screens —
-   * every single time, even for the same perfume sold a minute ago, since a
-   * Compound Product is only ever a catalog name with no stored composition.
+   * A Ready Product card was picked — added directly to the invoice
+   * immediately, exactly as before (SalesCatalogComponent already blocked
+   * this for out-of-stock/no-price products before emitting).
    */
-  onCatalogCardClick(p: CatalogProduct) {
-    if (p.product_type === 'COMPOUND') {
-      if (this.isCompoundUnavailable(p)) {
-        this.alert = { show: true, type: 'error', message: p.compound_unavailable_reason || `${p.name} غير متاح للتركيب حالياً.` };
-        return;
-      }
-      this.builderProduct = { id: p.id, name: p.name, default_oil_id: p.default_oil_id ?? null };
-      return;
-    }
-    if (this.isOutOfStock(p)) {
-      this.alert = { show: true, type: 'error', message: `${p.name} نفد من المخزون في هذا الفرع — يحتاج توريد.` };
-      return;
-    }
-    if (this.isMissingPrice(p)) {
-      this.alert = { show: true, type: 'error', message: `${p.name} ليس له سعر بيع محدد — أكمل إدارة الأسعار أولاً.` };
-      return;
-    }
+  onCatalogProductSelected(p: CatalogProduct) {
     this.addComposedLine({
       product_id: p.id, name: p.name, sku: p.sku, unit: p.unit,
       quantity: 1, price: p.configured_unit_price ?? 0, stock: p.shop_stock ?? 0,
@@ -377,25 +318,24 @@ export class CashierComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  closeBuilder() { this.builderProduct = null; }
-
-  /** Emitted by <app-catalog-sell-dialog> once the seller confirms oil+bottle.
-   *  The 3 real rows (oil/alcohol/bottle) share line.composition_key so the
-   *  cart can collapse them into ONE visible manufactured-perfume row (see
-   *  isHiddenMaterialRow()/compositionGroup() below) — captured here, before
-   *  builderProduct is cleared, since that's the only place the perfume's own
-   *  name is known. */
-  onCatalogCompositionAdded(lines: ComposedLine[]) {
-    const perfumeName = this.builderProduct?.name ?? '';
-    for (const line of lines) {
+  /** Emitted by <app-sales-catalog> once the seller confirms oil+bottle in
+   *  the Product Builder. The 3 real rows (oil/alcohol/bottle) share
+   *  line.composition_key so the cart can collapse them into ONE visible
+   *  manufactured-perfume row (see isHiddenMaterialRow()/compositionGroup()
+   *  below). */
+  onCatalogCompositionAdded(event: { perfumeName: string; lines: ComposedLine[] }) {
+    for (const line of event.lines) {
       this.addComposedLine({
         product_id: line.product_id, name: line.name, sku: line.sku, unit: line.unit,
         quantity: line.quantity, price: line.price, stock: line.stock,
         parent_product_id: line.parent_product_id, role: line.role,
-        composition_key: line.composition_key, parent_name: perfumeName,
+        composition_key: line.composition_key, parent_name: event.perfumeName,
       });
     }
-    this.builderProduct = null;
+  }
+
+  onCatalogPickError(message: string) {
+    this.alert = { show: true, type: 'error', message };
   }
 
   // ── Totals & balance ────────────────────────────────────
@@ -687,8 +627,6 @@ export class CashierComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Lifecycle ───────────────────────────────────────────
 
   ngOnInit(): void {
-    this.loadCatalog();
-
     // Arrived from Customer Details' "Create Invoice" action — preselect the
     // customer exactly like picking them from the search dropdown (same
     // selectCustomer() used everywhere else), just skipping the search step.

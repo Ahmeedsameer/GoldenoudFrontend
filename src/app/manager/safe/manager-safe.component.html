@@ -2,8 +2,8 @@
 
 <!-- Header -->
 <div class="mb-6">
-  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">خزن الفرع</h2>
-  <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">إدارة الأرصدة والمعاملات المالية</p>
+  <h2 class="text-xl font-semibold text-gray-800">خزن الفرع</h2>
+  <p class="text-sm text-gray-500 mt-0.5">إدارة الأرصدة والمعاملات المالية</p>
 </div>
 
 @if (alert.show) {
@@ -13,16 +13,16 @@
 <!-- Safes grid -->
 <div class="grid gap-5 sm:grid-cols-2">
   @for (safe of safes; track safe.id) {
-    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="rounded-2xl border border-gray-200 bg-white p-5">
 
       <!-- Safe type + kind -->
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ safe.safe_type?.name }}</span>
+          <span class="text-sm font-semibold text-gray-800">{{ safe.safe_type?.name }}</span>
           <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
             [class]="safe.safe_type?.kind === 'physical'
-              ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400'
-              : 'bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400'">
+              ? 'bg-blue-50 text-blue-700'
+              : 'bg-purple-50 text-purple-700'">
             {{ safe.safe_type?.kind === 'physical' ? 'نقدي' : 'إلكتروني' }}
           </span>
         </div>
@@ -32,20 +32,20 @@
       <div class="space-y-2 mb-5">
         @if (safe.balances && safe.balances.length > 0) {
           @for (b of safe.balances; track b.currency.id) {
-            <div class="rounded-xl bg-gray-50 dark:bg-white/[0.03] overflow-hidden">
+            <div class="rounded-xl bg-gray-50 overflow-hidden">
               <div class="flex items-center justify-between px-3 py-2">
-                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ b.currency.name }}</span>
+                <span class="text-xs font-medium text-gray-500">{{ b.currency.name }}</span>
                 <span class="text-base font-bold font-mono"
-                  [class]="+b.balance < 0 ? 'text-error-600 dark:text-error-400' : 'text-gray-800 dark:text-white/90'">
+                  [class]="+b.balance < 0 ? 'text-error-600' : 'text-gray-800'">
                   {{ b.currency.symbol }} {{ +b.balance | number:'1.2-2' }}
                 </span>
               </div>
               @if (methodsFor(safe, b.currency.id).length > 0) {
-                <div class="px-3 pb-2 space-y-1 border-t border-gray-200/60 dark:border-white/[0.05] pt-2">
+                <div class="px-3 pb-2 space-y-1 border-t border-gray-200/60 pt-2">
                   @for (m of methodsFor(safe, b.currency.id); track m.payment_method_id) {
                     <div class="flex items-center justify-between text-xs">
-                      <span class="text-gray-400 dark:text-gray-500">{{ m.name }}</span>
-                      <span class="font-mono text-gray-600 dark:text-gray-300">{{ b.currency.symbol }} {{ m.balance | number:'1.2-2' }}</span>
+                      <span class="text-gray-400">{{ m.name }}</span>
+                      <span class="font-mono text-gray-600">{{ b.currency.symbol }} {{ m.balance | number:'1.2-2' }}</span>
                     </div>
                   }
                 </div>
@@ -53,7 +53,7 @@
             </div>
           }
         } @else {
-          <p class="text-xs text-center text-gray-400 dark:text-gray-500 py-2">لا توجد أرصدة بعد</p>
+          <p class="text-xs text-center text-gray-400 py-2">لا توجد أرصدة بعد</p>
         }
       </div>
 
@@ -65,12 +65,12 @@
           إيداع
         </button>
         <button (click)="openWithdraw(safe)"
-          class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-error-300 text-error-600 hover:bg-error-50 dark:border-error-500/30 dark:text-error-400 dark:hover:bg-error-500/10 text-sm font-semibold transition-colors">
+          class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-error-300 text-error-600 hover:bg-error-50 text-sm font-semibold transition-colors">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
           سحب
         </button>
         <a [routerLink]="['/dashboard/safe/my-shop', safe.id, 'transactions']"
-          class="flex items-center justify-center px-3 py-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-white/[0.08] dark:text-gray-400 dark:hover:bg-white/[0.03] transition-colors">
+          class="flex items-center justify-center px-3 py-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
         </a>
       </div>
@@ -88,15 +88,15 @@
   <div class="p-6">
     <div class="flex items-center gap-3 mb-5">
       <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-        [class]="modalMode === 'deposit' ? 'bg-success-100 dark:bg-success-500/15' : 'bg-error-100 dark:bg-error-500/15'">
+        [class]="modalMode === 'deposit' ? 'bg-success-100' : 'bg-error-100'">
         @if (modalMode === 'deposit') {
-          <svg class="w-5 h-5 text-success-600 dark:text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <svg class="w-5 h-5 text-success-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         } @else {
-          <svg class="w-5 h-5 text-error-600 dark:text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+          <svg class="w-5 h-5 text-error-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
         }
       </div>
       <div>
-        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
+        <h3 class="text-base font-semibold text-gray-800">
           {{ modalMode === 'deposit' ? 'إيداع في الخزنة' : 'سحب من الخزنة' }}
         </h3>
         <p class="text-xs text-gray-400 mt-0.5">{{ activeSafe?.safe_type?.name }}</p>
@@ -104,8 +104,8 @@
     </div>
 
     @if (modalError) {
-      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 dark:bg-error-500/10 dark:border-error-500/20">
-        <p class="text-sm text-error-600 dark:text-error-400">{{ modalError }}</p>
+      <div class="mb-4 p-3 rounded-lg bg-error-50 border border-error-200">
+        <p class="text-sm text-error-600">{{ modalError }}</p>
       </div>
     }
 
@@ -114,10 +114,10 @@
 
         <!-- Currency -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">العملة <span class="text-error-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">العملة <span class="text-error-500">*</span></label>
           <select formControlName="currency_id"
-            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            [class]="isInvalid('currency_id') ? 'border-error-400' : 'border-gray-300 dark:border-gray-700 dark:bg-gray-800'">
+            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            [class]="isInvalid('currency_id') ? 'border-error-400' : 'border-gray-300'">
             <option value="" disabled selected>اختر العملة...</option>
             @for (c of currencies; track c.id) { <option [value]="c.id">{{ c.name }} ({{ c.symbol }})</option> }
           </select>
@@ -126,11 +126,11 @@
 
         <!-- Child safe (payment method) — "Entire Safe (Automatic)" default = today's behavior -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
             {{ modalMode === 'deposit' ? 'إيداع في' : 'سحب من' }}
           </label>
           <select formControlName="payment_method_id"
-            class="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
             <option [ngValue]="null">الخزنة بالكامل (تلقائي)</option>
             @for (m of paymentMethods; track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
           </select>
@@ -138,19 +138,19 @@
 
         <!-- Amount -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">المبلغ <span class="text-error-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">المبلغ <span class="text-error-500">*</span></label>
           <input type="number" formControlName="amount" min="0.01" step="0.01" placeholder="0.00"
-            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 dark:text-white/90 focus:outline-none focus:ring-2"
-            [class]="isInvalid('amount') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800'" />
+            class="h-10 w-full rounded-lg border px-3 text-sm bg-transparent text-gray-800 focus:outline-none focus:ring-2"
+            [class]="isInvalid('amount') ? 'border-error-400 focus:ring-error-500/20' : 'border-gray-300 focus:border-brand-400 focus:ring-brand-500/20'" />
           @if (isInvalid('amount')) { <p class="mt-1 text-xs text-error-500">المبلغ مطلوب ويجب أن يكون أكبر من صفر</p> }
         </div>
 
         <!-- Reason -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">السبب <span class="text-error-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">السبب <span class="text-error-500">*</span></label>
           <select formControlName="reason_id"
-            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 dark:text-gray-300 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            [class]="isInvalid('reason_id') ? 'border-error-400' : 'border-gray-300 dark:border-gray-700 dark:bg-gray-800'">
+            class="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            [class]="isInvalid('reason_id') ? 'border-error-400' : 'border-gray-300'">
             <option value="" disabled selected>اختر السبب...</option>
             @for (r of activeReasons; track r.id) { <option [value]="r.id">{{ r.name }}</option> }
           </select>
@@ -159,9 +159,9 @@
 
         <!-- Note -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">ملاحظة <span class="text-xs text-gray-400">(اختياري)</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">ملاحظة <span class="text-xs text-gray-400">(اختياري)</span></label>
           <textarea formControlName="note" rows="2" placeholder="ملاحظات إضافية..."
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent text-gray-800 dark:text-white/90 dark:border-gray-700 dark:bg-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 resize-none placeholder:text-gray-400"></textarea>
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-transparent text-gray-800 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 resize-none placeholder:text-gray-400"></textarea>
         </div>
 
       </div>
@@ -173,7 +173,7 @@
           @if (modalLoading) { جاري التنفيذ... } @else { {{ modalMode === 'deposit' ? 'تأكيد الإيداع' : 'تأكيد السحب' }} }
         </button>
         <button type="button" (click)="showModal = false" [disabled]="modalLoading"
-          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50">
+          class="px-5 h-10 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
           إلغاء
         </button>
       </div>

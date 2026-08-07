@@ -1,0 +1,206 @@
+<app-loading [loading]="pageLoading"></app-loading>
+
+<div class="crud-page-head">
+  <div>
+    <a [routerLink]="['..']" class="text-xs font-medium mb-1 inline-block" style="color: #9A7B1A;">‹ الرجوع للفاتورة</a>
+    <h1 class="page-title">تعديل الفاتورة رقم {{ invoiceId }}</h1>
+    <p class="page-subtitle">إضافة/حذف/تعديل كمية الأصناف — يُعاد بناء الفاتورة تلقائياً بأسعار الدفعات الحالية</p>
+  </div>
+</div>
+
+@if (alert.show) {
+  <div class="mb-5">
+    <app-alert [variant]="$any(alert.type)" [message]="alert.message"></app-alert>
+  </div>
+}
+
+@if (summary) {
+  <div class="ds-card p-4 mb-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-semibold text-gray-800">
+        {{ result ? 'ملخص التعديل المُنفَّذ' : 'معاينة الفرق المالي' }}
+      </h2>
+      @if (previewLoading) {
+        <span class="text-xs text-gray-400">جارٍ الحساب…</span>
+      }
+    </div>
+    <div class="grid grid-cols-3 gap-4 text-center">
+      <div>
+        <p class="text-xs text-gray-500">إجمالي الفاتورة القديمة</p>
+        <p class="text-lg font-semibold text-gray-800">{{ summary.old_total | number:'1.2-2' }}</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-500">إجمالي الفاتورة الجديدة</p>
+        <p class="text-lg font-semibold text-gray-800">{{ summary.new_total | number:'1.2-2' }}</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-500">فرق السعر</p>
+        <p class="text-lg font-semibold" [class]="difference > 0 ? 'text-success-600' : (difference < 0 ? 'text-error-600' : 'text-gray-800')">
+          {{ difference > 0 ? '+' : '' }}{{ difference | number:'1.2-2' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-3 pt-3 border-t border-gray-100 text-center">
+      @if (difference > 0) {
+        <p class="text-sm font-medium text-success-600">مبلغ إضافي مطلوب: {{ difference | number:'1.2-2' }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">سيتم تحصيل الفرق وتسويته في الخزنة المختارة.</p>
+      } @else if (difference < 0) {
+        <p class="text-sm font-medium text-error-600">مبلغ مسترد: {{ -difference | number:'1.2-2' }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">سيتم تسجيل الفرق كتسوية مستردة من الخزنة المختارة.</p>
+      } @else {
+        <p class="text-sm font-medium text-gray-500">لا يوجد فرق مالي</p>
+      }
+    </div>
+  </div>
+}
+
+@if (previewError) {
+  <div class="mb-5">
+    <app-alert variant="error" [message]="previewError"></app-alert>
+  </div>
+}
+
+@if (changedLines.length > 0) {
+  <div class="ds-card overflow-hidden mb-5">
+    <div class="px-5 py-4 border-b border-gray-100">
+      <h2 class="text-base font-semibold text-gray-900">الأصناف المتأثرة بالتعديل</h2>
+      <p class="text-xs text-gray-500 mt-0.5">السعر القديم من الفاتورة الأصلية — السعر الجديد محسوب حسب الدفعات الحالية (FIFO)</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="ds-table">
+        <thead class="ds-table-head">
+          <tr>
+            <th class="ds-th">الصنف</th>
+            <th class="ds-th text-center">الكمية القديمة</th>
+            <th class="ds-th text-center">الكمية الجديدة</th>
+            <th class="ds-th text-center">السعر القديم</th>
+            <th class="ds-th text-center">السعر الجديد</th>
+            <th class="ds-th text-center">الفرق</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of changedLines; track row.product_id) {
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="py-3 text-sm font-medium text-gray-800">{{ row.product_name }}</td>
+              <td class="px-4 py-3 text-sm text-center text-gray-600">{{ row.old_quantity || '—' }}</td>
+              <td class="px-4 py-3 text-sm text-center text-gray-600">{{ row.new_quantity || '—' }}</td>
+              <td class="px-4 py-3 text-sm text-center text-gray-600">{{ row.old_quantity ? (row.old_price | number:'1.2-2') : '—' }}</td>
+              <td class="px-4 py-3 text-sm text-center text-gray-600">{{ row.new_quantity ? (row.new_price | number:'1.2-2') : '—' }}</td>
+              <td class="px-4 py-3 text-sm text-center font-medium"
+                [class]="row.difference > 0 ? 'text-success-600' : (row.difference < 0 ? 'text-error-600' : 'text-gray-500')">
+                {{ row.difference > 0 ? '+' : '' }}{{ row.difference | number:'1.2-2' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+@if (invoice) {
+  <div class="ds-card overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100">
+      <h2 class="text-base font-semibold text-gray-900">أصناف الفاتورة</h2>
+      <p class="text-xs text-gray-500 mt-0.5">عناصر العطر المركّب (زيت/زجاجة) تُحذف وتُضاف كمجموعة واحدة عبر صانع المنتج أدناه</p>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="ds-table">
+        <thead class="ds-table-head">
+          <tr>
+            <th class="ds-th">الصنف</th>
+            <th class="ds-th">SKU</th>
+            <th class="ds-th w-32">الكمية</th>
+            <th class="ds-th w-16"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of lines; track $index; let i = $index) {
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="py-3 text-sm font-medium text-gray-800">
+                {{ line.name }}
+                @if (line.parent_name) {
+                  <span class="block text-[11px] font-normal text-gray-400">جزء من: {{ line.parent_name }}</span>
+                }
+              </td>
+              <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ line.sku || '—' }}</td>
+              <td class="px-4 py-3">
+                <input type="number" min="0.001" step="0.001" [(ngModel)]="line.quantity" (ngModelChange)="onQuantityChange()"
+                  class="lux-input h-9 w-24 text-center" />
+              </td>
+              <td class="px-4 py-3">
+                <button type="button" (click)="removeLine(i)" class="text-error-500 hover:text-error-700">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          }
+          @if (lines.length === 0) {
+            <tr><td colspan="4" class="py-8 text-center text-sm text-gray-400">لا توجد أصناف — أضف صنفاً من الكتالوج أدناه للمتابعة</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="p-5 border-t border-gray-100">
+      <h3 class="text-sm font-semibold text-gray-800 mb-2">إضافة صنف — كتالوج المبيعات</h3>
+      <p class="text-xs text-gray-500 mb-3">نفس كتالوج نقطة البيع، بمخزون وأسعار فرع الفاتورة الأصلي</p>
+      <app-sales-catalog
+        [shopId]="invoiceShopId"
+        (productSelected)="onCatalogProductSelected($event)"
+        (compositionAdded)="onCatalogCompositionAdded($event)"
+        (pickError)="onCatalogPickError($event)">
+      </app-sales-catalog>
+    </div>
+  </div>
+
+  <div class="ds-card p-5 mt-5">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      @if (isAdmin) {
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">الفرع (لتسوية الفرق)</label>
+          <select [(ngModel)]="settlementBranchId" (ngModelChange)="onBranchChange()" class="lux-select h-10 w-full">
+            <option [ngValue]="null">— اختر فرعاً —</option>
+            @for (b of branches; track b.id) {
+              <option [ngValue]="b.id">{{ b.name }}</option>
+            }
+          </select>
+        </div>
+      }
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          الخزنة (لتسوية الفرق إن وُجد)
+          @if (safeRequired) { <span class="text-error-500">*</span> }
+        </label>
+        <select [(ngModel)]="safeId" class="lux-select h-10 w-full" [class.border-error-300]="safeRequired && !safeId">
+          <option [ngValue]="null">— اختر خزنة —</option>
+          @for (s of safes; track s.id) {
+            <option [ngValue]="s.id">{{ safeLabel(s) }}</option>
+          }
+        </select>
+        @if (safeRequired) {
+          <p class="text-[11px] text-error-500 mt-1">مطلوبة — يوجد فرق مالي يجب تسويته من هذه الخزنة</p>
+        } @else {
+          <p class="text-[11px] text-gray-400 mt-1">غير مطلوبة حالياً — لا يوجد فرق في إجمالي الفاتورة</p>
+        }
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">ملاحظة (اختياري)</label>
+        <input type="text" [(ngModel)]="note" class="lux-input h-10 w-full" placeholder="سبب التعديل…" />
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-6 pt-5 border-t border-gray-100">
+      <app-button variant="primary" size="md" [disabled]="!canSave()" (btnClick)="save()">
+        @if (saving) { جارٍ الحفظ... } @else { حفظ التعديلات }
+      </app-button>
+      <a [routerLink]="['..']" class="px-6 h-10 flex items-center rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+        إلغاء
+      </a>
+    </div>
+  </div>
+}

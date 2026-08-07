@@ -14,10 +14,12 @@ import { ModalComponent } from '../../../shared/components/ui/modal/modal.compon
 import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { PaginationComponent } from '../../../pagination/pagination.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { LabelComponent } from '../../../shared/components/form/label/label.component';
+import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
 
 @Component({
   selector: 'app-admin-safe-detail',
-  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, PaginationComponent, DatePickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, LoadingComponent, ModalComponent, AlertComponent, PaginationComponent, DatePickerComponent, LabelComponent, ButtonComponent],
   templateUrl: './admin-safe-detail.component.html',
 })
 export class AdminSafeDetailComponent implements OnInit {

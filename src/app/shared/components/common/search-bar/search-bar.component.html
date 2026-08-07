@@ -5,10 +5,10 @@
     </svg>
   </span>
   <input type="text" [formControl]="control" [placeholder]="placeholder"
-    class="h-9 rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-8 text-sm placeholder:text-gray-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/10 focus:outline-none dark:border-gray-700 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 w-full" />
+    class="h-9 rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-8 text-sm placeholder:text-gray-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/10 focus:outline-none w-full" />
   @if (control.value) {
     <button type="button" (click)="clear()"
-      class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+      class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
       </svg>
